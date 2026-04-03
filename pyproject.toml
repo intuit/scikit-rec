@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scikit-rec"
+version = "0.1.1"
+description = "A scikit-style recommender systems library"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/intuit/scikit-rec"
+Repository = "https://github.com/intuit/scikit-rec"
+Issues = "https://github.com/intuit/scikit-rec/issues"
+
+[tool.setuptools.packages.find]
+include = ["skrec*"]
+
+# --- ruff (lint + format) ---
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # pycodestyle errors, pyflakes, isort
+
+[tool.ruff.format]
+quote-style = "double"
+
+# --- mypy ---
+[tool.mypy]
+python_version = "3.9"
+strict = false
+ignore_missing_imports = true
+
+# --- pytest ---
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+# --- coverage ---
+[tool.coverage.run]
+source = ["skrec"]
+
+[tool.coverage.report]
+fail_under = 80
