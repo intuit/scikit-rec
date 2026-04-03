@@ -1,3 +1,8 @@
 """skrec: A scikit-style recommender systems library."""
 
-__version__ = "0.1.1"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("scikit-rec")
+except PackageNotFoundError:
+    __version__ = "unknown"

@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68", "wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "scikit-rec"
-version = "0.1.1"
+dynamic = ["version"]
 description = "A scikit-style recommender systems library"
 readme = "README.md"
 license = "Apache-2.0"
@@ -23,6 +23,8 @@ dev = [
 Homepage = "https://github.com/intuit/scikit-rec"
 Repository = "https://github.com/intuit/scikit-rec"
 Issues = "https://github.com/intuit/scikit-rec/issues"
+
+[tool.setuptools_scm]
 
 [tool.setuptools.packages.find]
 include = ["skrec*"]
