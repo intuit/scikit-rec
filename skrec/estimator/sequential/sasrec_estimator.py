@@ -27,6 +27,7 @@ OUTCOME_SEQUENCE_COL = "OUTCOME_SEQUENCE"
 
 _nn_module = nn.Module if nn is not None else object
 
+
 class _SASRecTransformerBlock(_nn_module):
     """Single transformer block for SASRec: pre-norm, causal self-attention + FFN."""
 

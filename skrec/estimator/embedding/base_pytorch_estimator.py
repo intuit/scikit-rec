@@ -169,8 +169,7 @@ class BasePyTorchEmbeddingEstimator(BaseEmbeddingEstimator, abc.ABC):
         """
         if torch is None:
             raise ImportError(
-                "PyTorch is required for embedding estimators. "
-                "Install it with: pip install scikit-rec[torch]"
+                "PyTorch is required for embedding estimators. Install it with: pip install scikit-rec[torch]"
             )
         self.learning_rate = learning_rate
         self.epochs = epochs

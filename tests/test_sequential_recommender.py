@@ -1,7 +1,7 @@
-
 """
 Unit tests for SequentialRecommender._build_sequences and related behaviour.
 """
+
 import logging
 import os
 import tempfile

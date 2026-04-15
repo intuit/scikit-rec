@@ -26,6 +26,7 @@ SESSION_OUTCOMES_COL = "SESSION_OUTCOMES"
 
 _nn_module = nn.Module if nn is not None else object
 
+
 class _HRNNModule(_nn_module):
     """
     HRNN PyTorch module with a two-level GRU hierarchy.

@@ -1,7 +1,7 @@
-
 """
 Unit tests for SASRec estimator, scorer, and recommender.
 """
+
 import logging
 import os
 import pickle

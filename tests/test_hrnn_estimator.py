@@ -1,8 +1,8 @@
-
 """
 Unit tests for HRNNClassifierEstimator, HRNNRegressorEstimator,
 HierarchicalScorer, and HierarchicalSequentialRecommender.
 """
+
 import logging
 import os
 import pickle

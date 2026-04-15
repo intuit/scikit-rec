@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 _nn_module = nn.Module if nn is not None else object
 
+
 class _CrossLayer(_nn_module):
     def __init__(self, input_dim: int):
         super().__init__()

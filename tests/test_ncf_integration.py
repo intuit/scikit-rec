@@ -1,8 +1,8 @@
-
 """
 Integration test for NCF with UniversalScorer and RankingRecommender.
 This test validates that NCF works end-to-end in the recommender pipeline.
 """
+
 import numpy as np
 import pandas as pd
 import pytest

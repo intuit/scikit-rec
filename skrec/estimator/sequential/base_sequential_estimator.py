@@ -60,8 +60,7 @@ class SequentialEstimator(ABC):
     ):
         if torch is None:
             raise ImportError(
-                "PyTorch is required for sequential estimators. "
-                "Install it with: pip install scikit-rec[torch]"
+                "PyTorch is required for sequential estimators. Install it with: pip install scikit-rec[torch]"
             )
         self.learning_rate = learning_rate
         self.epochs = epochs
