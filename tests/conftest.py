@@ -30,7 +30,7 @@ _TORCH_TEST_FILES = [
 ]
 
 try:
-    import torch  # noqa: F401
+    import torch  # type: ignore[import-unresolved]  # noqa: F401
 except ImportError:
     collect_ignore = _TORCH_TEST_FILES
 

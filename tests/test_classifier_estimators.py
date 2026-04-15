@@ -61,13 +61,26 @@ def setup_fixture():
     test["reward_model_y"] = test["reward_model_df"]["y"].to_numpy()
     test["reward_model_x"] = test["reward_model_df"].drop(columns=["y"])
 
-    test["multioutput_x"] = pd.DataFrame({"Age": [28, 49, 35, 30], "Gender": [1, 0, 1, 0]})
+    test["multioutput_x"] = pd.DataFrame(
+        {
+            "Age": [28, 49, 35, 30, 22, 41, 55, 33, 27, 46, 38, 31],
+            "Gender": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+        }
+    )
     test["multioutput_y"] = np.array(
         [
             [1, 0, 0],
             [0, 0, 1],
             [0, 1, 0],
             [1, 1, 0],
+            [1, 0, 1],
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 1],
+            [1, 0, 0],
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 1],
         ]
     )
     return test
