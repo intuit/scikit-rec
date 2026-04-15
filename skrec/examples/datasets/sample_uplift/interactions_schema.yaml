@@ -1,0 +1,7 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: ITEM_ID
+    type: str
+  - name: OUTCOME
+    type: float

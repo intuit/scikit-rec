@@ -1,0 +1,76 @@
+site_name: scikit-rec
+site_url: https://intuit.github.io/scikit-rec
+repo_url: https://github.com/intuit/scikit-rec
+repo_name: intuit/scikit-rec
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - tables
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Datasets: getting-started/datasets.md
+  - User Guide:
+      - Architecture: user-guide/architecture.md
+      - Capability Matrix: user-guide/capability-matrix.md
+      - Scorers: user-guide/scorers.md
+      - Estimators: user-guide/estimators.md
+      - Training: user-guide/training.md
+      - Inference: user-guide/inference.md
+      - Evaluation: user-guide/evaluation.md
+      - Retrieval: user-guide/retrieval.md
+      - Collaborative Filtering: user-guide/collaborative-filtering.md
+      - NCF: user-guide/ncf.md
+      - Two-Tower: user-guide/two-tower.md
+      - SASRec: user-guide/sasrec.md
+      - HRNN: user-guide/hrnn.md
+  - Recommender Types:
+      - Comparison: recommender-types/comparison.md
+      - Ranking: recommender-types/ranking.md
+      - Bandits: recommender-types/bandits.md
+      - Uplift: recommender-types/uplift.md
+      - Sequential: recommender-types/sequential.md
+      - Hierarchical: recommender-types/hierarchical.md
+      - GCSL: recommender-types/gcsl.md
+  - Advanced:
+      - HPO: advanced/hpo.md
+      - Orchestration: advanced/orchestration.md
+      - Hybrid: advanced/hybrid.md
+      - Production: advanced/production.md
+  - Examples: examples/index.md

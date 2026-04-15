@@ -1,0 +1,13 @@
+USER_ID,ITEM_ID,OUTCOME,user_feature_1
+user_1,item_a,1,10
+user_1,control,0,10
+user_2,item_b,1,20
+user_2,control,0,20
+user_3,item_a,0,30
+user_3,control,0,30
+user_4,item_b,1,40
+user_4,control,0,40
+user_5,item_a,0,50
+user_5,control,1,50
+user_6,item_b,0,60
+user_6,control,1,60

@@ -1,0 +1,7 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: feat1
+    type: float
+  - name: feat2
+    type: float

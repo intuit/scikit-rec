@@ -1,0 +1,13 @@
+USER_ID,ITEM_ID,OUTCOME
+user_1,item_a,1
+user_1,control,0
+user_2,item_b,1
+user_2,control,0
+user_3,item_a,0
+user_3,control,0
+user_4,item_b,1
+user_4,control,0
+user_5,item_a,0
+user_5,control,1
+user_6,item_b,0
+user_6,control,1

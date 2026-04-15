@@ -1,0 +1,17 @@
+columns:
+  - name: ITEM_ID
+    type: str
+  - name: item_feat1
+    type: int
+  - name: item_feat2
+    type: int
+  - name: item_feat3
+    type: int
+  - name: item_feat4
+    type: int
+  - name: item_feat5
+    type: int
+  - name: item_feat6
+    type: int
+  - name: item_feat7
+    type: int

@@ -1,0 +1,15 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: feat1
+    type: float
+  - name: feat2
+    type: float
+  - name: feat3
+    type: float
+  - name: feat4
+    type: float
+  - name: feat5
+    type: float
+  - name: ITEM_ID
+    type: str

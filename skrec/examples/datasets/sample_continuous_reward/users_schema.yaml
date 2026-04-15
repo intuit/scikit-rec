@@ -1,0 +1,19 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: feat1
+    type: float
+  - name: feat2
+    type: float
+  - name: feat3
+    type: float
+  - name: onehot1
+    type: float
+  - name: onehot2
+    type: float
+  - name: pca_0
+    type: float
+  - name: pca_1
+    type: float
+  - name: pca_2
+    type: float

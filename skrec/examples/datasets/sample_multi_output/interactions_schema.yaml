@@ -1,0 +1,29 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: age
+    type: float
+  - name: income
+    type: float
+  - name: ITEM_200
+    type: float
+  - name: ITEM_600
+    type: float
+  - name: ITEM_800
+    type: float
+  - name: ITEM_850
+    type: float
+  - name: ITEM_910
+    type: float
+  - name: ITEM_920
+    type: float
+  - name: ITEM_930
+    type: float
+  - name: ITEM_940
+    type: float
+  - name: ITEM_965
+    type: float
+  - name: ITEM_970
+    type: float
+  - name: ITEM_975
+    type: float

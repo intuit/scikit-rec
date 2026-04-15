@@ -1,0 +1,114 @@
+LogisticRegression:
+  hyperparameter_tuning:
+    state: True
+    method: "grid_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+  solver:
+    - "newton-cg"
+    - "lbfgs"
+    - "liblinear"
+  penalty:
+    - "l2"
+  C:
+    - 100.0
+    - 10.0
+    - 1.0
+    - 0.1
+    - 0.01
+SklearnDummyClassifier:
+  hyperparameter_tuning:
+    state: True
+    method: "grid_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+  strategy:
+    - "uniform"
+
+XGBoostClassifier:
+  hyperparameter_tuning:
+    state: True
+    method: "randomized_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+  learning_rate:
+    - 0.1
+    - 1
+  n_estimators:
+    - 10
+    - 20
+XGBoostClassifierEarlyStopping:
+  hyperparameter_tuning:
+    state: True
+    method: "randomized_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+      early_stopping_rounds: 2
+  learning_rate:
+    - 0.1
+    - 1
+  n_estimators:
+    - 10
+    - 20
+
+MultiOutputXGBoostClassifier:
+  hyperparameter_tuning:
+    state: True
+    method: "randomized_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+  learning_rate:
+    - 0.1
+    - 1
+  n_estimators:
+    - 10
+    - 20
+  base_score:
+    - 0.5
+
+MultiOutputRandomForestClassifier:
+  hyperparameter_tuning:
+    state: True
+    method: "randomized_search_cv"
+    cv_params:
+      scoring: "accuracy"
+      verbose: 0
+      cv: 2
+  n_estimators:
+    - 10
+    - 20
+  criterion:
+    - "gini"
+    - "entropy"
+  max_depth:
+    - 10
+    - 20
+  min_samples_split:
+    - 2
+    - 5
+
+XGBoostRegressor:
+  hyperparameter_tuning:
+    state: True
+    method: "randomized_search_cv"
+    cv_params:
+      scoring: "neg_mean_squared_error"
+      verbose: 0
+      cv: 2
+      n_iter: 5
+  n_estimators:
+    - 5
+    - 10
+  gamma:
+    - 0.01
+    - 10.0

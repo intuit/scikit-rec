@@ -1,0 +1,5 @@
+columns:
+  - name: USER_ID
+    type: str
+  - name: user_feature_1
+    type: int

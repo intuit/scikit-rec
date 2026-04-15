@@ -1,0 +1,3 @@
+columns:
+  - name: ITEM_ID
+    type: str
