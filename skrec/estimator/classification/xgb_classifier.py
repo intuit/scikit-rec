@@ -5,7 +5,7 @@ import numpy as np
 import xgboost
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
-from xgboost import XGBClassifier
+from xgboost import XGBClassifier as _XGBClassifier
 
 from skrec.constants import ITEM_ID_NAME
 from skrec.dataset.batch_training_dataset import BatchTrainingDataset
@@ -18,10 +18,29 @@ from skrec.util.logger import get_logger
 logger = get_logger(__name__)
 
 
+class XGBClassifier(_XGBClassifier):
+    """XGBClassifier with a fix for the XGBoost 2.x ``get_params()`` serialization bug.
+
+    XGBoost 2.x internally serializes learned parameters (e.g. ``base_score``) as
+    JSON array strings like ``"[5E-1]"``. When sklearn's ``clone()`` calls
+    ``get_params()`` during cross-validation, it cannot parse these strings back
+    to floats and raises ``ValueError``.
+    """
+
+    def get_params(self, deep=True):
+        params = super().get_params(deep=deep)
+        for key, value in params.items():
+            if isinstance(value, str) and value.startswith("[") and value.endswith("]"):
+                try:
+                    params[key] = float(value.strip("[]"))
+                except ValueError:
+                    pass
+        return params
+
+
 class XGBClassifierEstimator(NumpyPredictorMixin, BaseClassifier):
     def __init__(self, params: Optional[dict] = None):
         params = params or {}
-        params.setdefault("base_score", 0.5)
         self._model = XGBClassifier(**params)
         self._use_inplace_predict = True
 
@@ -115,8 +134,8 @@ class BatchXGBClassifierEstimator(BaseClassifier):
 
 
 class TunedXGBClassifierEstimator(TunedEstimator, XGBClassifierEstimator):
-    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict, base_score: float = 0.5):
-        super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params, {"base_score": base_score})
+    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
+        super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params)
         self._use_inplace_predict = True
 
 
