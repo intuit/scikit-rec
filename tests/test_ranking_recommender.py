@@ -67,15 +67,12 @@ def test_universal_recommender(setup_fixture):
     scorer = UniversalScorer(estimator)
     universal_recommender = RankingRecommender(scorer)
 
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users,
-            sample_binary_reward_items,
-            sample_binary_reward_interactions,
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users,
+        sample_binary_reward_items,
+        sample_binary_reward_interactions,
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     assert_array_equal(universal_recommender.users_schema.columns, ["USER_ID", "feat1", "feat2"])
     assert_array_equal(
@@ -154,11 +151,8 @@ def test_multiclass_recommender(setup_fixture):
         )
 
     # training
-    try:
-        multiclass_recommender.train(interactions_ds=sample_multi_class_interactions)
-        logger.info("Finished Training of a Multiclass Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Multiclass Ranking Recommender Failed.")
+    multiclass_recommender.train(interactions_ds=sample_multi_class_interactions)
+    logger.info("Finished Training of a Multiclass Ranking Recommender.")
 
     # recommending
     users = pd.DataFrame({"USER_ID": ["Emma", "Jasper"], "feat1": [2, 3]})
@@ -295,13 +289,10 @@ def test_independent_models_recommender(setup_fixture):
     scorer = IndependentScorer(estimator)
     independent_models_recommender = RankingRecommender(scorer)
     # training
-    try:
-        independent_models_recommender.train(
-            sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
-        )
-        logger.info("Finished Training of a Item Models Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Item Models Ranking Recommender Failed.")
+    independent_models_recommender.train(
+        sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+    )
+    logger.info("Finished Training of a Item Models Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
@@ -327,16 +318,13 @@ def test_independent_models_recommender_continuous_rewards(setup_fixture):
     scorer = IndependentScorer(estimator)
     independent_models_recommender = RankingRecommender(scorer)
     # training
-    try:
-        independent_models_recommender.train(
-            sample_continuous_reward_users,
-            sample_continuous_reward_items,
-            sample_continuous_reward_interactions,
-        )
+    independent_models_recommender.train(
+        sample_continuous_reward_users,
+        sample_continuous_reward_items,
+        sample_continuous_reward_interactions,
+    )
 
-        logger.info("Finished Training of a Item Models Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Item Models Ranking Recommender Failed.")
+    logger.info("Finished Training of a Item Models Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
@@ -610,17 +598,14 @@ def test_training_with_validation_sets_recommender(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users,
-            sample_binary_reward_items,
-            sample_binary_reward_interactions,
-            valid_users_ds=sample_binary_reward_users,
-            valid_interactions_ds=sample_binary_reward_interactions,
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users,
+        sample_binary_reward_items,
+        sample_binary_reward_interactions,
+        valid_users_ds=sample_binary_reward_users,
+        valid_interactions_ds=sample_binary_reward_interactions,
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
@@ -660,15 +645,12 @@ def test_batch_universal_recommender(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users,
-            sample_binary_reward_items,
-            sample_binary_reward_interactions,
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users,
+        sample_binary_reward_items,
+        sample_binary_reward_interactions,
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
@@ -706,15 +688,12 @@ def test_mismatch_training_inference(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users,
-            sample_binary_reward_items,
-            sample_binary_reward_interactions,
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users,
+        sample_binary_reward_items,
+        sample_binary_reward_interactions,
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # Provide extra user feature
     interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
@@ -748,13 +727,10 @@ def test_1row_recommender_multiclass(setup_fixture):
     multiclass_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        multiclass_recommender.train(
-            interactions_ds=sample_multi_class_interactions,
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    multiclass_recommender.train(
+        interactions_ds=sample_multi_class_interactions,
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame(
@@ -773,13 +749,10 @@ def test_1_row_recommender_with_nones(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma"]})
@@ -808,13 +781,10 @@ def test_1row_recommender_universal(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame({"USER_ID": ["Emma"]})
@@ -883,13 +853,10 @@ def test_recommender_with_subset(setup_fixture):
     universal_recommender = RankingRecommender(scorer)
 
     # training
-    try:
-        universal_recommender.train(
-            sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
-        )
-        logger.info("Finished Training of a Universal Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Universal Ranking Recommender Failed.")
+    universal_recommender.train(
+        sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+    )
+    logger.info("Finished Training of a Universal Ranking Recommender.")
 
     new_items = pd.DataFrame(
         {
@@ -1064,11 +1031,8 @@ def test_multiclass_recommender_with_subset(setup_fixture, caplog):
         )
 
     # training
-    try:
-        multiclass_recommender.train(interactions_ds=sample_multi_class_interactions)
-        logger.info("Finished Training of a Multiclass Ranking Recommender.")
-    except Exception:
-        pytest.fail("Training of a Multiclass Ranking Recommender Failed.")
+    multiclass_recommender.train(interactions_ds=sample_multi_class_interactions)
+    logger.info("Finished Training of a Multiclass Ranking Recommender.")
 
     # recommending
     interactions = pd.DataFrame(

@@ -110,40 +110,32 @@ def test_multioutput_xgboost_reward_model(setup_fixture):
     hpo_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "MultiOutputXGBoostClassifier"
     )
-    try:
-        # No HPO
-        estimator = MultiOutputClassifierEstimator(XGBClassifier, first_params)
-        estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
-        estimator.predict_proba(setup_fixture["multioutput_x"])
+    # No HPO
+    estimator = MultiOutputClassifierEstimator(XGBClassifier, first_params)
+    estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
+    estimator.predict_proba(setup_fixture["multioutput_x"])
 
-        # With HPO
-        estimator = TunedMultiOutputClassifierEstimator(XGBClassifier, hpo_method, hpo_params, optimizer_params)
-        estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
-        estimator.predict_proba(setup_fixture["multioutput_x"])
-
-    except Exception:
-        pytest.fail("Fit-Predict MultiOutput XGB Reward Model Failed")
+    # With HPO
+    estimator = TunedMultiOutputClassifierEstimator(XGBClassifier, hpo_method, hpo_params, optimizer_params)
+    estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
+    estimator.predict_proba(setup_fixture["multioutput_x"])
 
 
 def test_multioutput_random_forest_reward_model(setup_fixture):
     hpo_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "MultiOutputRandomForestClassifier"
     )
-    try:
-        # No HPO
-        estimator = MultiOutputClassifierEstimator(RandomForestClassifier, first_params)
-        estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
-        estimator.predict_proba(setup_fixture["multioutput_x"])
+    # No HPO
+    estimator = MultiOutputClassifierEstimator(RandomForestClassifier, first_params)
+    estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
+    estimator.predict_proba(setup_fixture["multioutput_x"])
 
-        # With HPO
-        estimator = TunedMultiOutputClassifierEstimator(
-            RandomForestClassifier, hpo_method, hpo_params, optimizer_params
-        )
-        estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
-        estimator.predict_proba(setup_fixture["multioutput_x"])
-
-    except Exception:
-        pytest.fail("Fit-Predict MultiOutput Random Forest Reward Model Failed")
+    # With HPO
+    estimator = TunedMultiOutputClassifierEstimator(
+        RandomForestClassifier, hpo_method, hpo_params, optimizer_params
+    )
+    estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
+    estimator.predict_proba(setup_fixture["multioutput_x"])
 
 
 def test_xgb_reward_model(setup_fixture):
@@ -179,23 +171,19 @@ def test_sklearn_universal_reward_model(setup_fixture):
     dummy_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "SklearnDummyClassifier"
     )
-    try:
-        # No HPO
-        estimator = SklearnUniversalClassifierEstimator(DummyClassifier, first_params)
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        prediction = estimator.predict_proba(setup_fixture["reward_model_x"])
-        assert_array_equal(prediction, [[0.5, 0.5]] * 100)
+    # No HPO
+    estimator = SklearnUniversalClassifierEstimator(DummyClassifier, first_params)
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    prediction = estimator.predict_proba(setup_fixture["reward_model_x"])
+    assert_array_equal(prediction, [[0.5, 0.5]] * 100)
 
-        # With HPO
-        estimator = TunedSklearnUniversalClassifierEstimator(
-            DummyClassifier, hpo_method, dummy_params, optimizer_params
-        )
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        prediction = estimator.predict_proba(setup_fixture["reward_model_x"])
-        assert_array_equal(prediction, [[0.5, 0.5]] * 100)
-
-    except Exception:
-        pytest.fail("Fit-Predict Dummy Reward Model Failed")
+    # With HPO
+    estimator = TunedSklearnUniversalClassifierEstimator(
+        DummyClassifier, hpo_method, dummy_params, optimizer_params
+    )
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    prediction = estimator.predict_proba(setup_fixture["reward_model_x"])
+    assert_array_equal(prediction, [[0.5, 0.5]] * 100)
 
 
 def test_classification_with_one_hot_encoding():
@@ -209,31 +197,24 @@ def test_classification_with_one_hot_encoding():
     X = schema.apply(df.drop(columns=["target"]))
     y = df["target"]
 
-    try:
-        classifier = LogisticRegression()
-        classifier.fit(X, y)
-        classifier.predict(X)
-    except Exception:
-        pytest.fail("Fit-Predict Dummy Reward Model Failed")
+    classifier = LogisticRegression()
+    classifier.fit(X, y)
+    classifier.predict(X)
 
 
 def test_logreg_reward_model(setup_fixture):
     logreg_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "LogisticRegression"
     )
-    try:
-        # No HPO
-        estimator = LogisticRegressionClassifierEstimator(first_params)
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        estimator.predict_proba(setup_fixture["reward_model_x"])
+    # No HPO
+    estimator = LogisticRegressionClassifierEstimator(first_params)
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    estimator.predict_proba(setup_fixture["reward_model_x"])
 
-        # With HPO
-        estimator = TunedLogisticRegressionClassifierEstimator(hpo_method, logreg_params, optimizer_params)
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        estimator.predict_proba(setup_fixture["reward_model_x"])
-
-    except Exception:
-        pytest.fail("Fit-Predict LogReg Reward Model Failed")
+    # With HPO
+    estimator = TunedLogisticRegressionClassifierEstimator(hpo_method, logreg_params, optimizer_params)
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    estimator.predict_proba(setup_fixture["reward_model_x"])
 
 
 def test_illformed_x_y(setup_fixture):
@@ -267,13 +248,10 @@ def test_fit_predict_1_feature_xgb(setup_fixture):
     expected_reshaped_X = np.array([[1], [2], [3], [4], [5]])
     assert_array_equal(result, expected_reshaped_X)
 
-    try:
-        my_xgb_classifier.predict_proba(one_feature_x_1D_array_for_predict)
-        logger.info("Finished Testing One-Feature Predict for Multiple Rows")
-        my_xgb_classifier.predict_proba(pd.DataFrame([1]))
-        logger.info("Finished Testing One-Feature Predict for One Row")
-    except Exception:
-        pytest.fail("Test Fit-Predict 1 Feature Predict-Proba Failed")
+    my_xgb_classifier.predict_proba(one_feature_x_1D_array_for_predict)
+    logger.info("Finished Testing One-Feature Predict for Multiple Rows")
+    my_xgb_classifier.predict_proba(pd.DataFrame([1]))
+    logger.info("Finished Testing One-Feature Predict for One Row")
 
 
 def test_multi_class(setup_fixture):
@@ -286,57 +264,45 @@ def test_multi_class(setup_fixture):
     xgb_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "XGBoostClassifier"
     )
-    try:
-        # No HPO
-        estimator = XGBClassifierEstimator(first_params)
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
+    # No HPO
+    estimator = XGBClassifierEstimator(first_params)
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
-        # With HPO
-        estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
-
-    except Exception:
-        pytest.fail("Multi Class XGB Fit-Predict Failed")
+    # With HPO
+    estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
     logreg_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "SklearnDummyClassifier"
     )
 
-    try:
-        # No HPO
-        estimator = SklearnUniversalClassifierEstimator(DummyClassifier, first_params)
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
+    # No HPO
+    estimator = SklearnUniversalClassifierEstimator(DummyClassifier, first_params)
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
-        # With HPO
-        estimator = TunedSklearnUniversalClassifierEstimator(
-            DummyClassifier, hpo_method, logreg_params, optimizer_params
-        )
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
-
-    except Exception:
-        pytest.fail("Multi Class Sklearn Fit-Predict Failed")
+    # With HPO
+    estimator = TunedSklearnUniversalClassifierEstimator(
+        DummyClassifier, hpo_method, logreg_params, optimizer_params
+    )
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
     logreg_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "LogisticRegression"
     )
 
-    try:
-        # No HPO
-        estimator = LogisticRegressionClassifierEstimator(first_params)
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
+    # No HPO
+    estimator = LogisticRegressionClassifierEstimator(first_params)
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
-        # With HPO
-        estimator = TunedLogisticRegressionClassifierEstimator(hpo_method, logreg_params, optimizer_params)
-        estimator.fit(x, y_train)
-        estimator.predict_proba(x)
-
-    except Exception:
-        pytest.fail("Multi Class LogReg Fit-Predict Failed")
+    # With HPO
+    estimator = TunedLogisticRegressionClassifierEstimator(hpo_method, logreg_params, optimizer_params)
+    estimator.fit(x, y_train)
+    estimator.predict_proba(x)
 
 
 @skip_if_torch_not_installed
@@ -525,39 +491,26 @@ def test_estimators_with_validation_set(setup_fixture):
     y = setup_fixture["reward_model_y"]
     X_valid = X[1:]
     y_valid = y[1:]
-    try:
-        estimator = XGBClassifierEstimator()
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict_proba(X)
-    except Exception:
-        pytest.fail("XGB classification with validation set and no early stopping Failed")
+    estimator = XGBClassifierEstimator()
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict_proba(X)
 
-    try:
-        estimator = XGBClassifierEstimator({"early_stopping_rounds": 1})
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict_proba(X)
-    except Exception:
-        pytest.fail("XGB classification with validation set and early stopping Failed")
+    estimator = XGBClassifierEstimator({"early_stopping_rounds": 1})
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict_proba(X)
 
     xgb_params, hpo_method, optimizer_params, _ = parse_config(setup_fixture["estimator_config"], "XGBoostClassifier")
-    try:
-        estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict_proba(X)
-
-    except Exception:
-        pytest.fail("TunedXGB classification with validation set and early stopping Failed")
+    estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict_proba(X)
 
     X = setup_fixture["personalized_df"].drop("reward", axis=1)
     y = setup_fixture["personalized_df"]["reward"].to_numpy()
     X_valid = X[1:]
     y_valid = y[1:]
-    try:
-        estimator = WeightedXGBClassifierEstimator(params={"importance_type": "weight"})
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict_proba(X)
-    except Exception:
-        pytest.fail("XGB classification with validation set Failed")
+    estimator = WeightedXGBClassifierEstimator(params={"importance_type": "weight"})
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict_proba(X)
 
     estimator = LogisticRegressionClassifierEstimator({})
     with pytest.warns(UserWarning, match="does not support early stopping"):

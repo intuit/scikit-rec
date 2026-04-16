@@ -85,35 +85,23 @@ def test_estimators_with_validation_set(setup_fixture):
     X, y = setup_fixture["reward_model_x"], setup_fixture["reward_model_y"]
     X_valid = X[1:100]
     y_valid = y[1:100]
-    try:
-        estimator = XGBRegressorEstimator(first_params)
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict(X)
-    except Exception:
-        pytest.fail("XGB Regression with validation set Fit-Predict Failed")
+    estimator = XGBRegressorEstimator(first_params)
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict(X)
 
-    try:
-        estimator = TunedXGBRegressorEstimator(hpo_method, xgb_params, optimizer_params)
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict(X)
-    except Exception:
-        pytest.fail("Tuned XGB Regression with validation set Fit-Predict Failed")
+    estimator = TunedXGBRegressorEstimator(hpo_method, xgb_params, optimizer_params)
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict(X)
 
     first_params["early_stopping_rounds"] = 1
 
-    try:
-        estimator = XGBRegressorEstimator(first_params)
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict(X)
-    except Exception:
-        pytest.fail("XGB Regression with validation set Fit-Predict Failed (early stopping enabled)")
+    estimator = XGBRegressorEstimator(first_params)
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict(X)
 
-    try:
-        estimator = TunedXGBRegressorEstimator(hpo_method, xgb_params, optimizer_params)
-        estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
-        estimator.predict(X)
-    except Exception:
-        pytest.fail("Tuned XGB Regression with validation set Fit-Predict Failed  (early stopping enabled)")
+    estimator = TunedXGBRegressorEstimator(hpo_method, xgb_params, optimizer_params)
+    estimator.fit(X, y, X_valid=X_valid, y_valid=y_valid)
+    estimator.predict(X)
 
 
 def test_lightgbm_regressor_estimator(setup_fixture):
