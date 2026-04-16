@@ -131,9 +131,7 @@ def test_multioutput_random_forest_reward_model(setup_fixture):
     estimator.predict_proba(setup_fixture["multioutput_x"])
 
     # With HPO
-    estimator = TunedMultiOutputClassifierEstimator(
-        RandomForestClassifier, hpo_method, hpo_params, optimizer_params
-    )
+    estimator = TunedMultiOutputClassifierEstimator(RandomForestClassifier, hpo_method, hpo_params, optimizer_params)
     estimator.fit(setup_fixture["multioutput_x"], setup_fixture["multioutput_y"])
     estimator.predict_proba(setup_fixture["multioutput_x"])
 
@@ -178,9 +176,7 @@ def test_sklearn_universal_reward_model(setup_fixture):
     assert_array_equal(prediction, [[0.5, 0.5]] * 100)
 
     # With HPO
-    estimator = TunedSklearnUniversalClassifierEstimator(
-        DummyClassifier, hpo_method, dummy_params, optimizer_params
-    )
+    estimator = TunedSklearnUniversalClassifierEstimator(DummyClassifier, hpo_method, dummy_params, optimizer_params)
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     prediction = estimator.predict_proba(setup_fixture["reward_model_x"])
     assert_array_equal(prediction, [[0.5, 0.5]] * 100)
@@ -284,9 +280,7 @@ def test_multi_class(setup_fixture):
     estimator.predict_proba(x)
 
     # With HPO
-    estimator = TunedSklearnUniversalClassifierEstimator(
-        DummyClassifier, hpo_method, logreg_params, optimizer_params
-    )
+    estimator = TunedSklearnUniversalClassifierEstimator(DummyClassifier, hpo_method, logreg_params, optimizer_params)
     estimator.fit(x, y_train)
     estimator.predict_proba(x)
 
