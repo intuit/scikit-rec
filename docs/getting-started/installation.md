@@ -34,14 +34,6 @@ For S3 data loading:
 pip install scikit-rec[aws]
 ```
 
-### Explainability
-
-For SHAP-based feature explanations:
-
-```bash
-pip install scikit-rec[explain]
-```
-
 ### Development Dependencies
 
 If you're contributing to the library:

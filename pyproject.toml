@@ -27,9 +27,6 @@ torch = [
 aws = [
     "boto3>=1.26.27,<3.0.0",
 ]
-explain = [
-    "shap>=0.44.0,<1.0.0",
-]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

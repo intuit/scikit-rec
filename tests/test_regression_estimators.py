@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 
 from skrec.estimator.datatypes import HPOType
-from skrec.estimator.explainer import Explainer
 from skrec.estimator.regression.lightgbm_regressor import (
     LightGBMRegressorEstimator,
     TunedLightGBMRegressorEstimator,
@@ -58,24 +57,10 @@ def test_xgb_reward_model(setup_fixture):
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     estimator.predict(setup_fixture["reward_model_x"])
 
-    try:
-        explainer = Explainer(estimator)
-        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-    except ImportError:
-        pass  # shap not installed — skip explainer assertions
-
     # With HPO
     estimator = TunedXGBRegressorEstimator(hpo_method, xgb_params, optimizer_params)
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     estimator.predict(setup_fixture["reward_model_x"])
-
-    try:
-        explainer = Explainer(estimator)
-        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-    except ImportError:
-        pass  # shap not installed — skip explainer assertions
 
 
 def test_estimators_with_validation_set(setup_fixture):

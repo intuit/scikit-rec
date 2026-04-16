@@ -19,7 +19,6 @@ Optional extras:
 ```bash
 pip install scikit-rec[torch]    # Deep learning models (DeepFM, NCF, SASRec, HRNN, Two-Tower)
 pip install scikit-rec[aws]      # S3 data loading
-pip install scikit-rec[explain]  # SHAP explanations
 ```
 
 ## Quick Start

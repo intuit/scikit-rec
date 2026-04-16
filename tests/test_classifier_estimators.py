@@ -38,7 +38,6 @@ from skrec.estimator.classification.xgb_classifier import (
     XGBClassifierEstimator,
 )
 from skrec.estimator.datatypes import HPOType
-from skrec.estimator.explainer import Explainer
 from skrec.estimator.tuned_estimator import TunedEstimator
 from skrec.scorer.universal import UniversalScorer
 from skrec.util.config_loader import load_config
@@ -145,24 +144,10 @@ def test_xgb_reward_model(setup_fixture):
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     estimator.predict_proba(setup_fixture["reward_model_x"])
 
-    try:
-        explainer = Explainer(estimator)
-        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-    except ImportError:
-        pass  # shap not installed — skip explainer assertions
-
     # With HPO
     estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     estimator.predict_proba(setup_fixture["reward_model_x"])
-
-    try:
-        explainer = Explainer(estimator)
-        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-    except ImportError:
-        pass  # shap not installed — skip explainer assertions
 
 
 def test_sklearn_universal_reward_model(setup_fixture):
