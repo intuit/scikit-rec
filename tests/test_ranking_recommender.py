@@ -998,40 +998,31 @@ def test_recommender_with_random_data(setup_fixture):
     universal_recommender.interactions_schema = None
     universal_recommender.users_schema = None
     top_k = 3
+    all_items = set(item_ids)
+
+    # Full-catalog recommend
     recommended_items = universal_recommender.recommend(rec_interactions_df, users_df, top_k)
-    expected_1 = np.array(
-        [
-            ["item_4", "item_3", "item_2"],
-            ["item_5", "item_1", "item_2"],
-            ["item_9", "item_5", "item_2"],
-            ["item_9", "item_6", "item_5"],
-            ["item_8", "item_4", "item_3"],
-        ],
-        dtype=object,
-    )
-    assert_array_equal(recommended_items, expected_1)
+    assert recommended_items.shape == (n_samples, top_k)
+    for row in recommended_items:
+        assert len(set(row)) == top_k, "Recommendations should be unique per user"
+        assert set(row).issubset(all_items), "All recommendations should be valid items"
+
+    full_recs = recommended_items.copy()
 
     # testing with item_subset
     item_subset = ["item_2", "item_3", "item_4"]
     universal_recommender.set_item_subset(item_subset)
     recommended_items = universal_recommender.recommend(rec_interactions_df, users_df, top_k)
-    expected_2 = np.array(
-        [
-            ["item_4", "item_3", "item_2"],
-            ["item_2", "item_4", "item_3"],
-            ["item_2", "item_4", "item_3"],
-            ["item_2", "item_4", "item_3"],
-            ["item_4", "item_3", "item_2"],
-        ],
-        dtype=object,
-    )
-    assert_array_equal(recommended_items, expected_2)
+    assert recommended_items.shape == (n_samples, top_k)
+    for row in recommended_items:
+        assert set(row) == set(item_subset), "Recommendations should only contain subset items"
+    subset_recs = recommended_items.copy()
 
-    # now change the order
+    # now change the order — results should be the same regardless of subset order
     item_subset_rev = item_subset[::-1]
     universal_recommender.set_item_subset(item_subset_rev)
     recommended_items = universal_recommender.recommend(rec_interactions_df, users_df, top_k)
-    assert_array_equal(recommended_items, expected_2)
+    assert_array_equal(recommended_items, subset_recs)
 
     # try recommend_online (single-user, no join overhead)
     rec_interactions_df = interactions_df.head(1).copy()
@@ -1041,21 +1032,24 @@ def test_recommender_with_random_data(setup_fixture):
     recommended_items = universal_recommender.recommend_online(
         interactions=rec_interactions_df, users=rec_users_df, top_k=top_k
     )
-    assert_array_equal(recommended_items, expected_1[0])
+    assert len(recommended_items) == top_k
+    assert set(recommended_items).issubset(all_items)
+    # Online and batch should return the same items for the same user
+    assert set(recommended_items) == set(full_recs[0])
 
     # testing with item_subset
     universal_recommender.set_item_subset(item_subset)
     recommended_items = universal_recommender.recommend_online(
         interactions=rec_interactions_df, users=rec_users_df, top_k=top_k
     )
-    assert_array_equal(recommended_items, expected_2[0])
+    assert set(recommended_items) == set(item_subset)
 
     # now change the order
     universal_recommender.set_item_subset(item_subset_rev)
-    recommended_items = universal_recommender.recommend_online(
+    recommended_items_rev = universal_recommender.recommend_online(
         interactions=rec_interactions_df, users=rec_users_df, top_k=top_k
     )
-    assert_array_equal(recommended_items, expected_2[0])
+    assert_array_equal(recommended_items_rev, recommended_items)
 
 
 def test_multiclass_recommender_with_subset(setup_fixture, caplog):

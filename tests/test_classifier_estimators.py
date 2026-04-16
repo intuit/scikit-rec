@@ -150,33 +150,29 @@ def test_xgb_reward_model(setup_fixture):
     xgb_params, hpo_method, optimizer_params, first_params = parse_config(
         setup_fixture["estimator_config"], "XGBoostClassifier"
     )
+    # No HPO
+    estimator = XGBClassifierEstimator(first_params)
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    estimator.predict_proba(setup_fixture["reward_model_x"])
+
     try:
-        # No HPO
-        estimator = XGBClassifierEstimator(first_params)
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        estimator.predict_proba(setup_fixture["reward_model_x"])
+        explainer = Explainer(estimator)
+        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
+        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
+    except ImportError:
+        pass  # shap not installed — skip explainer assertions
 
-        try:
-            explainer = Explainer(estimator)
-            explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-            assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-        except ImportError:
-            pass  # shap not installed — skip explainer assertions
+    # With HPO
+    estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
+    estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
+    estimator.predict_proba(setup_fixture["reward_model_x"])
 
-        # With HPO
-        estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
-        estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
-        estimator.predict_proba(setup_fixture["reward_model_x"])
-
-        try:
-            explainer = Explainer(estimator)
-            explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
-            assert explanation.values.shape == setup_fixture["reward_model_x"].shape
-        except ImportError:
-            pass  # shap not installed — skip explainer assertions
-
-    except Exception:
-        pytest.fail("Fit Predict XGB Reward Model Failed")
+    try:
+        explainer = Explainer(estimator)
+        explanation = explainer.get_explanation(setup_fixture["reward_model_x"])
+        assert explanation.values.shape == setup_fixture["reward_model_x"].shape
+    except ImportError:
+        pass  # shap not installed — skip explainer assertions
 
 
 def test_sklearn_universal_reward_model(setup_fixture):
