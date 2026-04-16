@@ -152,8 +152,20 @@ def test_xgb_reward_model(setup_fixture):
     except ImportError:
         pass  # shap not installed — skip explainer assertions
 
-    # With HPO
+    # With HPO — debug: verify safe XGBClassifier is used
+    from skrec.estimator.classification.xgb_classifier import XGBClassifier as SafeXGB
+
+    print(f"\n[DEBUG] SafeXGB class: {SafeXGB}")
+    print(f"[DEBUG] SafeXGB MRO: {[c.__name__ for c in SafeXGB.__mro__[:4]]}")
+    print(f"[DEBUG] has get_params override: {'get_params' in SafeXGB.__dict__}")
+    test_instance = SafeXGB()
+    test_instance.base_score = "[5E-1]"  # simulate corruption
+    print(f"[DEBUG] sanitized get_params base_score: {test_instance.get_params().get('base_score')!r}")
+
     estimator = TunedXGBClassifierEstimator(hpo_method, xgb_params, optimizer_params)
+    inner_estimator = estimator._model.estimator
+    print(f"[DEBUG] inner estimator class: {type(inner_estimator)}")
+    print(f"[DEBUG] inner has get_params override: {'get_params' in type(inner_estimator).__dict__}")
     estimator.fit(setup_fixture["reward_model_x"], setup_fixture["reward_model_y"])
     estimator.predict_proba(setup_fixture["reward_model_x"])
 
