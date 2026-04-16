@@ -23,12 +23,19 @@ class TunedEstimator(BaseEstimator):
     is sufficient for inference (no estimator-specific predict optimisations).
     """
 
-    def __init__(self, estimator_class, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
+    def __init__(
+        self,
+        estimator_class,
+        hpo_method: HPOType,
+        param_space: dict,
+        optimizer_params: dict,
+        estimator_kwargs: Optional[dict] = None,
+    ):
         if estimator_class.__name__ == "MultiOutputClassifier":
             base_estimator = param_space.pop("estimator")
             estimator = estimator_class(estimator=base_estimator)
         else:
-            estimator = estimator_class()
+            estimator = estimator_class(**(estimator_kwargs or {}))
         if hpo_method == HPOType.GRID_SEARCH_CV:
             self._model = GridSearchCV(estimator=estimator, param_grid=param_space, **optimizer_params)
 

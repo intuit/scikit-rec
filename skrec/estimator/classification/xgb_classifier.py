@@ -116,8 +116,7 @@ class BatchXGBClassifierEstimator(BaseClassifier):
 
 class TunedXGBClassifierEstimator(TunedEstimator, XGBClassifierEstimator):
     def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict, base_score: float = 0.5):
-        param_space.setdefault("base_score", [base_score])
-        super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params)
+        super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params, {"base_score": base_score})
         self._use_inplace_predict = True
 
 
