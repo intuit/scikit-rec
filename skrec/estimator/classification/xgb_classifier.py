@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 class XGBClassifierEstimator(NumpyPredictorMixin, BaseClassifier):
     def __init__(self, params: Optional[dict] = None):
         params = params or {}
+        params.setdefault("base_score", 0.5)
         self._model = XGBClassifier(**params)
         self._use_inplace_predict = True
 
@@ -114,7 +115,8 @@ class BatchXGBClassifierEstimator(BaseClassifier):
 
 
 class TunedXGBClassifierEstimator(TunedEstimator, XGBClassifierEstimator):
-    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
+    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict, base_score: float = 0.5):
+        param_space.setdefault("base_score", [base_score])
         super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params)
         self._use_inplace_predict = True
 

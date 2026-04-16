@@ -12,6 +12,7 @@ from skrec.estimator.tuned_estimator import TunedEstimator
 class XGBRegressorEstimator(BaseRegressor):
     def __init__(self, params: Optional[dict] = None):
         params = params or {}
+        params.setdefault("base_score", 0.5)
         self._model = XGBRegressor(**params)
 
     def _fit_model(
@@ -34,5 +35,6 @@ class XGBRegressorEstimator(BaseRegressor):
 
 
 class TunedXGBRegressorEstimator(TunedEstimator, XGBRegressorEstimator):
-    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
+    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict, base_score: float = 0.5):
+        param_space.setdefault("base_score", [base_score])
         super().__init__(XGBRegressor, hpo_method, param_space, optimizer_params)

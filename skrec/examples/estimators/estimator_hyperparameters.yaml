@@ -43,8 +43,6 @@ XGBoostClassifier:
   n_estimators:
     - 10
     - 20
-  base_score:
-    - 0.5
 XGBoostClassifierEarlyStopping:
   hyperparameter_tuning:
     state: True
@@ -114,5 +112,3 @@ XGBoostRegressor:
   gamma:
     - 0.01
     - 10.0
-  base_score:
-    - 0.5
