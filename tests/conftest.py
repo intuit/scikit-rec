@@ -9,6 +9,11 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+# Import lightgbm BEFORE torch so that homebrew's libomp.dylib is loaded first.
+# PyTorch ships its own libomp.dylib; if torch is imported first, LightGBM's
+# C library sees a conflicting OpenMP runtime and segfaults during Dataset
+# creation (__init_from_np2d) on macOS ARM64.
+import lightgbm  # noqa: E402, F401
 import pandas as pd  # noqa: E402
 import pytest  # noqa: E402
 import yaml  # noqa: E402

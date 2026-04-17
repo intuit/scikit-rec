@@ -68,7 +68,7 @@ def base_config():
             },
         },
         "scorer_type": "independent",
-        "recommender_type": "propensity",
+        "recommender_type": "ranking",
     }
 
 
