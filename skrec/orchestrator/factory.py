@@ -164,6 +164,7 @@ def _resolve_lazy(registry: Dict[str, Tuple[str, str]], key: str) -> Type:
     module = importlib.import_module(module_path)
     return getattr(module, class_name)
 
+
 _INFERENCE_METHOD_MAP = {
     "mean_scalarization": MeanScalarization,
     "percentile_value": PercentileValue,
@@ -247,8 +248,7 @@ def _create_retriever(config: RetrieverConfig) -> BaseCandidateRetriever:
     cls = _RETRIEVER_MAP.get(retriever_type)
     if cls is None:
         raise NotImplementedError(
-            f"Retriever type '{retriever_type}' not supported. "
-            f"Supported types: {list(_RETRIEVER_MAP.keys())}"
+            f"Retriever type '{retriever_type}' not supported. Supported types: {list(_RETRIEVER_MAP.keys())}"
         )
 
     params = config.get("params", {})
@@ -298,8 +298,7 @@ def create_estimator(
 
     if estimator_type != "tabular":
         raise NotImplementedError(
-            f"Estimator type '{estimator_type}' not supported. "
-            f"Supported types: 'tabular', 'embedding', 'sequential'."
+            f"Estimator type '{estimator_type}' not supported. Supported types: 'tabular', 'embedding', 'sequential'."
         )
 
     # --- Tabular estimator path (existing logic) ---
@@ -386,9 +385,7 @@ def create_estimator(
     return estimator
 
 
-def create_scorer(
-    estimator: Union[BaseEstimator, SequentialEstimator], config: RecommenderConfig
-) -> BaseScorer:
+def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: RecommenderConfig) -> BaseScorer:
     """
     Factory function to create a scorer instance based on the overall recommender configuration.
 
@@ -438,15 +435,11 @@ def create_scorer(
         scorer = UniversalScorer(estimator=estimator)
     elif scorer_type == "sequential":
         if not isinstance(estimator, SequentialEstimator):
-            raise TypeError(
-                f"Sequential scorer requires a SequentialEstimator, got {type(estimator).__name__}."
-            )
+            raise TypeError(f"Sequential scorer requires a SequentialEstimator, got {type(estimator).__name__}.")
         scorer = SequentialScorer(estimator=estimator)
     elif scorer_type == "hierarchical":
         if not isinstance(estimator, SequentialEstimator):
-            raise TypeError(
-                f"Hierarchical scorer requires a SequentialEstimator, got {type(estimator).__name__}."
-            )
+            raise TypeError(f"Hierarchical scorer requires a SequentialEstimator, got {type(estimator).__name__}.")
         scorer = HierarchicalScorer(estimator=estimator)
     else:
         raise NotImplementedError(f"Scorer type '{scorer_type}' not supported.")
@@ -480,9 +473,7 @@ def create_recommender(scorer: BaseScorer, config: RecommenderConfig) -> BaseRec
         recommender = RankingRecommender(scorer=scorer, retriever=retriever)
     elif recommender_type == "sequential":
         if not isinstance(scorer, SequentialScorer):
-            raise TypeError(
-                f"SequentialRecommender requires a SequentialScorer, got {type(scorer).__name__}."
-            )
+            raise TypeError(f"SequentialRecommender requires a SequentialScorer, got {type(scorer).__name__}.")
         recommender = SequentialRecommender(
             scorer=scorer,
             max_len=recommender_params.get("max_len", 50),
@@ -490,8 +481,7 @@ def create_recommender(scorer: BaseScorer, config: RecommenderConfig) -> BaseRec
     elif recommender_type == "hierarchical_sequential":
         if not isinstance(scorer, HierarchicalScorer):
             raise TypeError(
-                f"HierarchicalSequentialRecommender requires a HierarchicalScorer, "
-                f"got {type(scorer).__name__}."
+                f"HierarchicalSequentialRecommender requires a HierarchicalScorer, got {type(scorer).__name__}."
             )
         recommender = HierarchicalSequentialRecommender(
             scorer=scorer,
@@ -553,22 +543,16 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
     if recommender_type in ("sequential", "hierarchical_sequential"):
         if estimator_type != "sequential":
             raise ValueError(
-                f"recommender_type '{recommender_type}' requires estimator_type 'sequential', "
-                f"got '{estimator_type}'."
+                f"recommender_type '{recommender_type}' requires estimator_type 'sequential', got '{estimator_type}'."
             )
     if recommender_type == "sequential" and scorer_type != "sequential":
-        raise ValueError(
-            f"recommender_type 'sequential' requires scorer_type 'sequential', got '{scorer_type}'."
-        )
+        raise ValueError(f"recommender_type 'sequential' requires scorer_type 'sequential', got '{scorer_type}'.")
     if recommender_type == "hierarchical_sequential" and scorer_type != "hierarchical":
         raise ValueError(
-            f"recommender_type 'hierarchical_sequential' requires scorer_type 'hierarchical', "
-            f"got '{scorer_type}'."
+            f"recommender_type 'hierarchical_sequential' requires scorer_type 'hierarchical', got '{scorer_type}'."
         )
     if scorer_type in ("sequential", "hierarchical") and estimator_type != "sequential":
-        raise ValueError(
-            f"scorer_type '{scorer_type}' requires estimator_type 'sequential', got '{estimator_type}'."
-        )
+        raise ValueError(f"scorer_type '{scorer_type}' requires estimator_type 'sequential', got '{estimator_type}'.")
     if estimator_type == "embedding" and scorer_type in ("multioutput", "multiclass", "independent"):
         raise ValueError(
             f"scorer_type '{scorer_type}' does not support embedding estimators. "
@@ -576,8 +560,7 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
         )
     if recommender_type == "uplift" and scorer_type not in ("independent", "universal"):
         raise ValueError(
-            f"recommender_type 'uplift' requires scorer_type 'independent' or 'universal', "
-            f"got '{scorer_type}'."
+            f"recommender_type 'uplift' requires scorer_type 'independent' or 'universal', got '{scorer_type}'."
         )
 
     # Create components using their respective factory functions

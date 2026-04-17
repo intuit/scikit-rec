@@ -1,3 +1,4 @@
+import importlib
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -49,6 +50,9 @@ from skrec.scorer.multiclass import MulticlassScorer
 from skrec.scorer.multioutput import MultioutputScorer
 from skrec.scorer.sequential import SequentialScorer
 from skrec.scorer.universal import UniversalScorer
+
+_torch_available = importlib.util.find_spec("torch") is not None
+requires_torch = pytest.mark.skipif(not _torch_available, reason="PyTorch not installed")
 
 # --- Tests for create_estimator ---
 
@@ -295,18 +299,28 @@ def test_create_recommender_pipeline_scorer_error(mock_create_scorer, mock_creat
 # --- Tests for embedding estimators ---
 
 
+def test_create_embedding_estimator_matrix_factorization():
+    """Test MF embedding estimator (pure NumPy, no torch required)."""
+    config = {
+        "estimator_type": "embedding",
+        "embedding": {"model_type": "matrix_factorization", "params": {}},
+    }
+    estimator = create_estimator(config)
+    assert isinstance(estimator, MatrixFactorizationEstimator)
+
+
+@requires_torch
 @pytest.mark.parametrize(
     "model_type, expected_cls",
     [
-        ("matrix_factorization", MatrixFactorizationEstimator),
         ("ncf", NCFEstimator),
         ("two_tower", ContextualizedTwoTowerEstimator),
         ("deep_cross_network", DeepCrossNetworkEstimator),
         ("neural_factorization", NeuralFactorizationEstimator),
     ],
 )
-def test_create_embedding_estimator(model_type, expected_cls):
-    """Test that each embedding model_type creates the correct class."""
+def test_create_embedding_estimator_torch(model_type, expected_cls):
+    """Test PyTorch-based embedding estimators (requires torch)."""
     config = {
         "estimator_type": "embedding",
         "embedding": {"model_type": model_type, "params": {}},
@@ -369,6 +383,7 @@ def test_create_embedding_estimator_missing_model_type():
 # --- Tests for sequential estimators ---
 
 
+@requires_torch
 @pytest.mark.parametrize(
     "model_type, expected_cls",
     [
@@ -388,6 +403,7 @@ def test_create_sequential_estimator(model_type, expected_cls):
     assert isinstance(estimator, expected_cls)
 
 
+@requires_torch
 def test_create_sequential_estimator_with_params():
     """Test sequential estimator with custom params."""
     config = {
@@ -986,6 +1002,7 @@ def test_e2e_embedding_ranking_pipeline():
     assert pipeline.scorer.estimator.n_factors == 16
 
 
+@requires_torch
 def test_e2e_sequential_pipeline():
     """End-to-end: SASRec + sequential scorer + sequential recommender."""
     config = {
