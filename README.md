@@ -8,6 +8,18 @@ A composable, scikit-style recommender systems library.
 Recommender (business logic)  -->  Scorer (item scoring)  -->  Estimator (ML model)
 ```
 
+### Why scikit-rec?
+
+**Composable by design.** Each layer is independently extensible. Swap XGBoost for a Two-Tower model without changing your recommender. Add a new bandit strategy without touching the scorer. The library spans XGBoost, LightGBM, and scikit-learn alongside deep learning models (NCF, Two-Tower, DeepFM, SASRec, HRNN), with GPU optional — a pure-NumPy matrix factorization (ALS/SGD) requires no PyTorch. The composable architecture also accommodates novel research: a Goal-Conditioned Supervised Learning (GCSL) recommender for multi-objective recommendation was implemented as a single `Recommender` subclass — no new scorer or estimator required. Contributions welcome: implement one abstract class and it works with everything else.
+
+**Beyond ranking.** Contextual bandits (epsilon-greedy, static-action) and heterogeneous treatment effect estimation (T/S/X-Learner) are first-class paradigms, not afterthoughts. All share the same evaluation infrastructure, so you can directly compare a ranking policy against a bandit or uplift policy on the same logged data.
+
+**Production-grade evaluation.** The most complete offline policy evaluation suite in any recommendation library: IPS, Doubly Robust, SNIPS, Direct Method, Policy-Weighted, and Replay Match, paired with eight ranking and classification metrics (Precision, Recall, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward) — enabling counterfactual policy comparison from logged data with a single call.
+
+**Production readiness.** Config-driven pipeline factory with Optuna HPO, low-latency single-user inference (`recommend_online`), two-stage retrieval-then-ranking, and batch training.
+
+**Learn by example.** Ten end-to-end Jupyter notebooks on MovieLens 1M cover ranking, bandits, uplift, sequential recommendations, multi-objective optimization, hyperparameter tuning, two-stage retrieval, and contextual two-tower models. Our SASRec achieves HR@10 = 0.8953 and NDCG@10 = 0.6331 on MovieLens-1M (leave-last-out, 1 positive + 100 negatives). Each notebook downloads data, trains, evaluates, and shows sample recommendations — ready to run.
+
 ## Installation
 
 ```bash
@@ -85,7 +97,15 @@ recommendations = recommender.recommend(interactions=interactions_df, users=user
 
 ### Evaluators
 
-Offline policy evaluation methods: Simple, IPS, Doubly Robust, SNIPS, Direct Method, Policy Weighted, Replay Match.
+| Evaluator | Description |
+|---|---|
+| `SimpleEvaluator` | Standard offline evaluation on held-out data |
+| `IPSEvaluator` | Inverse Propensity Scoring for counterfactual evaluation |
+| `DREvaluator` | Doubly Robust — combines direct estimation with IPS |
+| `SNIPSEvaluator` | Self-Normalized IPS — reduces variance of IPS |
+| `DirectMethodEvaluator` | Uses a reward model to estimate policy value |
+| `PolicyWeightedEvaluator` | Weights logged rewards by policy/logging probability ratio |
+| `ReplayMatchEvaluator` | Unbiased evaluation using only matching logged actions |
 
 ### Metrics
 
@@ -94,6 +114,23 @@ Precision@k, Recall@k, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward.
 ### Retrievers
 
 Two-stage retrieval: Popularity, Content-Based, Embedding-Based.
+
+## Example Notebooks
+
+| Notebook | What it demonstrates |
+|---|---|
+| [Ranking with XGBoost](examples/ranking_xgboost_movielens1m.ipynb) | Feature-based ranking with demographics and genre features |
+| [Uplift Modeling](examples/uplift_modeling.ipynb) | S-Learner, T-Learner, X-Learner treatment effect estimation |
+| [GCSL Multi-Objective](examples/gcsl_multi_objective_movielens1m.ipynb) | Goal-conditioned recommendations — steer quality vs. novelty |
+| [HPO with Optuna](examples/hpo_xgboost_movielens1m.ipynb) | Hyperparameter tuning with TPE, GP, and CMA-ES samplers |
+| [Two-Stage Retrieval](examples/retrieval_two_stage.ipynb) | Popularity, content-based, and embedding retrieval + ranking |
+| [Two-Tower Models](examples/contextualized_two_tower_context_modes.ipynb) | Three context modes: user_tower, trilinear, scoring_layer |
+| [SASRec (Positives)](examples/sasrec_movielens1m_positives.ipynb) | Self-attentive sequential recommendation on positive interactions |
+| [SASRec (Ratings)](examples/sasrec_movielens1m_ratings.ipynb) | SASRec with explicit ratings as soft labels |
+| [SASRec (MSE)](examples/sasrec_movielens1m_ratings_mse.ipynb) | SASRec regressor with MSE loss |
+| [HRNN](examples/hrnn_movielens1m.ipynb) | Hierarchical RNN for session-aware recommendations |
+
+All notebooks use MovieLens 1M (downloaded automatically) and include training, evaluation, and sample recommendations.
 
 ## Documentation
 
@@ -104,7 +141,6 @@ See the [docs/](docs/) directory for:
 - [Quick start tutorial](docs/getting-started/quick-start.md)
 - [Dataset preparation](docs/getting-started/datasets.md)
 - [Evaluation guide](docs/user-guide/evaluation.md)
-- [Example notebooks](examples/)
 
 ## Development
 
