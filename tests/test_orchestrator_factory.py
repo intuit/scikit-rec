@@ -208,21 +208,38 @@ def mock_scorer():
     [
         ({"recommender_type": "bandits"}, ContextualBanditsRecommender),
         ({"recommender_type": "ranking"}, RankingRecommender),
-        ({}, RankingRecommender),  # Test default (key absent)
-        ({"recommender_type": None}, RankingRecommender),  # Test default (explicit None)
     ],
 )
 def test_create_recommender_success_cases(mock_scorer, config, expected_type):
-    """Test successful creation of various recommender types and defaults."""
+    """Test successful creation of various recommender types."""
     recommender = create_recommender(mock_scorer, config)
     assert isinstance(recommender, expected_type)
     assert recommender.scorer == mock_scorer
 
 
-def test_create_recommender_error_on_unsupported(mock_scorer):
-    """Test that an unsupported recommender type raises NotImplementedError."""
-    config = {"recommender_type": "fancy_new_recommender"}
-    with pytest.raises(NotImplementedError, match="Recommender type 'fancy_new_recommender' not supported"):
+@pytest.mark.parametrize(
+    "config, expected_error, match_pattern",
+    [
+        (
+            {"recommender_type": "fancy_new_recommender"},
+            NotImplementedError,
+            r"Recommender type 'fancy_new_recommender' not supported",
+        ),
+        (
+            {},
+            ValueError,
+            r"'recommender_type' must be specified in the configuration\.",
+        ),
+        (
+            {"recommender_type": None},
+            ValueError,
+            r"'recommender_type' must be specified in the configuration\.",
+        ),
+    ],
+)
+def test_create_recommender_error_cases(mock_scorer, config, expected_error, match_pattern):
+    """Test error conditions during recommender creation."""
+    with pytest.raises(expected_error, match=match_pattern):
         create_recommender(mock_scorer, config)
 
 
@@ -266,11 +283,11 @@ def test_create_recommender_pipeline_estimator_error(mock_create_estimator):
     # Config structure matching factory expectations
     config = {
         "estimator_config": {"ml_task": "invalid"},
-        "scorer_type": "independent",  # Need scorer_type for the call signature
+        "scorer_type": "independent",
+        "recommender_type": "ranking",
     }
     with pytest.raises(ValueError, match="Estimator config error"):
         create_recommender_pipeline(config)
-    # Check that create_estimator was called with estimator_config and scorer_type
     mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type=config["scorer_type"])
 
 

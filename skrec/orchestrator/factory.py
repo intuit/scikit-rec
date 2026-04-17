@@ -52,7 +52,16 @@ OptimizerParams = Dict[str, Any]
 
 
 class XGBConfig(TypedDict, total=False):
-    pass  # Define specific XGBoost keys if known
+    n_estimators: int
+    max_depth: int
+    learning_rate: float
+    subsample: float
+    colsample_bytree: float
+    colsample_bynode: float
+    objective: str
+    eval_metric: str
+    n_jobs: int
+    random_state: int
 
 
 class HPOConfig(TypedDict, total=False):
@@ -459,8 +468,9 @@ def create_recommender(scorer: BaseScorer, config: RecommenderConfig) -> BaseRec
     Returns:
         An instance of a BaseRecommender subclass.
     """
-    # Use `or` so explicit None is treated as "use default", not as a distinct value
-    recommender_type = config.get("recommender_type") or "ranking"
+    recommender_type = config.get("recommender_type")
+    if not recommender_type:
+        raise ValueError("'recommender_type' must be specified in the configuration.")
     recommender_params = config.get("recommender_params", {})
     logger.info(f"Creating recommender of type: {recommender_type}")
 
@@ -533,7 +543,9 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
 
     estimator_config = config.get("estimator_config", {})
     scorer_type = config.get("scorer_type")
-    recommender_type = config.get("recommender_type") or "ranking"
+    recommender_type = config.get("recommender_type")
+    if not recommender_type:
+        raise ValueError("'recommender_type' must be specified in the configuration.")
     estimator_type = estimator_config.get("estimator_type") or "tabular"
 
     if not estimator_config:
