@@ -1,6 +1,6 @@
 # Architecture Overview
 
-The **recommender** library uses a clean 3-layer architecture that separates concerns and maximizes flexibility.
+**scikit-rec** uses a clean 3-layer architecture that separates concerns and maximizes flexibility.
 
 ## The 3-Layer Design
 

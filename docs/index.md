@@ -1,10 +1,10 @@
-# Recommender Library Documentation
+# scikit-rec Documentation
 
-Welcome to the **recommender** library documentation! This library provides a scikit-learn style framework for building, training, and evaluating production-ready recommendation systems.
+Welcome to the **scikit-rec** documentation! This library provides a scikit-learn style framework for building, training, and evaluating production-ready recommendation systems.
 
-## What is Recommender?
+## What is scikit-rec?
 
-The **recommender** library is a comprehensive Python package that standardizes the development of recommendation models. It provides:
+**scikit-rec** is a comprehensive Python package that standardizes the development of recommendation models. It provides:
 
 - 🏗️ **Modular 3-layer architecture** (Recommender → Scorer → Estimator)
 - 📊 **Multiple evaluation strategies** (Simple, IPS, DR, SNIPS, and more)
@@ -118,8 +118,8 @@ recommendations = recommender.recommend(
 ## Version Information
 
 !!! info "Version Status"
-    - **Recommender 3.0**: Currently in testing mode
-    - **Recommender 2.x**: Stable and production-ready
+    - **scikit-rec 3.0**: Currently in testing mode
+    - **scikit-rec 2.x**: Stable and production-ready
 
 ## Support
 
