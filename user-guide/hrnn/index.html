@@ -1,0 +1,2426 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://intuit.github.io/scikit-rec/user-guide/hrnn/">
+      
+      
+        <link rel="prev" href="../sasrec/">
+      
+      
+        <link rel="next" href="../../recommender-types/comparison/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>HRNN - scikit-rec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#hierarchical-session-recommendation-hrnn" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="scikit-rec" class="md-header__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            scikit-rec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              HRNN
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="scikit-rec" class="md-nav__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    scikit-rec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../capability-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scorers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../estimators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collaborative-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ncf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-tower/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-Tower
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sasrec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SASRec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variants
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-data-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Data Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Data Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explicit-session-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicit Session IDs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-max_sessions-and-max_session_len" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing max_sessions and max_session_len
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-on-movielens-1m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance on MovieLens 1M
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyperparameter-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hyperparameter Tuning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hyperparameter Tuning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#session-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regularization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regularization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epochs-and-early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Epochs and Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-hrnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use HRNN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-sasrec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with SASRec
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-users-appear-to-have-only-one-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All users appear to have only one session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-not-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model not learning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poor-ranking-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poor ranking quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommender Types
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommender Types
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/ranking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/bandits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bandits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/uplift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uplift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/sequential/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequential
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/hierarchical/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hierarchical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/gcsl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hpo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hybrid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variants
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-data-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Data Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Data Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explicit-session-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicit Session IDs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-max_sessions-and-max_session_len" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing max_sessions and max_session_len
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-on-movielens-1m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance on MovieLens 1M
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyperparameter-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hyperparameter Tuning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hyperparameter Tuning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#session-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regularization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regularization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epochs-and-early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Epochs and Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-hrnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use HRNN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-sasrec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with SASRec
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-users-appear-to-have-only-one-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All users appear to have only one session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-not-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model not learning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poor-ranking-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poor ranking quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="hierarchical-session-recommendation-hrnn">Hierarchical Session Recommendation (HRNN)<a class="headerlink" href="#hierarchical-session-recommendation-hrnn" title="Permanent link">&para;</a></h1>
+<p>HRNN (Hierarchical Recurrent Neural Network) is a session-aware model that uses a two-level GRU hierarchy to capture both within-session dynamics and long-term user preferences across sessions.</p>
+<div class="admonition tip">
+<p class="admonition-title">When to use HRNN vs SASRec</p>
+<p>Use HRNN when your data has <strong>natural session boundaries</strong> — e-commerce visits, app sessions, TV viewing sittings. HRNN explicitly models how user preferences evolve from one session to the next. Use <a href="../sasrec/">SASRec</a> when interactions form a single continuous history without clear session structure.</p>
+</div>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>HRNNClassifierEstimator</code> and <code>HRNNRegressorEstimator</code> implement the architecture from Quadrana et al. (RecSys 2017) with the following design:</p>
+<ul>
+<li><strong>Session GRU</strong>: encodes the sequence of items within a single session</li>
+<li><strong>User GRU</strong>: evolves user state across sessions; its output seeds the session GRU's initial hidden state for the next session</li>
+<li><strong>Right-aligned padding</strong> in both dimensions — most recent session at the last index, most recent item at the last position within each session</li>
+<li><strong>No user embedding table</strong> — user representation is derived dynamically from session history at inference time</li>
+</ul>
+<h3 id="variants">Variants<a class="headerlink" href="#variants" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Loss</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HRNNClassifierEstimator</code></td>
+<td>Binary Cross-Entropy (BCE)</td>
+<td>Implicit feedback or binary labels</td>
+</tr>
+<tr>
+<td><code>HRNNRegressorEstimator</code></td>
+<td>Mean Squared Error (MSE)</td>
+<td>Explicit ratings or continuous rewards</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.sequential.hrnn_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">HRNNClassifierEstimator</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.hierarchical</span><span class="w"> </span><span class="kn">import</span> <span class="n">HierarchicalScorer</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.recommender.sequential.hierarchical_recommender</span><span class="w"> </span><span class="kn">import</span> <span class="n">HierarchicalSequentialRecommender</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.dataset.interactions_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractionsDataset</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># 1. Define the model</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">HRNNClassifierEstimator</span><span class="p">(</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">hidden_units</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>               <span class="c1"># GRU hidden size and item embedding dimension</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">num_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                  <span class="c1"># GRU depth</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">num_negatives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>               <span class="c1"># Negatives sampled per positive during training</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">max_sessions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>               <span class="c1"># Max past sessions retained per user</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">max_session_len</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>            <span class="c1"># Max items per session</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>                    <span class="c1"># Upper bound — early stopping may stop sooner</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>     <span class="c1"># Stop if val loss doesn&#39;t improve for 5 epochs</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">restore_best_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>     <span class="c1"># Restore weights from best val-loss epoch</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="p">)</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="c1"># 2. Wrap in scorer and recommender</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">HierarchicalScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">HierarchicalSequentialRecommender</span><span class="p">(</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    <span class="n">scorer</span><span class="p">,</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    <span class="n">max_sessions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="n">max_session_len</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    <span class="n">session_timeout_minutes</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>   <span class="c1"># Gap threshold for automatic session splitting</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="p">)</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="c1"># 3. Train (optionally pass a validation split for early stopping)</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="n">recommender</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    <span class="n">items_ds</span><span class="o">=</span><span class="n">items_dataset</span><span class="p">,</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    <span class="n">interactions_ds</span><span class="o">=</span><span class="n">interactions_dataset</span><span class="p">,</span>         <span class="c1"># Must contain TIMESTAMP column</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    <span class="n">valid_interactions_ds</span><span class="o">=</span><span class="n">valid_interactions_ds</span><span class="p">,</span>  <span class="c1"># Optional: enables early stopping</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="c1"># 4. Recommend</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="n">recs</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">recommend</span><span class="p">(</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    <span class="n">interactions</span><span class="o">=</span><span class="n">recent_interactions_df</span><span class="p">,</span>    <span class="c1"># USER_ID, ITEM_ID, TIMESTAMP</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    <span class="n">top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="input-data-requirements">Input Data Requirements<a class="headerlink" href="#input-data-requirements" title="Permanent link">&para;</a></h2>
+<p>The interactions dataset <strong>must</strong> contain a <code>TIMESTAMP</code> column. Session boundaries are detected automatically from timestamp gaps unless you supply an explicit <code>SESSION_ID</code> column.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span>   <span class="p">[</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;ITEM_ID&quot;</span><span class="p">:</span>   <span class="p">[</span><span class="s2">&quot;i1&quot;</span><span class="p">,</span> <span class="s2">&quot;i2&quot;</span><span class="p">,</span> <span class="s2">&quot;i3&quot;</span><span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="s2">&quot;OUTCOME&quot;</span><span class="p">:</span>   <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">],</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;TIMESTAMP&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span>  <span class="mi">200</span><span class="p">,</span>  <span class="mi">5000</span><span class="p">,</span> <span class="mi">5100</span><span class="p">],</span>   <span class="c1"># gap between i2→i3 starts new session</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">})</span>
+</code></pre></div>
+<p>Use the shared schema for dataset validation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">InteractionsDataset</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">data_location</span><span class="o">=</span><span class="s2">&quot;interactions.csv&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">client_schema_path</span><span class="o">=</span><span class="s2">&quot;skrec/dataset/required_schemas/interactions_schema_with_timestamp_training.yaml&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="explicit-session-ids">Explicit Session IDs<a class="headerlink" href="#explicit-session-ids" title="Permanent link">&para;</a></h3>
+<p>If your data already has session boundaries defined, pass a <code>SESSION_ID</code> column — it takes priority over timestamp-based detection:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;SESSION_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;session&quot;</span><span class="p">]</span>
+</code></pre></div>
+<h2 id="session-detection">Session Detection<a class="headerlink" href="#session-detection" title="Permanent link">&para;</a></h2>
+<p><code>HierarchicalSequentialRecommender</code> detects session boundaries before training and inference (in priority order):</p>
+<ol>
+<li><strong>Explicit</strong> — <code>SESSION_ID</code> column present in the interactions DataFrame</li>
+<li><strong>Implicit</strong> — <code>session_timeout_minutes</code> set; a new session starts whenever the gap between consecutive interactions exceeds the timeout</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Explicit session boundaries</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">HierarchicalSequentialRecommender</span><span class="p">(</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">scorer</span><span class="p">,</span> <span class="n">max_sessions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_session_len</span><span class="o">=</span><span class="mi">20</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="c1"># SESSION_ID column in data takes priority</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Implicit — 30-minute timeout (default)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">HierarchicalSequentialRecommender</span><span class="p">(</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">scorer</span><span class="p">,</span> <span class="n">max_sessions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_session_len</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">session_timeout_minutes</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">)</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Implicit — 24-hour timeout (e.g. daily sessions)</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">HierarchicalSequentialRecommender</span><span class="p">(</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">scorer</span><span class="p">,</span> <span class="n">max_sessions</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">max_session_len</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="n">session_timeout_minutes</span><span class="o">=</span><span class="mi">1440</span><span class="p">,</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">)</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Numeric vs. datetime timestamps</p>
+<p>Numeric timestamps (int/float) are treated as <strong>Unix epoch seconds</strong> — the standard for datasets like MovieLens and Amazon Reviews. Datetime or string timestamps are parsed with <code>pd.to_datetime</code>. Do <strong>not</strong> pass Unix epoch seconds as datetime strings, as pandas would interpret the integers as nanoseconds.</p>
+</div>
+<h2 id="architecture-parameters">Architecture Parameters<a class="headerlink" href="#architecture-parameters" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">HRNNClassifierEstimator</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">hidden_units</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>                  <span class="c1"># GRU hidden size and item embedding dimension</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">num_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                     <span class="c1"># GRU depth (1 is standard; &gt;1 adds inter-layer dropout)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>                 <span class="c1"># Applied to item embeddings and GRU inter-layer connections</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">num_negatives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                  <span class="c1"># Negatives per positive per training step (≥1)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">max_sessions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>                  <span class="c1"># Sessions retained per user (synced from recommender at train time)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">max_session_len</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>               <span class="c1"># Items retained per session (synced from recommender at train time)</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>                       <span class="c1"># Max epochs — early stopping may stop sooner</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>                 <span class="c1"># L2 regularization (e.g. 1e-4 to prevent overfitting)</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>     <span class="c1"># Epochs without val-loss improvement before stopping</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">restore_best_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>        <span class="c1"># Restore best-epoch weights when early stopping fires</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="early-stopping">Early Stopping<a class="headerlink" href="#early-stopping" title="Permanent link">&para;</a></h3>
+<p>When <code>valid_interactions_ds</code> is passed to <code>HierarchicalSequentialRecommender.train()</code>, the estimator evaluates validation loss after each epoch. Set <code>early_stopping_patience</code> to stop training automatically when the val loss plateaus:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">HRNNClassifierEstimator</span><span class="p">(</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>    <span class="c1"># Stop if no improvement for 5 consecutive epochs</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">restore_best_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>    <span class="c1"># Roll back to the best epoch&#39;s weights (default True)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">recommender</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">items_ds</span><span class="o">=</span><span class="n">items_ds</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">interactions_ds</span><span class="o">=</span><span class="n">interactions_ds</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">valid_interactions_ds</span><span class="o">=</span><span class="n">valid_inter_ds</span><span class="p">,</span>   <span class="c1"># Single interaction per user (e.g. second-to-last positive)</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Preparing a validation split</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">interactions</span><span class="p">[</span><span class="s2">&quot;rank&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactions</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;USER_ID&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cumcount</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">train_df</span> <span class="o">=</span> <span class="n">interactions</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rank&quot;</span><span class="p">])</span>       <span class="c1"># ALL interactions</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">valid_df</span> <span class="o">=</span> <span class="n">interactions</span><span class="p">[</span><span class="n">interactions</span><span class="p">[</span><span class="s2">&quot;rank&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>   <span class="c1"># Second-to-last per user</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">interactions_ds</span> <span class="o">=</span> <span class="n">InteractionsDataset</span><span class="p">(</span><span class="n">data_location</span><span class="o">=</span><span class="s2">&quot;train.csv&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">valid_inter_ds</span>  <span class="o">=</span> <span class="n">InteractionsDataset</span><span class="p">(</span><span class="n">data_location</span><span class="o">=</span><span class="s2">&quot;valid.csv&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">HRNN on ML-1M: early stopping may not fire</p>
+<p>On datasets where the model improves monotonically throughout training (e.g. ML-1M with <code>epochs=100</code>), <code>early_stopping_patience</code> will never trigger. This is expected — it means the model kept improving and more epochs would help further. Consider increasing <code>epochs</code> in that case.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">max_sessions / max_session_len ownership</p>
+<p><code>HierarchicalSequentialRecommender</code> owns these parameters. It syncs them to the estimator at training time and logs a warning if they differ.</p>
+</div>
+<h3 id="choosing-max_sessions-and-max_session_len">Choosing <code>max_sessions</code> and <code>max_session_len</code><a class="headerlink" href="#choosing-max_sessions-and-max_session_len" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Use case</th>
+<th>Suggested config</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-commerce (short, frequent sessions)</td>
+<td><code>max_sessions=10, max_session_len=15</code></td>
+</tr>
+<tr>
+<td>Video streaming (longer sessions)</td>
+<td><code>max_sessions=10, max_session_len=30</code></td>
+</tr>
+<tr>
+<td>Daily app sessions</td>
+<td><code>max_sessions=15, max_session_len=30</code></td>
+</tr>
+<tr>
+<td>ML-1M benchmark</td>
+<td><code>max_sessions=15, max_session_len=30</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="training-modes">Training Modes<a class="headerlink" href="#training-modes" title="Permanent link">&para;</a></h2>
+<p>HRNN supports four data configurations — only the data preparation cell changes; the estimator, scorer, and recommender setup is identical.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>OUTCOME values</th>
+<th>Estimator</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Positives only</strong></td>
+<td>All <code>1.0</code></td>
+<td>Classifier</td>
+<td>Filter to engaged interactions before training</td>
+</tr>
+<tr>
+<td><strong>Binary 0/1</strong></td>
+<td><code>1.0</code> for positive, <code>0.0</code> for negative</td>
+<td>Classifier</td>
+<td>E.g. rating ≥ 4 → 1.0, rating ≤ 2 → 0.0</td>
+</tr>
+<tr>
+<td><strong>Soft-label</strong></td>
+<td>Normalized to <code>[0, 1]</code></td>
+<td>Classifier</td>
+<td>E.g. <code>rating / 5.0</code></td>
+</tr>
+<tr>
+<td><strong>Continuous</strong></td>
+<td>Raw float values</td>
+<td>Regressor</td>
+<td>Revenue, time-spent, raw ratings</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Mode 1: Positives only</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;OUTCOME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Mode 2: Binary 0/1</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;OUTCOME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;rating&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span> <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">)</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">interactions_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;OUTCOME&quot;</span><span class="p">])</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Mode 3: Soft-label BCE</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;OUTCOME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;rating&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">5.0</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># Mode 4: Continuous (use HRNNRegressorEstimator)</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.sequential.hrnn_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">HRNNRegressorEstimator</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">HRNNRegressorEstimator</span><span class="p">(</span><span class="n">hidden_units</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="performance-on-movielens-1m">Performance on MovieLens 1M<a class="headerlink" href="#performance-on-movielens-1m" title="Permanent link">&para;</a></h2>
+<p>Evaluated with leave-last-two-out split on positives (rating ≥ 4), sampled ranking (1 positive + 100 random negatives per user, 6,038 users):</p>
+<table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>HR@10</th>
+<th>NDCG@10</th>
+<th>Config</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classifier, BCE, positives-only (rating ≥ 4), with val loss logging</td>
+<td><strong>0.6812</strong></td>
+<td><strong>0.3969</strong></td>
+<td><code>epochs=100, patience=5</code> — val loss improved all 100 epochs</td>
+</tr>
+</tbody>
+</table>
+<p>Config: <code>hidden_units=50, num_layers=1, max_sessions=15, max_session_len=30, session_timeout_minutes=1440, epochs=100, early_stopping_patience=5</code></p>
+<p>Val loss curve: 1.0033 → 0.7271 across 100 epochs (monotonically decreasing — patience never triggered).</p>
+<div class="admonition note">
+<p class="admonition-title">SASRec vs HRNN on ML-1M</p>
+<p>HRNN achieves HR@10=0.68 vs SASRec's 0.88 on ML-1M. This is expected: ML-1M users have long flat histories (100+ interactions) that don't naturally segment into short sessions. HRNN's two-level GRU is optimised for short, frequent sessions — it closes the gap on e-commerce and app session datasets.</p>
+</div>
+<h2 id="hyperparameter-tuning">Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Permanent link">&para;</a></h2>
+<h3 id="session-boundaries">Session boundaries<a class="headerlink" href="#session-boundaries" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">session_timeout_minutes</span><span class="o">=</span><span class="mi">30</span>     <span class="c1"># Standard web session (Google Analytics default)</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">session_timeout_minutes</span><span class="o">=</span><span class="mi">1440</span>   <span class="c1"># Daily sessions (24 hours)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">session_timeout_minutes</span><span class="o">=</span><span class="kc">None</span>   <span class="c1"># Requires explicit SESSION_ID in data</span>
+</code></pre></div>
+<h3 id="regularization">Regularization<a class="headerlink" href="#regularization" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.0</span>   <span class="c1"># No dropout (use for small datasets / overfit tests)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.2</span>   <span class="c1"># Recommended default</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.5</span>   <span class="c1"># Heavy regularization for large models</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.0</span>   <span class="c1"># Default</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">weight_decay</span><span class="o">=</span><span class="mf">1e-4</span>  <span class="c1"># Light L2 regularization</span>
+</code></pre></div>
+<h3 id="epochs-and-early-stopping">Epochs and Early Stopping<a class="headerlink" href="#epochs-and-early-stopping" title="Permanent link">&para;</a></h3>
+<p><code>epochs</code> is an upper bound. On datasets where the model keeps improving, early stopping won't fire — increase <code>epochs</code> to let it run longer:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">epochs</span><span class="o">=</span><span class="mi">50</span>     <span class="c1"># Quick experiments</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">epochs</span><span class="o">=</span><span class="mi">100</span>    <span class="c1"># Standard training</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">epochs</span><span class="o">=</span><span class="mi">200</span>    <span class="c1"># With early stopping as a safety cap</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">epochs</span><span class="o">=</span><span class="mi">500</span>    <span class="c1"># Small datasets or slow-converging configs</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span>   <span class="c1"># Default (recommended)</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0005</span>  <span class="c1"># More conservative</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Recommended production config</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">HRNNClassifierEstimator</span><span class="p">(</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>    <span class="n">restore_best_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="when-to-use-hrnn">When to Use HRNN<a class="headerlink" href="#when-to-use-hrnn" title="Permanent link">&para;</a></h2>
+<p>✅ <strong>Use HRNN when:</strong></p>
+<ul>
+<li>Interactions naturally group into sessions (shopping visits, app opens, TV sittings)</li>
+<li>You want to model how user preferences shift between sessions</li>
+<li>You have timestamp data and sessions can be inferred from gaps</li>
+</ul>
+<p>❌ <strong>Don't use HRNN when:</strong></p>
+<ul>
+<li>Interactions have no natural session structure — use <a href="../sasrec/">SASRec</a></li>
+<li>No <code>TIMESTAMP</code> available — use <a href="../../recommender-types/ranking/">RankingRecommender</a> with <a href="../ncf/">NCF</a></li>
+</ul>
+<h2 id="comparison-with-sasrec">Comparison with SASRec<a class="headerlink" href="#comparison-with-sasrec" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>HRNN</th>
+<th>SASRec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Session-aware</strong></td>
+<td>✅ Yes — explicit two-level hierarchy</td>
+<td>❌ No — single flat sequence</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>GRU + GRU</td>
+<td>Transformer (self-attention)</td>
+</tr>
+<tr>
+<td><strong>Requires sessions</strong></td>
+<td>✅ Yes (detected automatically)</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td><strong>Long-range dependencies</strong></td>
+<td>Via user GRU across sessions</td>
+<td>Via attention over full sequence</td>
+</tr>
+<tr>
+<td><strong>Training speed</strong></td>
+<td>🐢 Moderate</td>
+<td>🐢 Moderate</td>
+</tr>
+<tr>
+<td><strong>PyTorch required</strong></td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="all-users-appear-to-have-only-one-session">All users appear to have only one session<a class="headerlink" href="#all-users-appear-to-have-only-one-session" title="Permanent link">&para;</a></h3>
+<p>The most common cause is passing Unix epoch second timestamps to <code>pd.to_datetime</code>, which interprets integers as nanoseconds — making all inter-item gaps appear to be microseconds. HRNN automatically handles numeric timestamps correctly (direct second comparison), but verify your timestamp column type:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">interactions_df</span><span class="p">[</span><span class="s2">&quot;TIMESTAMP&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>   <span class="c1"># should be int64 or float64</span>
+</code></pre></div>
+<h3 id="model-not-learning">Model not learning<a class="headerlink" href="#model-not-learning" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>num_negatives ≥ 1</code> — setting it to 0 means unseen items receive no gradient, producing near-random scores</li>
+<li>Verify <code>session_timeout_minutes</code> produces multiple sessions per user (check with <code>len(sessions_df["SESSION_SEQUENCES"].iloc[0])</code>)</li>
+<li>Reduce <code>dropout_rate</code> to 0.0 and increase <code>epochs</code> to confirm the model can overfit before adding regularization</li>
+</ol>
+<h3 id="poor-ranking-quality">Poor ranking quality<a class="headerlink" href="#poor-ranking-quality" title="Permanent link">&para;</a></h3>
+<ol>
+<li>When using binary 0/1 labels, evaluate on last <strong>positive</strong> interaction per user (not last overall)</li>
+<li>Increase <code>max_sessions</code> and <code>max_session_len</code> if users have rich histories being truncated</li>
+<li>Try <code>num_negatives=3</code> for harder training signal on large catalogues</li>
+</ol>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Quadrana, M., Cremonesi, P., &amp; Jannach, D. (2017). <a href="https://dl.acm.org/doi/10.1145/3109859.3109896">Personalizing Session-Based Recommendations with Hierarchical Recurrent Neural Networks</a>. In RecSys 2017.</li>
+</ul>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../../recommender-types/hierarchical/">HierarchicalSequentialRecommender</a></strong> — Full guide to the recommender layer</li>
+<li><strong><a href="../sasrec/">SASRec Guide</a></strong> — Compare with the transformer-based sequential model</li>
+<li><strong><a href="../training/">Training Guide</a></strong> — General training patterns</li>
+<li><strong><a href="../evaluation/">Evaluation Guide</a></strong> — How to measure ranking quality</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

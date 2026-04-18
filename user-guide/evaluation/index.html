@@ -1,0 +1,2695 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://intuit.github.io/scikit-rec/user-guide/evaluation/">
+      
+      
+        <link rel="prev" href="../inference/">
+      
+      
+        <link rel="next" href="../retrieval/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Evaluation - scikit-rec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#evaluation-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="scikit-rec" class="md-header__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            scikit-rec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Evaluation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="scikit-rec" class="md-nav__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    scikit-rec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../capability-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scorers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../estimators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation-method-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation Method Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contextual-bandits-and-evaluate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contextual bandits and evaluate()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-evaluators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Evaluators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Evaluators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-simpleevaluator-on-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. SimpleEvaluator (On-Policy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-replaymatchevaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. ReplayMatchEvaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-ipsevaluator-inverse-propensity-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. IPSEvaluator (Inverse Propensity Scoring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-drevaluator-doubly-robust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. DREvaluator (Doubly Robust)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-snipsevaluator-self-normalized-ips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. SNIPSEvaluator (Self-Normalized IPS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-policyweightedevaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. PolicyWeightedEvaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ranking-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranking Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#classification-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reward-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reward Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evaluation Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ground-truth-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ground Truth Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluating-embedding-based-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluating Embedding-Based Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evaluating Embedding-Based Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-evaluation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Evaluation Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-inference-evaluation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Inference Evaluation Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-and-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caching and Performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching and Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-cached-and-when-its-recomputed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets cached and when it's recomputed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sweeping-metrics-or-top-k-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweeping metrics or top-k values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switching-evaluator-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching evaluator type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-use-multiple-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Use Multiple Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-choose-right-evaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Choose Right Evaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-off-policy-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Off-Policy Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-temporal-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Temporal Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-logged_items-must-be-provided" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "logged_items must be provided"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-off-policy-estimates-seem-biased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Off-policy estimates seem biased
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-switching-eval_type-raises-eval_kwargs-is-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Switching eval_type raises "eval_kwargs is required"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collaborative-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ncf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-tower/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-Tower
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sasrec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SASRec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hrnn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommender Types
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommender Types
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/ranking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/bandits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bandits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/uplift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uplift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/sequential/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequential
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/hierarchical/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hierarchical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/gcsl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hpo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hybrid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation-method-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation Method Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contextual-bandits-and-evaluate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contextual bandits and evaluate()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-evaluators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Evaluators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Evaluators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-simpleevaluator-on-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. SimpleEvaluator (On-Policy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-replaymatchevaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. ReplayMatchEvaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-ipsevaluator-inverse-propensity-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. IPSEvaluator (Inverse Propensity Scoring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-drevaluator-doubly-robust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. DREvaluator (Doubly Robust)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-snipsevaluator-self-normalized-ips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. SNIPSEvaluator (Self-Normalized IPS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-policyweightedevaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. PolicyWeightedEvaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ranking-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranking Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#classification-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reward-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reward Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evaluation Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ground-truth-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ground Truth Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluating-embedding-based-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluating Embedding-Based Models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evaluating Embedding-Based Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-evaluation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Evaluation Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-inference-evaluation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Inference Evaluation Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-and-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caching and Performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching and Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-cached-and-when-its-recomputed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets cached and when it's recomputed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sweeping-metrics-or-top-k-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweeping metrics or top-k values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switching-evaluator-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching evaluator type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-use-multiple-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Use Multiple Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-choose-right-evaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Choose Right Evaluator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-off-policy-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Off-Policy Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-temporal-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Temporal Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-logged_items-must-be-provided" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "logged_items must be provided"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-off-policy-estimates-seem-biased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Off-policy estimates seem biased
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-switching-eval_type-raises-eval_kwargs-is-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Switching eval_type raises "eval_kwargs is required"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="evaluation-guide">Evaluation Guide<a class="headerlink" href="#evaluation-guide" title="Permanent link">&para;</a></h1>
+<p>This guide covers how to evaluate recommendation models using various evaluation strategies and metrics.</p>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.evaluator.datatypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecommenderEvaluatorType</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.metrics.datatypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecommenderMetricType</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Prepare ground truth</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">eval_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s2">&quot;item_A&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;item_B&quot;</span><span class="p">]]),</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">]])</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Evaluate</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">ndcg</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span><span class="p">},</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NDCG@5: </span><span class="si">{</span><span class="n">ndcg</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="evaluation-method-overview">Evaluation Method Overview<a class="headerlink" href="#evaluation-method-overview" title="Permanent link">&para;</a></h2>
+<p>The <code>evaluate()</code> method accepts:</p>
+<ul>
+<li><strong><code>eval_type</code></strong>: A <code>RecommenderEvaluatorType</code> that determines the evaluation technique (SIMPLE, IPS, DR, etc.)</li>
+<li><strong><code>metric_type</code></strong>: A <code>RecommenderMetricType</code> that specifies which metric to calculate (NDCG, Precision, ROC-AUC, etc.)</li>
+<li><strong><code>score_items_kwargs</code></strong>: Parameters passed to the internal <code>score_items()</code> method, including:</li>
+<li><code>interactions</code>: DataFrame with interaction context features</li>
+<li><code>users</code>: DataFrame with user features<ul>
+<li>For <strong>embedding-based models</strong> (a <code>BaseEmbeddingEstimator</code> subclass with <code>UniversalScorer</code>), this can include pre-computed embeddings in the <code>USER_EMBEDDING_NAME</code> column for real-time inference evaluation</li>
+</ul>
+</li>
+<li><strong><code>eval_kwargs</code></strong>: Ground truth data including <code>logged_items</code> and <code>logged_rewards</code>, and optionally <code>logging_proba</code> for off-policy evaluation. Pass <code>None</code> or an empty dict <code>{}</code> to reuse cached modified rewards when still valid — see <a href="#caching-and-performance">Caching and Performance</a>.</li>
+</ul>
+<p><strong>Learn more</strong>: <a href="../inference/">Inference Guide</a> for details on <code>score_items()</code> parameters</p>
+<h2 id="contextual-bandits-and-evaluate">Contextual bandits and <code>evaluate()</code><a class="headerlink" href="#contextual-bandits-and-evaluate" title="Permanent link">&para;</a></h2>
+<p><a href="../../recommender-types/bandits/#evaluation"><code>ContextualBanditsRecommender</code></a> applies a <strong>bandit strategy</strong> on top of scorer outputs. Offline <code>evaluate()</code> is <strong>policy-aligned</strong> wherever that strategy shapes rankings or target probabilities (same idea as <code>recommend()</code>):</p>
+<ul>
+<li>Configure the strategy with <strong><code>set_strategy()</code></strong> (or in the constructor) <strong>before</strong> calling <code>evaluate()</code> when the code path ranks via the policy. If you omit this, you may see <code>RuntimeError: Strategy not set. Call set_strategy() before recommend().</code> This applies in particular to <strong><code>STATIC_ACTION</code></strong> with <strong>non-probabilistic</strong> evaluators (e.g. Simple, ReplayMatch), where full rankings are built through <code>_recommend_from_scores</code>.</li>
+<li>Metrics describe <strong>deployed policy behavior</strong>, not necessarily “sort items by raw score.” For <strong>base-model-only</strong> ranking metrics, use <a href="../../recommender-types/ranking/"><code>RankingRecommender</code></a> (or another non-bandit recommender) with the same underlying scorer.</li>
+</ul>
+<p>See the <a href="../../recommender-types/bandits/#evaluation">bandits guide</a> for examples and off-policy (IPS / DR / SNIPS) notes.</p>
+<h2 id="available-evaluators">Available Evaluators<a class="headerlink" href="#available-evaluators" title="Permanent link">&para;</a></h2>
+<h3 id="1-simpleevaluator-on-policy">1. SimpleEvaluator (On-Policy)<a class="headerlink" href="#1-simpleevaluator-on-policy" title="Permanent link">&para;</a></h3>
+<p>Standard evaluation assuming recommendations match logging policy.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span><span class="p">},</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">logged_items</span><span class="p">,</span> <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">logged_rewards</span><span class="p">}</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Use when</strong>: Evaluating on data collected from the same recommender policy.</p>
+<h3 id="2-replaymatchevaluator">2. ReplayMatchEvaluator<a class="headerlink" href="#2-replaymatchevaluator" title="Permanent link">&para;</a></h3>
+<p>Replay-based evaluation that only considers recommendations matching logged actions.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">REPLAY_MATCH</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="o">...</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Use when</strong>: You want conservative estimates by only evaluating on matched recommendations.</p>
+<h3 id="3-ipsevaluator-inverse-propensity-scoring">3. IPSEvaluator (Inverse Propensity Scoring)<a class="headerlink" href="#3-ipsevaluator-inverse-propensity-scoring" title="Permanent link">&para;</a></h3>
+<p>Off-policy evaluation using propensity scores.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">eval_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">logged_items</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">logged_rewards</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;logging_proba&quot;</span><span class="p">:</span> <span class="n">logging_probabilities</span>  <span class="c1"># Required!</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">IPS</span><span class="p">,</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="o">...</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Use when</strong>: Evaluating on data collected from a different policy. Requires logging probabilities.</p>
+<h3 id="4-drevaluator-doubly-robust">4. DREvaluator (Doubly Robust)<a class="headerlink" href="#4-drevaluator-doubly-robust" title="Permanent link">&para;</a></h3>
+<p>Combines direct method and IPS for robust off-policy evaluation.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">DR</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="o">...</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Use when</strong>: Want robust off-policy estimates with lower variance than IPS.</p>
+<h3 id="5-snipsevaluator-self-normalized-ips">5. SNIPSEvaluator (Self-Normalized IPS)<a class="headerlink" href="#5-snipsevaluator-self-normalized-ips" title="Permanent link">&para;</a></h3>
+<p>Self-normalized variant of IPS for lower variance.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SNIPS</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="o">...</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Use when</strong>: IPS estimates have high variance.</p>
+<h3 id="6-policyweightedevaluator">6. PolicyWeightedEvaluator<a class="headerlink" href="#6-policyweightedevaluator" title="Permanent link">&para;</a></h3>
+<p>Policy-weighted evaluation for off-policy scenarios.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">POLICY_WEIGHTED</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="o">...</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="available-metrics">Available Metrics<a class="headerlink" href="#available-metrics" title="Permanent link">&para;</a></h2>
+<h3 id="ranking-metrics">Ranking Metrics<a class="headerlink" href="#ranking-metrics" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>PRECISION_AT_K</code></strong>: Precision@k - Fraction of relevant items in top-k</li>
+<li><strong><code>NDCG_AT_K</code></strong>: Normalized Discounted Cumulative Gain@k</li>
+<li><strong><code>MAP_AT_K</code></strong>: Mean Average Precision@k</li>
+<li><strong><code>MRR_AT_K</code></strong>: Mean Reciprocal Rank@k</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">precision</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">PRECISION_AT_K</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="o">...</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="classification-metrics">Classification Metrics<a class="headerlink" href="#classification-metrics" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>ROC_AUC</code></strong>: ROC-AUC score</li>
+<li><strong><code>PR_AUC</code></strong>: Precision-Recall AUC</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">roc_auc</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># Still required but not used</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="o">...</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="reward-metrics">Reward Metrics<a class="headerlink" href="#reward-metrics" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>AVERAGE_REWARD_AT_K</code></strong>: Expected reward in top-k</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">reward</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">AVERAGE_REWARD_AT_K</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="o">...</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="evaluation-parameters">Evaluation Parameters<a class="headerlink" href="#evaluation-parameters" title="Permanent link">&para;</a></h2>
+<h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>eval_type</code></strong>: Which evaluator to use (SIMPLE, IPS, DR, etc.)</li>
+<li><strong><code>metric_type</code></strong>: Which metric to calculate (NDCG, Precision, etc.)</li>
+<li><strong><code>eval_top_k</code></strong>: Top-k cutoff for ranking metrics</li>
+<li><strong><code>temperature</code></strong>: Temperature for softmax conversion (default: 1.0)</li>
+<li><strong><code>score_items_kwargs</code></strong>: Arguments for <code>score_items()</code> method</li>
+<li><strong><code>eval_kwargs</code></strong>: Ground truth data (logged_items, logged_rewards, etc.)</li>
+</ul>
+<h3 id="ground-truth-data">Ground Truth Data<a class="headerlink" href="#ground-truth-data" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">eval_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s2">&quot;item_A&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;item_B&quot;</span><span class="p">]]),</span>      <span class="c1"># Actual items</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">]]),</span>              <span class="c1"># Actual rewards</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="s2">&quot;logging_proba&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.7</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">]])</span>                 <span class="c1"># Optional: for off-policy</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="complete-example">Complete Example<a class="headerlink" href="#complete-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.evaluator.datatypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecommenderEvaluatorType</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.metrics.datatypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecommenderMetricType</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Prepare test data</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">]})</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">users_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="s2">&quot;income&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">50000</span><span class="p">,</span> <span class="mi">75000</span><span class="p">]</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="p">})</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="c1"># Ground truth</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="n">eval_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>    <span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s2">&quot;item_3&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;item_2&quot;</span><span class="p">]]),</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>    <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]])</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="p">}</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="c1"># Evaluate multiple metrics efficiently:</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="c1"># Pass score_items_kwargs and eval_kwargs on the first call to compute scores</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="c1"># and modified rewards. Omit both on subsequent calls — only the metric</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="c1"># calculation reruns, the expensive intermediate results are reused.</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>    <span class="p">(</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span> <span class="s2">&quot;NDCG@5&quot;</span><span class="p">),</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>    <span class="p">(</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">PRECISION_AT_K</span><span class="p">,</span> <span class="s2">&quot;Precision@5&quot;</span><span class="p">),</span>
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>    <span class="p">(</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">MAP_AT_K</span><span class="p">,</span> <span class="s2">&quot;MAP@5&quot;</span><span class="p">),</span>
+<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>    <span class="p">(</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span><span class="p">,</span> <span class="s2">&quot;ROC-AUC&quot;</span><span class="p">),</span>
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="p">]</span>
+<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>
+<a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a><span class="n">score_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span><span class="p">}</span>
+<a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+<a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a>    <span class="n">score</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a>        <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a>        <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span>
+<a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>        <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a>        <span class="n">score_items_kwargs</span><span class="o">=</span><span class="n">score_kwargs</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># score once</span>
+<a id="__codelineno-11-38" name="__codelineno-11-38" href="#__codelineno-11-38"></a>        <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>            <span class="c1"># modified rewards once</span>
+<a id="__codelineno-11-39" name="__codelineno-11-39" href="#__codelineno-11-39"></a>    <span class="p">)</span>
+<a id="__codelineno-11-40" name="__codelineno-11-40" href="#__codelineno-11-40"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="evaluating-embedding-based-models">Evaluating Embedding-Based Models<a class="headerlink" href="#evaluating-embedding-based-models" title="Permanent link">&para;</a></h2>
+<p>When evaluating recommenders that use <strong><code>BaseEmbeddingEstimator</code></strong> subclasses (e.g., <code>NeuralFactorizationEstimator</code>, <code>ContextualizedTwoTowerEstimator</code>) with <strong><code>UniversalScorer</code></strong>, you can evaluate in two modes:</p>
+<h3 id="batch-evaluation-mode">Batch Evaluation Mode<a class="headerlink" href="#batch-evaluation-mode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Evaluator uses internally learned user embeddings</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>        <span class="c1"># users=None - model uses internal embeddings</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="p">},</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="real-time-inference-evaluation-mode">Real-Time Inference Evaluation Mode<a class="headerlink" href="#real-time-inference-evaluation-mode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">USER_EMBEDDING_NAME</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># Prepare users DataFrame with pre-computed embeddings</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">users_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">USER_EMBEDDING_NAME</span><span class="p">:</span> <span class="p">[</span><span class="n">user_emb_1</span><span class="p">,</span> <span class="n">user_emb_2</span><span class="p">],</span>  <span class="c1"># Pre-computed embeddings</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="c1"># Optionally include other user features</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="p">})</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="c1"># Evaluate using pre-computed embeddings (simulates real-time inference)</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>        <span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>        <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span>  <span class="c1"># Contains pre-computed embeddings</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="p">},</span>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Learn more</strong>: <a href="../estimators/#embedding-estimators">Embedding Estimators Guide</a> | <a href="../inference/#embedding-based-inference-real-time-with-pre-computed-embeddings">Inference Guide</a></p>
+<h2 id="caching-and-performance">Caching and Performance<a class="headerlink" href="#caching-and-performance" title="Permanent link">&para;</a></h2>
+<p><code>evaluate()</code> internally caches intermediate results to avoid redundant computation. Understanding when each cache is invalidated lets you structure calls efficiently.</p>
+<h3 id="what-gets-cached-and-when-its-recomputed">What gets cached and when it's recomputed<a class="headerlink" href="#what-gets-cached-and-when-its-recomputed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Cached value</th>
+<th>Recomputed when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recommendation scores</td>
+<td><code>score_items_kwargs</code> is provided</td>
+</tr>
+<tr>
+<td>Modified rewards</td>
+<td><strong>Non-empty</strong> <code>eval_kwargs</code> is provided, or scores change, or <code>eval_type</code>/<code>eval_factory_kwargs</code> change</td>
+</tr>
+<tr>
+<td>Metric result</td>
+<td>Always recomputed (cheap pure function)</td>
+</tr>
+</tbody>
+</table>
+<p>Concretely:</p>
+<ul>
+<li><strong>Only <code>metric_type</code> or <code>eval_top_k</code> changed</strong> → only the final metric calculation reruns. Scores and modified rewards are reused.</li>
+<li><strong>Non-empty <code>eval_kwargs</code> provided</strong> → modified rewards are recomputed. (<code>None</code> and <code>{}</code> are treated the same for reuse; there is no identity check on the data when you do pass a non-empty mapping.)</li>
+<li><strong><code>score_items_kwargs</code> provided</strong> → scores and modified rewards are both recomputed.</li>
+<li><strong><code>eval_type</code> or <code>eval_factory_kwargs</code> changed</strong> → a new evaluator is created and modified rewards are recomputed.</li>
+<li><strong><code>recommender.clear_evaluation_cache()</code></strong> → clears scores, ranks, modified rewards, and the evaluator handle. The next <code>evaluate()</code> call must supply <code>score_items_kwargs</code> again (and non-empty <code>eval_kwargs</code> when modified rewards are missing).</li>
+</ul>
+<h3 id="sweeping-metrics-or-top-k-values">Sweeping metrics or top-k values<a class="headerlink" href="#sweeping-metrics-or-top-k-values" title="Permanent link">&para;</a></h3>
+<p>The most common pattern where caching matters is computing multiple metrics or top-k cutoffs over the same data. Pass <code>score_items_kwargs</code> and <code>eval_kwargs</code> only on the first call; on subsequent calls pass <code>eval_kwargs=None</code> or <code>eval_kwargs={}</code> to reuse cached modified rewards:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">eval_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">logged_items</span><span class="p">,</span> <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">logged_rewards</span><span class="p">}</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">score_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span><span class="p">}</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># First call: scores computed, modified rewards computed, metric computed</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">ndcg</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="n">score_kwargs</span><span class="p">,</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="p">)</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="c1"># Subsequent calls: only the metric calculation reruns</span>
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="n">precision</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">PRECISION_AT_K</span><span class="p">,</span>
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>    <span class="c1"># score_items_kwargs and eval_kwargs omitted — caches reused</span>
+<a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="p">)</span>
+<a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
+<a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="n">map_score</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">MAP_AT_K</span><span class="p">,</span>
+<a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>    <span class="c1"># different top_k is fine — still reuses scores and modified rewards</span>
+<a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="switching-evaluator-type">Switching evaluator type<a class="headerlink" href="#switching-evaluator-type" title="Permanent link">&para;</a></h3>
+<p>Switching <code>eval_type</code> invalidates the modified rewards cache. You must provide <code>eval_kwargs</code> again for the new evaluator:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Compute with SIMPLE</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">simple_score</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="n">score_kwargs</span><span class="p">,</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="p">)</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="c1"># Switching to IPS — must provide eval_kwargs (and logging_proba)</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="n">ips_score</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">IPS</span><span class="p">,</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">eval_data</span><span class="p">,</span> <span class="s2">&quot;logging_proba&quot;</span><span class="p">:</span> <span class="n">logging_proba</span><span class="p">},</span>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>    <span class="c1"># score_items_kwargs can be omitted — scores are reused</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="1-use-multiple-metrics">1. Use Multiple Metrics<a class="headerlink" href="#1-use-multiple-metrics" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Different metrics capture different aspects</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">metrics_to_evaluate</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>      <span class="c1"># Ranking quality</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">PRECISION_AT_K</span><span class="p">,</span>  <span class="c1"># Relevance</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span>          <span class="c1"># Classification performance</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="p">]</span>
+</code></pre></div>
+<h3 id="2-choose-right-evaluator">2. Choose Right Evaluator<a class="headerlink" href="#2-choose-right-evaluator" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>On-policy data</strong> (same recommender) → SIMPLE</li>
+<li><strong>Off-policy data</strong> (different recommender) → IPS, DR, or SNIPS</li>
+<li><strong>Conservative estimate</strong> → REPLAY_MATCH</li>
+</ul>
+<h3 id="3-off-policy-evaluation">3. Off-Policy Evaluation<a class="headerlink" href="#3-off-policy-evaluation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Always include logging probabilities for off-policy</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">eval_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">logged_items</span><span class="p">,</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">logged_rewards</span><span class="p">,</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>    <span class="s2">&quot;logging_proba&quot;</span><span class="p">:</span> <span class="n">logging_proba</span>  <span class="c1"># Critical!</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="4-temporal-validation">4. Temporal Validation<a class="headerlink" href="#4-temporal-validation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Split by time for realistic evaluation</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">train_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">cutoff</span><span class="p">]</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">test_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">cutoff</span><span class="p">]</span>
+</code></pre></div>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-logged_items-must-be-provided">Issue: "logged_items must be provided"<a class="headerlink" href="#issue-logged_items-must-be-provided" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Include ground truth in <code>eval_kwargs</code>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">}</span>
+</code></pre></div></p>
+<h3 id="issue-off-policy-estimates-seem-biased">Issue: Off-policy estimates seem biased<a class="headerlink" href="#issue-off-policy-estimates-seem-biased" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: 
+- Check logging probabilities are correct
+- Use DR or SNIPS for lower variance
+- Collect more data</p>
+<h3 id="issue-switching-eval_type-raises-eval_kwargs-is-required">Issue: Switching <code>eval_type</code> raises "eval_kwargs is required"<a class="headerlink" href="#issue-switching-eval_type-raises-eval_kwargs-is-required" title="Permanent link">&para;</a></h3>
+<p>Changing <code>eval_type</code> invalidates the modified rewards cache. You must supply <code>eval_kwargs</code> for the new evaluator to recompute them.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># ✅ Correct — provide eval_kwargs when switching eval_type</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">ips_score</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">IPS</span><span class="p">,</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">eval_data</span><span class="p">,</span> <span class="s2">&quot;logging_proba&quot;</span><span class="p">:</span> <span class="n">logging_proba</span><span class="p">},</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../architecture/">Architecture Overview</a></strong> - How evaluators fit in the 3-layer design</li>
+<li><strong><a href="../training/">Training Guide</a></strong> - Train models for evaluation</li>
+<li><strong><a href="../../advanced/production/">Production Guide</a></strong> - Deploy evaluated models</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

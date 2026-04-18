@@ -1,0 +1,2512 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://intuit.github.io/scikit-rec/getting-started/datasets/">
+      
+      
+        <link rel="prev" href="../quick-start/">
+      
+      
+        <link rel="next" href="../../user-guide/architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Datasets - scikit-rec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dataset-preparation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="scikit-rec" class="md-header__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            scikit-rec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Datasets
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="scikit-rec" class="md-nav__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    scikit-rec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dataset Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-interactions-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Interactions Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-users-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Users Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-items-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Items Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Relationships
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-use-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Use Schemas?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema File Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required Schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#categorical-preprocessing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Categorical Preprocessing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Categorical Preprocessing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-vocabulary-based-encoding-one-hot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Vocabulary-Based Encoding (One-Hot)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-hash-bucketing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Hash Bucketing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading Datasets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loading Datasets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From S3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-local-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Local Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-example-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Example Datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-requirements-by-scorer-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Requirements by Scorer Type
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dataset Requirements by Scorer Type">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Universal Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#independent-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiclass-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiclass Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multioutput-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multioutput Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-feature-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Feature Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-data-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Data Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-traintest-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Train/Test Split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-schema-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Schema Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#keyerror-user_id-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KeyError: 'USER_ID' not found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typeerror-expected-float-got-str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeError: Expected float, got str
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#valueerror-items-dataset-required-for-universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValueError: Items dataset required for Universal scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/capability-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/scorers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/estimators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/collaborative-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/ncf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/two-tower/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-Tower
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/sasrec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SASRec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/hrnn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommender Types
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommender Types
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/ranking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/bandits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bandits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/uplift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uplift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/sequential/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequential
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/hierarchical/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hierarchical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/gcsl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hpo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hybrid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dataset Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-interactions-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Interactions Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-users-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Users Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-items-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Items Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Relationships
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-use-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Use Schemas?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema File Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required Schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#categorical-preprocessing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Categorical Preprocessing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Categorical Preprocessing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-vocabulary-based-encoding-one-hot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Vocabulary-Based Encoding (One-Hot)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-hash-bucketing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Hash Bucketing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading Datasets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loading Datasets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From S3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-local-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Local Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-example-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Example Datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-requirements-by-scorer-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset Requirements by Scorer Type
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dataset Requirements by Scorer Type">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Universal Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#independent-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiclass-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiclass Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multioutput-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multioutput Scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-feature-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Feature Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-data-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Data Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-traintest-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Train/Test Split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-schema-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Schema Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#keyerror-user_id-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KeyError: 'USER_ID' not found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typeerror-expected-float-got-str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeError: Expected float, got str
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#valueerror-items-dataset-required-for-universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValueError: Items dataset required for Universal scorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dataset-preparation">Dataset Preparation<a class="headerlink" href="#dataset-preparation" title="Permanent link">&para;</a></h1>
+<p>Understanding how to prepare datasets is crucial for building effective recommendation systems with this library. This guide covers the required dataset structure, schemas, and preprocessing options.</p>
+<h2 id="dataset-types">Dataset Types<a class="headerlink" href="#dataset-types" title="Permanent link">&para;</a></h2>
+<p>There are <strong>three types of datasets</strong> required for training recommendation models:</p>
+<h3 id="1-interactions-dataset">1. Interactions Dataset<a class="headerlink" href="#1-interactions-dataset" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Captures what happened when users interacted with items.</p>
+<p><strong>Required Columns</strong>:
+- <code>USER_ID</code> (str): Unique identifier for the user
+- <code>ITEM_ID</code> (str): Unique identifier for the item
+- <code>OUTCOME</code> (float): The reward/outcome of the interaction (e.g., click=1/0, revenue=$$$)</p>
+<p><strong>Optional Columns</strong>: Any context features (e.g., timestamp, device, location)</p>
+<p><strong>Example</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">&quot;ITEM_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;item_A&quot;</span><span class="p">,</span> <span class="s2">&quot;item_B&quot;</span><span class="p">,</span> <span class="s2">&quot;item_A&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="s2">&quot;OUTCOME&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1234567890</span><span class="p">,</span> <span class="mi">1234567900</span><span class="p">,</span> <span class="mi">1234567910</span><span class="p">],</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mobile&quot;</span><span class="p">,</span> <span class="s2">&quot;desktop&quot;</span><span class="p">,</span> <span class="s2">&quot;mobile&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">})</span>
+</code></pre></div></p>
+<h3 id="2-users-dataset">2. Users Dataset<a class="headerlink" href="#2-users-dataset" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Contains user-level features.</p>
+<p><strong>Required Columns</strong>:
+- <code>USER_ID</code> (str): Must match IDs in Interactions dataset</p>
+<p><strong>Optional Columns</strong>: Any user features (e.g., age, location, preferences)</p>
+<p><strong>Example</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">users_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">,</span> <span class="s2">&quot;user_3&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">45</span><span class="p">],</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;TX&quot;</span><span class="p">,</span> <span class="s2">&quot;NY&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;income&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">50000</span><span class="p">,</span> <span class="mi">75000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">]</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">})</span>
+</code></pre></div></p>
+<h3 id="3-items-dataset">3. Items Dataset<a class="headerlink" href="#3-items-dataset" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Contains item-level features.</p>
+<p><strong>Required Columns</strong>:
+- <code>ITEM_ID</code> (str): Must match IDs in Interactions dataset</p>
+<p><strong>Optional Columns</strong>: Any item features (e.g., category, price, brand)</p>
+<p><strong>Example</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">items_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="s2">&quot;ITEM_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;item_A&quot;</span><span class="p">,</span> <span class="s2">&quot;item_B&quot;</span><span class="p">,</span> <span class="s2">&quot;item_C&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;electronics&quot;</span><span class="p">,</span> <span class="s2">&quot;clothing&quot;</span><span class="p">,</span> <span class="s2">&quot;electronics&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">299.99</span><span class="p">,</span> <span class="mf">49.99</span><span class="p">,</span> <span class="mf">199.99</span><span class="p">],</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="s2">&quot;brand&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span> <span class="s2">&quot;Nike&quot;</span><span class="p">,</span> <span class="s2">&quot;Samsung&quot;</span><span class="p">]</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">})</span>
+</code></pre></div></p>
+<h2 id="dataset-relationships">Dataset Relationships<a class="headerlink" href="#dataset-relationships" title="Permanent link">&para;</a></h2>
+<p><img alt="Dataset Relationships" src="../../images/recommender_dataset.png" /></p>
+<p><strong>Key Points</strong>:
+- Bold columns are required
+- Additional columns become features automatically
+- Datasets are joined on <code>USER_ID</code> and <code>ITEM_ID</code></p>
+<h2 id="schemas">Schemas<a class="headerlink" href="#schemas" title="Permanent link">&para;</a></h2>
+<p>Schemas define data types, validation rules, and preprocessing options for your datasets.</p>
+<h3 id="why-use-schemas">Why Use Schemas?<a class="headerlink" href="#why-use-schemas" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Type Safety</strong>: Specify data types for each column</li>
+<li><strong>Validation</strong>: Automatically validate training and inference data</li>
+<li><strong>Feature Selection</strong>: Easily experiment with different feature subsets</li>
+<li><strong>Preprocessing</strong>: Configure categorical encoding strategies</li>
+</ol>
+<h3 id="schema-file-format">Schema File Format<a class="headerlink" href="#schema-file-format" title="Permanent link">&para;</a></h3>
+<p>Schemas are defined in YAML files:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">columns</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">USER_ID</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ITEM_ID</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OUTCOME</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">float</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">age</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">int</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">state</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="nt">vocab</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CA&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;TX&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;NC&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;NY&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Vocabulary-based encoding</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zip_code</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="nt">hash_buckets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">  </span><span class="c1"># Hash bucketing</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Case Sensitivity</p>
+<p>Schema definitions are <strong>case-sensitive</strong>. <code>USER_ID</code> ≠ <code>user_id</code></p>
+</div>
+<h3 id="required-schemas">Required Schemas<a class="headerlink" href="#required-schemas" title="Permanent link">&para;</a></h3>
+<p>The library provides required schemas for validation:</p>
+<ul>
+<li><a href="https://github.com/intuit/scikit-rec/blob/main/skrec/dataset/required_schemas/interactions_schema_training.yaml">interactions_schema_training.yaml</a></li>
+<li><a href="https://github.com/intuit/scikit-rec/blob/main/skrec/dataset/required_schemas/interactions_schema_inference.yaml">interactions_schema_inference.yaml</a></li>
+<li><a href="https://github.com/intuit/scikit-rec/blob/main/skrec/dataset/required_schemas/users_schema.yaml">users_schema.yaml</a></li>
+<li><a href="https://github.com/intuit/scikit-rec/blob/main/skrec/dataset/required_schemas/items_schema.yaml">items_schema.yaml</a></li>
+</ul>
+<h2 id="categorical-preprocessing">Categorical Preprocessing<a class="headerlink" href="#categorical-preprocessing" title="Permanent link">&para;</a></h2>
+<p>The library supports two methods for handling categorical features:</p>
+<h3 id="1-vocabulary-based-encoding-one-hot">1. Vocabulary-Based Encoding (One-Hot)<a class="headerlink" href="#1-vocabulary-based-encoding-one-hot" title="Permanent link">&para;</a></h3>
+<p><strong>Use when</strong>: You have a predefined, small set of categories.</p>
+<p><strong>How it works</strong>: Creates binary columns for each category value.</p>
+<p><strong>Configuration</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">state</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">vocab</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CA&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;TX&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;NC&quot;</span><span class="p p-Indicator">]</span>
+</code></pre></div></p>
+<p><strong>Result</strong>: Creates columns <code>state_0</code>, <code>state_1</code>, <code>state_2</code>, <code>state_unknown</code></p>
+<p><strong>Handling Unknown Values</strong>:
+- Out-of-vocabulary values → <code>state_unknown = 1</code>
+- NaN values → <code>state_unknown = 1</code></p>
+<p><strong>Example</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Input</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;CA&quot;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Output after encoding</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">state_0</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">state_1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">state_2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">state_unknown</span><span class="o">=</span><span class="mi">0</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Input</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;FL&quot;</span>  <span class="c1"># Not in vocab</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># Output after encoding</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">state_0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">state_1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">state_2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">state_unknown</span><span class="o">=</span><span class="mi">1</span>
+</code></pre></div></p>
+<h3 id="2-hash-bucketing">2. Hash Bucketing<a class="headerlink" href="#2-hash-bucketing" title="Permanent link">&para;</a></h3>
+<p><strong>Use when</strong>: You have many categories or an unknown number of categories.</p>
+<p><strong>How it works</strong>: Hashes each value into a fixed number of buckets.</p>
+<p><strong>Configuration</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zip_code</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">str</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">hash_buckets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</code></pre></div></p>
+<p><strong>Result</strong>: Creates columns <code>zip_code_0</code> through <code>zip_code_99</code></p>
+<p><strong>Handling NaN Values</strong>:
+- NaN → Filled with string "nan", then hashed</p>
+<p><strong>Example</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Input</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">zip_code</span> <span class="o">=</span> <span class="s2">&quot;94025&quot;</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># After hashing to bucket 42</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">zip_code_42</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">zip_code_0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">zip_code_99</span><span class="o">=</span><span class="mi">0</span>
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">Encoding Trigger</p>
+<p>Categorical preprocessing only activates if <code>vocab</code> or <code>hash_buckets</code> is specified and the column type is <code>str</code>.</p>
+</div>
+<h2 id="loading-datasets">Loading Datasets<a class="headerlink" href="#loading-datasets" title="Permanent link">&para;</a></h2>
+<h3 id="from-s3">From S3<a class="headerlink" href="#from-s3" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.dataset.interactions_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractionsDataset</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.dataset.users_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">UsersDataset</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.dataset.items_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ItemsDataset</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1"># Load from S3</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">interactions_ds</span> <span class="o">=</span> <span class="n">InteractionsDataset</span><span class="p">(</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">data_location</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/data/interactions.csv&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">client_schema_path</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/schemas/interactions_schema.yaml&#39;</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">)</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">users_ds</span> <span class="o">=</span> <span class="n">UsersDataset</span><span class="p">(</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="n">data_location</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/data/users.csv&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">client_schema_path</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/schemas/users_schema.yaml&#39;</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="p">)</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="n">items_ds</span> <span class="o">=</span> <span class="n">ItemsDataset</span><span class="p">(</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>    <span class="n">data_location</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/data/items.csv&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="n">client_schema_path</span><span class="o">=</span><span class="s1">&#39;s3://my-bucket/schemas/items_schema.yaml&#39;</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="p">)</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># Fetch data as pandas DataFrames</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">interactions_ds</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="n">users_df</span> <span class="o">=</span> <span class="n">users_ds</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="n">items_df</span> <span class="o">=</span> <span class="n">items_ds</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="from-local-files">From Local Files<a class="headerlink" href="#from-local-files" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">interactions_ds</span> <span class="o">=</span> <span class="n">InteractionsDataset</span><span class="p">(</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">data_location</span><span class="o">=</span><span class="s1">&#39;./data/interactions.csv&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">client_schema_path</span><span class="o">=</span><span class="s1">&#39;./schemas/interactions_schema.yaml&#39;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="using-example-datasets">Using Example Datasets<a class="headerlink" href="#using-example-datasets" title="Permanent link">&para;</a></h3>
+<p>The library includes sample datasets for experimentation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.examples.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">sample_binary_reward_interactions</span><span class="p">,</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">sample_binary_reward_users</span><span class="p">,</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">sample_binary_reward_items</span><span class="p">,</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">)</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># These are ready-to-use Dataset objects</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">sample_binary_reward_interactions</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Available Examples</strong>:
+- <code>sample_binary_reward_*</code>: Binary classification (click/no-click)
+- <code>sample_continuous_reward_*</code>: Regression (revenue, time-spent)
+- <code>sample_multiclass_*</code>: Multi-class classification
+- <code>sample_multioutput_*</code>: Multi-output scenarios</p>
+<p><a href="https://github.com/intuit/scikit-rec/tree/main/skrec/examples/datasets">Browse all example datasets</a></p>
+<h2 id="dataset-requirements-by-scorer-type">Dataset Requirements by Scorer Type<a class="headerlink" href="#dataset-requirements-by-scorer-type" title="Permanent link">&para;</a></h2>
+<p>Different scorers have different dataset requirements:</p>
+<h3 id="universal-scorer">Universal Scorer<a class="headerlink" href="#universal-scorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>Interactions</strong>: Multiple rows per user allowed</li>
+<li>✅ <strong>Users</strong>: Required</li>
+<li>✅ <strong>Items</strong>: Required (item features used)</li>
+<li>📊 <strong>Outcome</strong>: Binary (classification) or continuous (regression)</li>
+</ul>
+<h3 id="independent-scorer">Independent Scorer<a class="headerlink" href="#independent-scorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>Interactions</strong>: Multiple rows per user allowed</li>
+<li>✅ <strong>Users</strong>: Optional</li>
+<li>❌ <strong>Items</strong>: Not used</li>
+<li>📊 <strong>Outcome</strong>: Binary or continuous</li>
+</ul>
+<h3 id="multiclass-scorer">Multiclass Scorer<a class="headerlink" href="#multiclass-scorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>⚠️ <strong>Interactions</strong>: One row per user only</li>
+<li>❌ <strong>Users</strong>: Not allowed</li>
+<li>❌ <strong>Items</strong>: Not allowed</li>
+<li>📊 <strong>Outcome</strong>: Not allowed (uses <code>ITEM_ID</code> as target)</li>
+</ul>
+<h3 id="multioutput-scorer">Multioutput Scorer<a class="headerlink" href="#multioutput-scorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>⚠️ <strong>Interactions</strong>: One row per user only</li>
+<li>❌ <strong>Users</strong>: Not allowed</li>
+<li>❌ <strong>Items</strong>: Not allowed</li>
+<li>📊 <strong>Outcome</strong>: Multiple outcomes with prefix <code>OUTCOME_*</code> (e.g., <code>OUTCOME_1</code>, <code>OUTCOME_click</code>)</li>
+</ul>
+<p><strong>Learn more:</strong> <a href="../../user-guide/scorers/">Scorer Selection Guide</a></p>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="1-feature-engineering">1. Feature Engineering<a class="headerlink" href="#1-feature-engineering" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Include relevant features that explain user preferences</li>
+<li>Normalize numerical features for better model performance</li>
+<li>Use categorical encoding appropriately</li>
+</ul>
+<h3 id="2-data-quality">2. Data Quality<a class="headerlink" href="#2-data-quality" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Remove duplicate interactions</li>
+<li>Handle missing values consistently</li>
+<li>Ensure ID consistency across datasets</li>
+</ul>
+<h3 id="3-traintest-split">3. Train/Test Split<a class="headerlink" href="#3-traintest-split" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Split by time for temporal validation</li>
+<li>Ensure no data leakage between train/test</li>
+</ul>
+<h3 id="4-schema-management">4. Schema Management<a class="headerlink" href="#4-schema-management" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Version your schemas alongside your data</li>
+<li>Use consistent naming conventions</li>
+<li>Document feature meanings</li>
+</ul>
+<h3 id="5-performance">5. Performance<a class="headerlink" href="#5-performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li>For large datasets, consider sampling during experimentation</li>
+<li>Use appropriate data formats (Parquet &gt; CSV for large files)</li>
+<li>Cache preprocessed data when iterating</li>
+</ul>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<h3 id="keyerror-user_id-not-found">KeyError: 'USER_ID' not found<a class="headerlink" href="#keyerror-user_id-not-found" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Ensure all required columns are present and spelled correctly (case-sensitive).</p>
+<h3 id="typeerror-expected-float-got-str">TypeError: Expected float, got str<a class="headerlink" href="#typeerror-expected-float-got-str" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Check your schema matches your actual data types.</p>
+<h3 id="valueerror-items-dataset-required-for-universal-scorer">ValueError: Items dataset required for Universal scorer<a class="headerlink" href="#valueerror-items-dataset-required-for-universal-scorer" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Provide an items dataset or switch to Independent scorer.</p>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../quick-start/">Quick Start Tutorial</a></strong> - Build a recommender with example datasets</li>
+<li><strong><a href="../../user-guide/scorers/">Scorer Selection</a></strong> - Choose the right scorer for your data</li>
+<li><strong><a href="../../user-guide/architecture/">Architecture Overview</a></strong> - Understand how datasets flow through the system</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

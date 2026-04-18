@@ -1,0 +1,2236 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://intuit.github.io/scikit-rec/recommender-types/comparison/">
+      
+      
+        <link rel="prev" href="../../user-guide/hrnn/">
+      
+      
+        <link rel="next" href="../ranking/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Comparison - scikit-rec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#recommender-types-comparison" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="scikit-rec" class="md-header__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            scikit-rec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Comparison
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="scikit-rec" class="md-nav__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    scikit-rec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/capability-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/scorers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/estimators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/collaborative-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/ncf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/two-tower/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-Tower
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/sasrec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SASRec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/hrnn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommender Types
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommender Types
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommender-overviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommender Overviews
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommender Overviews">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-rankingrecommender-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. RankingRecommender (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-sequentialrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SequentialRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-hierarchicalsequentialrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. HierarchicalSequentialRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-contextualbanditsrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ContextualBanditsRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-upliftrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. UpliftRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-gcslrecommender-gcsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. GcslRecommender (GCSL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combining-recommenders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining Recommenders
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Combining Recommenders">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fallback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fallback Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-stage-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Stage Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-inference-and-evaluation-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Inference and Evaluation Interface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unified Inference and Evaluation Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommend-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recommend() Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluate-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate() Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q-which-recommender-should-i-start-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Which recommender should I start with?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-can-i-use-multiple-recommenders-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Can I use multiple recommenders together?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-do-all-recommenders-support-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Do all recommenders support evaluation?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-which-recommenders-support-real-time-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Which recommenders support real-time inference?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-can-i-switch-recommenders-after-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Can I switch recommenders after training?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ranking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bandits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bandits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uplift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uplift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sequential/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequential
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hierarchical/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hierarchical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gcsl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hpo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hybrid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommender-overviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommender Overviews
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommender Overviews">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-rankingrecommender-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. RankingRecommender (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-sequentialrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SequentialRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-hierarchicalsequentialrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. HierarchicalSequentialRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-contextualbanditsrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ContextualBanditsRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-upliftrecommender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. UpliftRecommender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-gcslrecommender-gcsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. GcslRecommender (GCSL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combining-recommenders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining Recommenders
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Combining Recommenders">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fallback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fallback Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-stage-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Stage Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-inference-and-evaluation-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Inference and Evaluation Interface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unified Inference and Evaluation Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommend-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recommend() Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluate-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate() Method
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q-which-recommender-should-i-start-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Which recommender should I start with?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-can-i-use-multiple-recommenders-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Can I use multiple recommenders together?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-do-all-recommenders-support-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Do all recommenders support evaluation?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-which-recommenders-support-real-time-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Which recommenders support real-time inference?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-can-i-switch-recommenders-after-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: Can I switch recommenders after training?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="recommender-types-comparison">Recommender Types Comparison<a class="headerlink" href="#recommender-types-comparison" title="Permanent link">&para;</a></h1>
+<p>After choosing a <a href="../../user-guide/scorers/">Scorer</a> and <a href="../../user-guide/estimators/">Estimator</a>, the next step is selecting a <strong>Recommender type</strong>. The library provides several recommender implementations, each suited for different use cases and decision-making scenarios.</p>
+<h2 id="quick-comparison">Quick Comparison<a class="headerlink" href="#quick-comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Recommender</th>
+<th>Use Case</th>
+<th>Training Data</th>
+<th>Exploration</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><a href="../ranking/">RankingRecommender</a></strong></td>
+<td>General ranking</td>
+<td>User-item interactions</td>
+<td>Via <code>sampling_temperature</code></td>
+<td>Most scenarios; also powers embedding models (TwoTower, NeuralFactorization, NCF)</td>
+</tr>
+<tr>
+<td><strong><a href="../sequential/">SequentialRecommender</a></strong></td>
+<td>Sequential patterns</td>
+<td>User-item interactions + TIMESTAMP</td>
+<td>Via <code>sampling_temperature</code></td>
+<td>Watch/browse/purchase history (SASRec)</td>
+</tr>
+<tr>
+<td><strong><a href="../hierarchical/">HierarchicalSequentialRecommender</a></strong></td>
+<td>Session-structured patterns</td>
+<td>User-item interactions + TIMESTAMP</td>
+<td>Via <code>sampling_temperature</code></td>
+<td>Session-aware history with cross-session memory (HRNN)</td>
+</tr>
+<tr>
+<td><strong><a href="../bandits/">ContextualBanditsRecommender</a></strong></td>
+<td>Online learning</td>
+<td>User-item interactions</td>
+<td>Built-in strategies</td>
+<td>Cold-start, A/B testing, exploration</td>
+</tr>
+<tr>
+<td><strong><a href="../uplift/">UpliftRecommender</a></strong></td>
+<td>Causal impact</td>
+<td>User-item + treatment</td>
+<td>No</td>
+<td>Incremental impact optimization (T/S/X-Learner)</td>
+</tr>
+<tr>
+<td><strong><a href="../gcsl/">GcslRecommender</a></strong></td>
+<td>Multi-objective (GCSL)</td>
+<td>User-item interactions</td>
+<td>No</td>
+<td>Multiple competing objectives</td>
+</tr>
+</tbody>
+</table>
+<h2 id="decision-guide">Decision Guide<a class="headerlink" href="#decision-guide" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>graph TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    A[Start] --&gt; B{Do you have&lt;br/&gt;interaction data?}
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    B --&gt;|No| E[Collect interaction data&lt;br/&gt;or non-ML baselines]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    B --&gt;|Yes| F{Need explicit&lt;br/&gt;exploration?}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    F --&gt;|Yes| G[ContextualBanditsRecommender]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    F --&gt;|No| H{Measuring causal&lt;br/&gt;impact?}
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    H --&gt;|Yes| K[UpliftRecommender]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    H --&gt;|No| L{Multiple&lt;br/&gt;objectives?}
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    L --&gt;|Yes| M[GcslRecommender]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    L --&gt;|No| O{Interaction&lt;br/&gt;order matters?}
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    O --&gt;|Yes| Q{Session-&lt;br/&gt;structured?}
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Q --&gt;|Yes| R[HierarchicalSequentialRecommender]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Q --&gt;|No| P[SequentialRecommender]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    O --&gt;|No| N[RankingRecommender&lt;br/&gt;most common]
+</code></pre></div>
+<h2 id="recommender-overviews">Recommender Overviews<a class="headerlink" href="#recommender-overviews" title="Permanent link">&para;</a></h2>
+<h3 id="1-rankingrecommender-default">1. RankingRecommender (Default)<a class="headerlink" href="#1-rankingrecommender-default" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Standard ranking and recommendation tasks.</p>
+<p><strong>Key Features</strong>:
+- Ranks items deterministically by predicted reward
+- Supports probabilistic sampling for exploration
+- Compatible with all scorer types — including embedding models
+- Most commonly used recommender</p>
+<p><strong>When to Use</strong>:
+- E-commerce product recommendations
+- Content recommendation (articles, videos)
+- Search result ranking
+- Any standard ranking task
+- Real-time retrieval with learned embeddings (pair with <code>ContextualizedTwoTowerEstimator</code>, <code>NeuralFactorizationEstimator</code>, or <code>NCFEstimator</code>)</p>
+<p><a href="../ranking/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h3 id="2-sequentialrecommender">2. SequentialRecommender<a class="headerlink" href="#2-sequentialrecommender" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Order-aware recommendations based on interaction sequences.</p>
+<p><strong>Key Features</strong>:
+- Captures temporal patterns using the <strong>SASRec</strong> transformer model
+- Sorts interactions by timestamp per user before training
+- Supports both implicit (BCE) and explicit (MSE) feedback
+- Compatible with <code>sampling_temperature</code> for probabilistic recommendations</p>
+<p><strong>When to Use</strong>:
+- Video watch history or content queues
+- E-commerce browsing and purchase journeys
+- Music listening sessions
+- Any scenario where "what did the user just do?" matters</p>
+<p><a href="../sequential/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h3 id="3-hierarchicalsequentialrecommender">3. HierarchicalSequentialRecommender<a class="headerlink" href="#3-hierarchicalsequentialrecommender" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Session-aware recommendations that model both within-session and cross-session dynamics.</p>
+<p><strong>Key Features</strong>:
+- Two-level GRU hierarchy (<strong>HRNN</strong>): session GRU encodes items within a session; user GRU propagates state across sessions
+- User GRU output seeds the next session's GRU — long-term preferences modulate short-term behaviour
+- Sessions defined by a configurable <code>session_timeout_minutes</code> gap
+- Supports both implicit (BCE) and explicit (MSE) feedback</p>
+<p><strong>When to Use</strong>:
+- Users have natural session breaks (e-commerce visits, streaming sessions)
+- Within-session context matters separately from long-term history
+- You want to capture re-engagement patterns across sessions</p>
+<p><a href="../hierarchical/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h3 id="4-contextualbanditsrecommender">4. ContextualBanditsRecommender<a class="headerlink" href="#4-contextualbanditsrecommender" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Explicit exploration-exploitation trade-off for online learning.</p>
+<p><strong>Key Features</strong>:
+- Built-in exploration strategies (Epsilon-Greedy, Static Action)
+- Tracks which recommendations were exploratory
+- Ideal for A/B testing scenarios
+- Continuously learns from feedback</p>
+<p><strong>When to Use</strong>:
+- Cold-start scenarios (new items/users)
+- Online learning systems
+- A/B testing and experimentation
+- Need to balance exploration and exploitation</p>
+<p><a href="../bandits/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h3 id="5-upliftrecommender">5. UpliftRecommender<a class="headerlink" href="#5-upliftrecommender" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Estimate causal impact of recommendations.</p>
+<p><strong>Key Features</strong>:
+- Measures incremental effect (uplift)
+- T-Learner and S-Learner strategies
+- Treatment effect estimation
+- Focuses on causality, not correlation</p>
+<p><strong>When to Use</strong>:
+- Maximize incremental revenue (not total revenue)
+- Understand treatment effects
+- Avoid recommending items users would engage with anyway
+- Causal inference scenarios</p>
+<p><a href="../uplift/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h3 id="6-gcslrecommender-gcsl">6. GcslRecommender (GCSL)<a class="headerlink" href="#6-gcslrecommender-gcsl" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Goal-conditioned recommendations — one trained model, steerable at inference via swappable goal specifications.</p>
+<p><strong>Key Features</strong>:
+- Keeps outcome columns as input features (the "goal conditioning" trick)
+- Three built-in inference methods: <code>PredefinedValue</code>, <code>PercentileValue</code>, <code>MeanScalarization</code>
+- Swap goals at inference with <code>set_inference_method()</code> — no retraining
+- Out-of-distribution warnings when goals exceed training range
+- Extensible: subclass <code>BaseInference</code> to add custom goal strategies</p>
+<p><strong>When to Use</strong>:
+- Optimize for multiple competing metrics (engagement AND revenue AND diversity)
+- A/B test different business objectives without retraining
+- Steer between popular and niche recommendations
+- Any scenario where one model should serve multiple objectives</p>
+<p><a href="../gcsl/"><strong>→ Full Guide</strong></a></p>
+<hr />
+<h2 id="combining-recommenders">Combining Recommenders<a class="headerlink" href="#combining-recommenders" title="Permanent link">&para;</a></h2>
+<p>You can combine multiple recommenders for more sophisticated systems:</p>
+<h3 id="fallback-strategy">Fallback Strategy<a class="headerlink" href="#fallback-strategy" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Try ML-based recommendation first, fall back to a simple baseline (e.g. popularity list)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">recommendations</span> <span class="o">=</span> <span class="n">ml_recommender</span><span class="o">.</span><span class="n">recommend</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">except</span> <span class="n">InsufficientDataError</span><span class="p">:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">recommendations</span> <span class="o">=</span> <span class="n">popular_items_fallback</span><span class="p">(</span><span class="n">top_k</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="multi-stage-filtering">Multi-Stage Filtering<a class="headerlink" href="#multi-stage-filtering" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Stage 1: Your own business logic — build an allowed candidate id list</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">candidate_items</span> <span class="o">=</span> <span class="n">filter_items_by_business_rules</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">catalog_df</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Stage 2: RankingRecommender scores only that subset</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">ranking_recommender</span><span class="o">.</span><span class="n">set_item_subset</span><span class="p">(</span><span class="n">candidate_items</span><span class="p">)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">recommendations</span> <span class="o">=</span> <span class="n">ranking_recommender</span><span class="o">.</span><span class="n">recommend</span><span class="p">(</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">interactions</span><span class="o">=</span><span class="n">interactions_df</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">users</span><span class="o">=</span><span class="n">users_df</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">ranking_recommender</span><span class="o">.</span><span class="n">clear_item_subset</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="unified-inference-and-evaluation-interface">Unified Inference and Evaluation Interface<a class="headerlink" href="#unified-inference-and-evaluation-interface" title="Permanent link">&para;</a></h2>
+<p>All recommenders share a consistent interface for making recommendations and evaluating performance:</p>
+<h3 id="recommend-method"><code>recommend()</code> Method<a class="headerlink" href="#recommend-method" title="Permanent link">&para;</a></h3>
+<p>Accepts <code>interactions</code> (optional) and <code>users</code> (optional) DataFrames:</p>
+<ul>
+<li>For most recommenders, these DataFrames provide user features and interaction context features</li>
+<li>When using a <strong><code>BaseEmbeddingEstimator</code></strong> subclass with <strong><code>UniversalScorer</code></strong> for real-time inference, the <code>users</code> DataFrame should contain <code>USER_ID</code> and <code>USER_EMBEDDING_NAME</code> (with pre-computed embeddings), and optionally other user features</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">recommendations</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">recommend</span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">interactions</span><span class="o">=</span><span class="n">interactions_df</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">users</span><span class="o">=</span><span class="n">users_df</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Learn more</strong>: <a href="../../user-guide/inference/">Inference Guide</a></p>
+<h3 id="evaluate-method"><code>evaluate()</code> Method<a class="headerlink" href="#evaluate-method" title="Permanent link">&para;</a></h3>
+<p>Accepts a <code>RecommenderEvaluatorType</code> and <code>RecommenderMetricType</code>, which determine the evaluation technique and metric to use:</p>
+<ul>
+<li><strong><code>score_items_kwargs</code></strong>: Passed to <code>score_items()</code>, can include <code>interactions</code> and <code>users</code> DataFrames (potentially with pre-computed embeddings for embedding models)</li>
+<li><strong><code>eval_kwargs</code></strong>: Provides logged rewards and items for the evaluator</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">NDCG_AT_K</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">interactions_df</span><span class="p">,</span> <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">users_df</span><span class="p">},</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;logged_items&quot;</span><span class="p">:</span> <span class="n">logged_items</span><span class="p">,</span> <span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">logged_rewards</span><span class="p">}</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Learn more</strong>: <a href="../../user-guide/evaluation/">Evaluation Guide</a></p>
+<h2 id="common-questions">Common Questions<a class="headerlink" href="#common-questions" title="Permanent link">&para;</a></h2>
+<h3 id="q-which-recommender-should-i-start-with">Q: Which recommender should I start with?<a class="headerlink" href="#q-which-recommender-should-i-start-with" title="Permanent link">&para;</a></h3>
+<p><strong>A</strong>: Start with <strong>RankingRecommender</strong>. It's the most flexible and works for 80% of use cases. Switch to specialized recommenders only when you have specific requirements (cold-start, causal inference, etc.).</p>
+<h3 id="q-can-i-use-multiple-recommenders-together">Q: Can I use multiple recommenders together?<a class="headerlink" href="#q-can-i-use-multiple-recommenders-together" title="Permanent link">&para;</a></h3>
+<p><strong>A</strong>: Yes! See the "Combining Recommenders" section above for patterns.</p>
+<h3 id="q-do-all-recommenders-support-evaluation">Q: Do all recommenders support evaluation?<a class="headerlink" href="#q-do-all-recommenders-support-evaluation" title="Permanent link">&para;</a></h3>
+<p><strong>A</strong>: Yes, all recommenders share the same <code>evaluate()</code> interface.</p>
+<h3 id="q-which-recommenders-support-real-time-inference">Q: Which recommenders support real-time inference?<a class="headerlink" href="#q-which-recommenders-support-real-time-inference" title="Permanent link">&para;</a></h3>
+<p><strong>A</strong>: All recommenders support real-time inference, but performance varies:
+- <strong>Fastest</strong>: <code>RankingRecommender</code> with tabular scorers and caching (see <a href="../../user-guide/inference/">Inference</a>)
+- <strong>Fast</strong>: ContextualBanditsRecommender
+- <strong>Slower</strong>: UpliftRecommender (more complex models)</p>
+<h3 id="q-can-i-switch-recommenders-after-training">Q: Can I switch recommenders after training?<a class="headerlink" href="#q-can-i-switch-recommenders-after-training" title="Permanent link">&para;</a></h3>
+<p><strong>A</strong>: No, recommenders are trained independently. To switch, train the new recommender from scratch.</p>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<p>Choose a recommender type to learn more:</p>
+<ul>
+<li><strong><a href="../ranking/">RankingRecommender</a></strong> - Start here for most use cases</li>
+<li><strong><a href="../sequential/">SequentialRecommender</a></strong> / <strong><a href="../hierarchical/">HierarchicalSequentialRecommender</a></strong> - Order- and session-aware models</li>
+<li><strong><a href="../bandits/">ContextualBanditsRecommender</a></strong> - For exploration and A/B testing</li>
+<li><strong><a href="../uplift/">UpliftRecommender</a></strong> - For causal inference</li>
+<li><strong><a href="../gcsl/">GcslRecommender</a></strong> - Multi-objective ranking (GCSL)</li>
+</ul>
+<p>Or continue learning:</p>
+<ul>
+<li><strong><a href="../../user-guide/training/">Training Guide</a></strong> - How to train recommenders</li>
+<li><strong><a href="../../user-guide/evaluation/">Evaluation Guide</a></strong> - How to evaluate recommenders</li>
+<li><strong><a href="../../advanced/orchestration/">Orchestration</a></strong> - Config-driven pipelines</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
