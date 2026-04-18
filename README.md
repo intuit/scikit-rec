@@ -134,13 +134,13 @@ All notebooks use MovieLens 1M (downloaded automatically) and include training, 
 
 ## Documentation
 
-See the [docs/](docs/) directory for:
+Full documentation is available at **[intuit.github.io/scikit-rec](https://intuit.github.io/scikit-rec)**.
 
-- [Architecture overview](docs/user-guide/architecture.md)
-- [Capability matrix](docs/user-guide/capability-matrix.md)
-- [Quick start tutorial](docs/getting-started/quick-start.md)
-- [Dataset preparation](docs/getting-started/datasets.md)
-- [Evaluation guide](docs/user-guide/evaluation.md)
+- [Architecture overview](https://intuit.github.io/scikit-rec/user-guide/architecture/)
+- [Capability matrix](https://intuit.github.io/scikit-rec/user-guide/capability-matrix/)
+- [Quick start tutorial](https://intuit.github.io/scikit-rec/getting-started/quick-start/)
+- [Dataset preparation](https://intuit.github.io/scikit-rec/getting-started/datasets/)
+- [Evaluation guide](https://intuit.github.io/scikit-rec/user-guide/evaluation/)
 
 ## Development
 
