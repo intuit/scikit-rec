@@ -115,12 +115,6 @@ recommendations = recommender.recommend(
 )
 ```
 
-## Version Information
-
-!!! info "Version Status"
-    - **scikit-rec 3.0**: Currently in testing mode
-    - **scikit-rec 2.x**: Stable and production-ready
-
 ## Support
 
 - **Issues**: Report bugs in [GitHub Issues](https://github.com/intuit/scikit-rec/issues)
