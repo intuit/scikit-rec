@@ -347,7 +347,7 @@ recommendations = recommender.recommend(...)
 
 ## When to Switch to RankingRecommender
 
-Consider switching from Bandits to Propensity when:
+Consider switching from Bandits to RankingRecommender when:
 - ✅ You have collected enough data (thousands of interactions per item)
 - ✅ Item quality estimates are stable
 - ✅ You want fully deterministic recommendations

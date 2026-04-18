@@ -20,7 +20,7 @@ pip install skrec
 
 ### Torch Support
 
-For deep learning models (DeepFM, NCF, Two-Tower, SASRec, HRNN):
+For PyTorch-based models (NCF, Two-Tower, DCN, NeuralFactorization, SASRec, HRNN, DeepFM):
 
 ```bash
 pip install scikit-rec[torch]

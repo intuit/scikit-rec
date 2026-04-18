@@ -88,7 +88,7 @@ Retriever is **optional** on these classes. `SequentialRecommender`’s public c
 
 | Support | Details |
 |---------|---------|
-| **Estimator** | In the shipped code, **`BatchXGBClassifierEstimator`** implements `_batch_fit_model` (see `recommender/estimator/classification/xgb_classifier.py`). Other estimators use in-memory `fit` unless extended. |
+| **Estimator** | In the shipped code, **`BatchXGBClassifierEstimator`** implements `_batch_fit_model` (see `skrec/estimator/classification/xgb_classifier.py`). Other estimators use in-memory `fit` unless extended. |
 | **Training** | `coordinate_training` uses the batch path when `estimator.support_batch_training()` is true: **`interactions_ds` required**; **`items_ds` required** for partitioned catalogue setup; validation datasets must satisfy the same rules as tabular validation (e.g. `valid_users_ds` when users + valid interactions). |
 | **Embedding** | **No** batch-training branch for `BaseEmbeddingEstimator` in the same iterator style. |
 | **Sequential** | **`support_batch_training()` is False** for `SequentialEstimator`. |

@@ -214,9 +214,11 @@ Within each family, the method contract is **enforced by abstract base classes**
 ## Implementation Details
 
 For implementation details and complete API, see:
-- `recommender/estimator/classification/` - Classification estimators
-- `recommender/estimator/regression/` - Regression estimators
-- `recommender/estimator/base_estimator.py` - Base estimator interface
+- `skrec/estimator/classification/` - Classification estimators
+- `skrec/estimator/regression/` - Regression estimators
+- `skrec/estimator/embedding/` - Embedding estimators (MF, NCF, TwoTower, DCN)
+- `skrec/estimator/sequential/` - Sequential estimators (SASRec, HRNN)
+- `skrec/estimator/base_estimator.py` - Base estimator interface
 
 ## Next Steps
 

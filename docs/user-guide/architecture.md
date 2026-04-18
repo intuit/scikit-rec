@@ -11,8 +11,12 @@ The **recommender** library uses a clean 3-layer architecture that separates con
 **Responsibility**: Implement recommendation strategy and business logic.
 
 **Examples**:
-- `RankingRecommender`: Rank items by predicted propensity
+- `RankingRecommender`: Rank items by predicted score
 - `ContextualBanditsRecommender`: Exploration-exploitation strategies
+- `SequentialRecommender`: Sequential recommendation (SASRec)
+- `HierarchicalSequentialRecommender`: Session-based recommendation (HRNN)
+- `UpliftRecommender`: Causal treatment effect estimation
+- `GcslRecommender`: Goal-conditioned multi-objective recommendation
 
 **Key Methods**:
 - `train()`: Train the underlying models
@@ -25,10 +29,12 @@ The **recommender** library uses a clean 3-layer architecture that separates con
 **Responsibility**: Determine how to score items given user context.
 
 **Examples**:
-- `UniversalScorer`: Single global model for all items (uses item features)
+- `UniversalScorer`: Single global model for all items (uses item features, supports embedding estimators)
 - `IndependentScorer`: Separate model per item
 - `MulticlassScorer`: Treat items as competing classes
 - `MultioutputScorer`: Multiple outcomes per prediction
+- `SequentialScorer`: Scores from SASRec interaction sequences
+- `HierarchicalScorer`: Scores from HRNN session hierarchies
 
 ![Choosing the Scorer](../images/scorer.png)
 
@@ -42,9 +48,10 @@ The **recommender** library uses a clean 3-layer architecture that separates con
 **Responsibility**: The actual machine learning model that makes predictions.
 
 **Examples**:
-- Classification: `XGBClassifierEstimator`, `LightGBMClassifierEstimator`, `LogisticRegressionClassifierEstimator`
-- Regression: `XGBRegressorEstimator`, `LightGBMRegressorEstimator`, `SklearnUniversalRegressorEstimator`
-- Deep Learning: `DeepFMClassifier`
+- Tabular Classification: `XGBClassifierEstimator`, `LightGBMClassifierEstimator`, `LogisticRegressionClassifierEstimator`, `DeepFMClassifier`
+- Tabular Regression: `XGBRegressorEstimator`, `LightGBMRegressorEstimator`, `SklearnUniversalRegressorEstimator`
+- Embedding: `MatrixFactorizationEstimator`, `NCFEstimator`, `ContextualizedTwoTowerEstimator`, `DeepCrossNetworkEstimator`
+- Sequential: `SASRecClassifierEstimator`, `HRNNClassifierEstimator`
 
 **Key Methods**:
 - `fit()`: Train the model
@@ -139,7 +146,7 @@ Share components across different recommenders:
 # Same scorer for different recommender types
 scorer = UniversalScorer(estimator)
 
-propensity_rec = RankingRecommender(scorer)
+ranking_rec = RankingRecommender(scorer)
 bandit_rec = ContextualBanditsRecommender(scorer, strategy_type=...)
 ```
 

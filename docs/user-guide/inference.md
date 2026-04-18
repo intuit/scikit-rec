@@ -247,7 +247,7 @@ for user in users:
 ### 3. Use Lighter Models
 ```python
 # For real-time: LogisticRegression or LightGBM
-estimator = LGBMClassifierEstimator({"n_estimators": 50})  # Faster
+estimator = LightGBMClassifierEstimator({"n_estimators": 50})  # Faster
 
 # For batch: XGBoost or DeepFM
 estimator = XGBClassifierEstimator({"n_estimators": 200})  # Better quality

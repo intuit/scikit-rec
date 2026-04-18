@@ -75,7 +75,7 @@ Provide the built-in schema to enable validation:
 ```python
 InteractionsDataset(
     data_location="interactions.csv",
-    client_schema_path="recommender/dataset/required_schemas/interactions_schema_with_timestamp_training.yaml",
+    client_schema_path="skrec/dataset/required_schemas/interactions_schema_with_timestamp_training.yaml",
 )
 ```
 

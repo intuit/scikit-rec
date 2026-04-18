@@ -292,17 +292,17 @@ dev_config = {
         "xgboost": {"n_estimators": 200, "max_depth": 8}
     },
     "scorer_type": "universal",
-    "recommender_type": "propensity"
+    "recommender_type": "ranking"
 }
 
 # Production: Faster model
 prod_config = {
     "estimator_config": {
         "ml_task": "classification",
-        "lightgbm": {"n_estimators": 100, "max_depth": 5}  # Faster
+        "xgboost": {"n_estimators": 100, "max_depth": 4}  # Lighter for low latency
     },
     "scorer_type": "universal",
-    "recommender_type": "propensity"
+    "recommender_type": "ranking"
 }
 ```
 

@@ -438,8 +438,7 @@ ips_score = recommender.evaluate(
 
 ## Next Steps
 
-- **[Metrics Guide](../user-guide/architecture.md)** - Deep dive into metrics
-- **[Evaluator Guide](../user-guide/architecture.md)** - Deep dive into evaluators
+- **[Architecture Overview](architecture.md)** - How evaluators fit in the 3-layer design
 - **[Training Guide](training.md)** - Train models for evaluation
 - **[Production Guide](../advanced/production.md)** - Deploy evaluated models
 

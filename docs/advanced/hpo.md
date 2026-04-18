@@ -140,7 +140,7 @@ base_pipeline_config = {
         }
     },
     "scorer_type": "independent",
-    "recommender_type": "propensity"
+    "recommender_type": "ranking"
 }
 
 # Define search space using plain dicts
@@ -244,7 +244,7 @@ base_config = {
         }
     },
     "scorer_type": "universal",
-    "recommender_type": "propensity"
+    "recommender_type": "ranking"
 }
 
 # 2. Define search space

@@ -140,6 +140,6 @@ uplift_recommendations = recommender.recommend(...)
 ## Implementation Details
 
 For implementation details and API reference, see:
-- `recommender/recommender/uplift_model/uplift_t_learner.py`
-- `recommender/recommender/uplift_model/uplift_s_learner.py`
+- `skrec/recommender/uplift_model/uplift_recommender.py`
+- `skrec/recommender/uplift_model/uplift_scorer_adapter.py`
 

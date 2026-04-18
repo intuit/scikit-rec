@@ -137,7 +137,7 @@ config = {
         }
     },
     "scorer_type": "universal",
-    "recommender_type": "propensity"
+    "recommender_type": "ranking"
 }
 
 recommender = create_recommender_pipeline(config)

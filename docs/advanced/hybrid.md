@@ -88,23 +88,23 @@ def ensemble_recommend(user_id, user_features, top_k=5, weights=None):
     Combine scores from multiple recommenders with weighted average.
     """
     if weights is None:
-        weights = {'propensity': 0.6, 'text': 0.4}
+        weights = {'ranking': 0.6, 'bandits': 0.4}
     
     interactions_df = pd.DataFrame({"USER_ID": [user_id]})
     users_df = pd.DataFrame({"USER_ID": [user_id], **user_features})
     
     # Get scores from each recommender
-    scores_propensity = ranking_recommender.score_items(interactions_df, users_df)
+    scores_ranking = ranking_recommender.score_items(interactions_df, users_df)
     scores_bandits = bandits_recommender.score_items(interactions_df, users_df)
     
     # Normalize scores (0-1 range)
-    scores_propensity_norm = (scores_propensity - scores_propensity.min()) / (scores_propensity.max() - scores_propensity.min())
+    scores_ranking_norm = (scores_ranking - scores_ranking.min()) / (scores_ranking.max() - scores_ranking.min())
     scores_bandits_norm = (scores_bandits - scores_bandits.min()) / (scores_bandits.max() - scores_bandits.min())
     
     # Weighted combination
     ensemble_scores = (
-        weights['propensity'] * scores_propensity_norm +
-        weights['text'] * scores_bandits_norm
+        weights['ranking'] * scores_ranking_norm +
+        weights['bandits'] * scores_bandits_norm
     )
     
     # Get top-k
@@ -294,8 +294,8 @@ class HybridRecommender:
     """
     Production-ready hybrid recommender combining multiple strategies.
     """
-    def __init__(self, propensity_rec, bandits_rec, rule_rec):
-        self.propensity_rec = propensity_rec
+    def __init__(self, ranking_rec, bandits_rec, rule_rec):
+        self.ranking_rec = ranking_rec
         self.bandits_rec = bandits_rec
         self.rule_rec = rule_rec
         
@@ -322,7 +322,7 @@ class HybridRecommender:
             strategy = 'bandits'
         else:
             # Established user: collaborative filtering
-            primary_rec = self.propensity_rec
+            primary_rec = self.ranking_rec
             strategy = 'collaborative'
         
         # Stage 3: Get primary recommendations
@@ -371,9 +371,9 @@ class HybridRecommender:
 ```python
 # A/B test different weights
 weights_configs = [
-    {'propensity': 0.7, 'text': 0.3},
-    {'propensity': 0.6, 'text': 0.4},
-    {'propensity': 0.5, 'text': 0.5}
+    {'ranking': 0.7, 'bandits': 0.3},
+    {'ranking': 0.6, 'bandits': 0.4},
+    {'ranking': 0.5, 'bandits': 0.5}
 ]
 
 for weights in weights_configs:

@@ -8,10 +8,12 @@ Scorers determine **how items are scored** given user context. Choosing the righ
 
 | Scorer | Models | Item Features | Use Case |
 |--------|--------|---------------|----------|
-| **Universal** | 1 global model | ✅ Required | Best performance, needs item features |
+| **Universal** | 1 global model | ✅ Required | Best performance, needs item features. Also supports embedding estimators. |
 | **Independent** | 1 model per item | ❌ Not used | Simple, no item features needed |
 | **Multiclass** | 1 model | ❌ Not allowed | One positive item per user |
 | **Multioutput** | 1 model | ❌ Not allowed | Multiple outcomes per user |
+| **Sequential** | 1 sequential model | ❌ N/A | SASRec — scores from interaction sequences |
+| **Hierarchical** | 1 sequential model | ❌ N/A | HRNN — scores from session-structured sequences |
 
 ## 1. UniversalScorer (Most Common)
 
@@ -141,11 +143,54 @@ interactions_df = pd.DataFrame({
 
 ---
 
+## 5. SequentialScorer
+
+**How it works**: Wraps a `SequentialEstimator` (SASRec) that scores all items from a user's interaction sequence in a single forward pass.
+
+```python
+from skrec.scorer.sequential import SequentialScorer
+
+scorer = SequentialScorer(estimator)  # estimator must be a SequentialEstimator
+```
+
+**Dataset Requirements**:
+- ✅ **Interactions**: Multiple rows per user with `TIMESTAMP` column
+- ❌ **Users**: Not used (sequences encode user preferences)
+- ✅ **Items**: Used for item vocabulary
+- 📊 **Outcome**: Binary
+
+**When to use**: When interaction order matters and you want to model sequential patterns (e.g., "users who watched A then B tend to watch C next"). Requires `SequentialRecommender` and a SASRec estimator. See [SASRec guide](sasrec.md).
+
+---
+
+## 6. HierarchicalScorer
+
+**How it works**: Wraps a `SequentialEstimator` (HRNN) that models session-structured interaction histories with a two-level GRU hierarchy.
+
+```python
+from skrec.scorer.hierarchical import HierarchicalScorer
+
+scorer = HierarchicalScorer(estimator)  # estimator must be a SequentialEstimator
+```
+
+**Dataset Requirements**:
+- ✅ **Interactions**: Multiple rows per user with `TIMESTAMP` (and optionally `SESSION_ID`)
+- ❌ **Users**: Not used
+- ✅ **Items**: Used for item vocabulary
+- 📊 **Outcome**: Binary
+
+**When to use**: When users have distinct browsing sessions and cross-session context matters. Requires `HierarchicalSequentialRecommender` and an HRNN estimator. See [HRNN guide](hrnn.md).
+
+---
+
 ## Decision Guide
 
 ```mermaid
 graph TD
-    A[Start] --> B{Have item<br/>features?}
+    A[Start] --> Z{Sequential/<br/>session data?}
+    Z -->|Yes, flat sequences| SEQ[SequentialScorer<br/>+ SASRec]
+    Z -->|Yes, sessions| HIER[HierarchicalScorer<br/>+ HRNN]
+    Z -->|No| B{Have item<br/>features?}
     B -->|Yes| C[UniversalScorer]
     B -->|No| D{One positive<br/>item per user?}
     D -->|Yes| E{Need features?}
@@ -176,6 +221,17 @@ Compatible with scorers when outcomes are continuous:
 - MulticlassScorer ✅
 - Others ❌
 
+### Embedding Estimators (MF, NCF, TwoTower, DCN, NeuralFactorization)
+- UniversalScorer ✅ (auto-dispatches to embedding pipeline)
+- IndependentScorer ❌
+- MulticlassScorer ❌
+- MultioutputScorer ❌
+
+### Sequential Estimators (SASRec, HRNN)
+- SequentialScorer ✅ (for SASRec)
+- HierarchicalScorer ✅ (for HRNN)
+- All other scorers ❌
+
 ## Complete Examples
 
 ### Example 1: Universal Scorer (E-commerce)
@@ -191,10 +247,10 @@ scorer = UniversalScorer(estimator)
 ### Example 2: Independent Scorer (Content Recommendation)
 ```python
 from skrec.scorer.independent import IndependentScorer
-from skrec.estimator.classification.lgbm_classifier import LGBMClassifierEstimator
+from skrec.estimator.classification.lightgbm_classifier import LightGBMClassifierEstimator
 
 # No item features, each content piece is unique
-estimator = LGBMClassifierEstimator({"learning_rate": 0.05})
+estimator = LightGBMClassifierEstimator({"learning_rate": 0.05})
 scorer = IndependentScorer(estimator)
 
 # Enable parallel inference for speed

@@ -81,7 +81,7 @@ interactions_df = pd.DataFrame({
 Use the provided schema file for dataset validation:
 
 ```yaml
-# recommender/dataset/required_schemas/interactions_schema_with_timestamp_training.yaml
+# skrec/dataset/required_schemas/interactions_schema_with_timestamp_training.yaml
 columns:
   - name: USER_ID
     type: str
