@@ -45,6 +45,28 @@ from skrec.util.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Authoritative, single-source-of-truth enums — these back both the factory's
+# upfront validation (inside `create_recommender_pipeline`) and any external
+# consumer (e.g., a system-prompt builder) that needs to introspect
+# scikit-rec's capabilities.
+RECOMMENDER_TYPES: Tuple[str, ...] = (
+    "ranking",
+    "bandits",
+    "sequential",
+    "hierarchical_sequential",
+    "uplift",
+    "gcsl",
+)
+SCORER_TYPES: Tuple[str, ...] = (
+    "universal",
+    "independent",
+    "multiclass",
+    "multioutput",
+    "sequential",
+    "hierarchical",
+)
+ESTIMATOR_TYPES: Tuple[str, ...] = ("tabular", "embedding", "sequential")
+
 # --- Type Definitions ---
 
 ParamSpace = Dict[str, Any]
@@ -551,6 +573,16 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
     if not estimator_config:
         logger.warning("estimator_config not found in main config. Attempting to proceed with empty estimator config.")
 
+    # Upfront validation against the authoritative enum tuples. Makes the
+    # tuples the explicit contract for top-level config consumers, so that
+    # `capability_matrix()` stays in lockstep with what the factory accepts.
+    if recommender_type not in RECOMMENDER_TYPES:
+        raise ValueError(f"Unknown recommender_type '{recommender_type}'. Valid: {RECOMMENDER_TYPES}")
+    if scorer_type is not None and scorer_type not in SCORER_TYPES:
+        raise ValueError(f"Unknown scorer_type '{scorer_type}'. Valid: {SCORER_TYPES}")
+    if estimator_type not in ESTIMATOR_TYPES:
+        raise ValueError(f"Unknown estimator_type '{estimator_type}'. Valid: {ESTIMATOR_TYPES}")
+
     # Cross-cutting validation: catch mismatches early
     if recommender_type in ("sequential", "hierarchical_sequential"):
         if estimator_type != "sequential":
@@ -582,3 +614,26 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
 
     logger.info("Recommender pipeline created successfully.")
     return recommender
+
+
+def capability_matrix() -> Dict[str, Tuple[str, ...]]:
+    """Authoritative enum tuples for every factory-recognized dimension.
+
+    Callers (e.g., a system-prompt builder or a validator) can use this to
+    stay in lockstep with scikit-rec's capabilities without hardcoding enum
+    values or reaching into private registry maps.
+
+    Evaluator and metric enums are intentionally omitted — those live on
+    ``skrec.evaluator.datatypes.RecommenderEvaluatorType`` and
+    ``skrec.metrics.datatypes.RecommenderMetricType`` respectively and are
+    already enumerable via ``list(RecommenderEvaluatorType)``.
+    """
+    return {
+        "recommender_types": RECOMMENDER_TYPES,
+        "scorer_types": SCORER_TYPES,
+        "estimator_types": ESTIMATOR_TYPES,
+        "embedding_model_types": tuple(_EMBEDDING_ESTIMATOR_MAP.keys()),
+        "sequential_model_types": tuple(_SEQUENTIAL_ESTIMATOR_MAP.keys()),
+        "inference_method_types": tuple(_INFERENCE_METHOD_MAP.keys()),
+        "retriever_types": tuple(_RETRIEVER_MAP.keys()),
+    }

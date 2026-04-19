@@ -299,11 +299,13 @@ def test_create_recommender_pipeline_scorer_error(mock_create_scorer, mock_creat
     mock_create_estimator.return_value = mock_est
     mock_create_scorer.side_effect = NotImplementedError("Scorer type error")
 
-    # Config structure matching factory expectations
+    # scorer_type must pass upfront tuple validation in create_recommender_pipeline;
+    # the point of this test is that errors from the underlying create_scorer call
+    # propagate, so we use a valid enum and let the mock raise.
     config = {
         "estimator_config": {"ml_task": "classification", "xgboost": {}, "weights": {}, "hpo": {}},
-        "scorer_type": "invalid",  # Scorer type at top level
-        "recommender_type": "ranking",  # Need recommender_type as well
+        "scorer_type": "universal",
+        "recommender_type": "ranking",
     }
     with pytest.raises(NotImplementedError, match="Scorer type error"):
         create_recommender_pipeline(config)
@@ -1094,3 +1096,88 @@ def test_e2e_bandits_pipeline():
     pipeline = create_recommender_pipeline(config)
     assert isinstance(pipeline, ContextualBanditsRecommender)
     assert isinstance(pipeline.scorer, UniversalScorer)
+
+
+# --- Tests for capability_matrix() and top-level enum tuples ---
+
+
+def test_capability_matrix_has_expected_keys():
+    from skrec.orchestrator import capability_matrix
+
+    cm = capability_matrix()
+    assert set(cm.keys()) == {
+        "recommender_types",
+        "scorer_types",
+        "estimator_types",
+        "embedding_model_types",
+        "sequential_model_types",
+        "inference_method_types",
+        "retriever_types",
+    }
+    # All values should be tuples (immutable contract for callers).
+    for key, value in cm.items():
+        assert isinstance(value, tuple), f"{key} should be a tuple"
+
+
+def test_top_level_tuples_exposed():
+    from skrec.orchestrator import ESTIMATOR_TYPES, RECOMMENDER_TYPES, SCORER_TYPES
+
+    assert "ranking" in RECOMMENDER_TYPES
+    assert "bandits" in RECOMMENDER_TYPES
+    assert "gcsl" in RECOMMENDER_TYPES
+    assert "universal" in SCORER_TYPES
+    assert "hierarchical" in SCORER_TYPES
+    assert "tabular" in ESTIMATOR_TYPES
+    assert "embedding" in ESTIMATOR_TYPES
+    assert "sequential" in ESTIMATOR_TYPES
+
+
+def test_capability_matrix_reflects_private_maps():
+    """The capability matrix is the contract — it must mirror the factory's
+    registry keys. If a new embedding/sequential/inference/retriever entry is
+    added, this test will drive updating the matrix as a single source of truth.
+    """
+    from skrec.orchestrator import capability_matrix
+
+    cm = capability_matrix()
+    assert "matrix_factorization" in cm["embedding_model_types"]
+    assert "two_tower" in cm["embedding_model_types"]
+    assert "sasrec_classifier" in cm["sequential_model_types"]
+    assert "mean_scalarization" in cm["inference_method_types"]
+    assert "popularity" in cm["retriever_types"]
+
+
+def test_create_recommender_pipeline_rejects_unknown_recommender_type():
+    with pytest.raises(ValueError, match="Unknown recommender_type 'not_real'"):
+        create_recommender_pipeline(
+            {
+                "recommender_type": "not_real",
+                "scorer_type": "universal",
+                "estimator_config": {"ml_task": "classification"},
+                "recommender_params": {},
+            }
+        )
+
+
+def test_create_recommender_pipeline_rejects_unknown_scorer_type():
+    with pytest.raises(ValueError, match="Unknown scorer_type 'not_real'"):
+        create_recommender_pipeline(
+            {
+                "recommender_type": "ranking",
+                "scorer_type": "not_real",
+                "estimator_config": {"ml_task": "classification"},
+                "recommender_params": {},
+            }
+        )
+
+
+def test_create_recommender_pipeline_rejects_unknown_estimator_type():
+    with pytest.raises(ValueError, match="Unknown estimator_type 'not_real'"):
+        create_recommender_pipeline(
+            {
+                "recommender_type": "ranking",
+                "scorer_type": "universal",
+                "estimator_config": {"estimator_type": "not_real"},
+                "recommender_params": {},
+            }
+        )
