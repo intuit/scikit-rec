@@ -1,5 +1,8 @@
 # Orchestrator module for assembling recommender pipelines
 from skrec.orchestrator.factory import (
+    ESTIMATOR_TYPES,
+    RECOMMENDER_TYPES,
+    SCORER_TYPES,
     EmbeddingConfig,
     EstimatorConfig,
     HPOConfig,
@@ -10,6 +13,7 @@ from skrec.orchestrator.factory import (
     SequentialConfig,
     WeightsConfig,
     XGBConfig,
+    capability_matrix,
     create_estimator,
     create_recommender,
     create_recommender_pipeline,
@@ -21,6 +25,10 @@ __all__ = [
     "create_estimator",
     "create_scorer",
     "create_recommender",
+    "capability_matrix",
+    "RECOMMENDER_TYPES",
+    "SCORER_TYPES",
+    "ESTIMATOR_TYPES",
     "RecommenderConfig",
     "EstimatorConfig",
     "EmbeddingConfig",

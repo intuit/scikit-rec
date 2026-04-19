@@ -42,6 +42,13 @@ class UniversalScorer(BaseScorer):
     def __init__(self, estimator: Union[BaseClassifier, BaseEmbeddingEstimator]) -> None:
         super().__init__(estimator)
 
+    def __reduce__(self):
+        # pickle's default reconstruction calls cls.__new__(cls) with no extra
+        # args, which the factory __new__ rejects. Route through a module-level
+        # helper that bypasses the factory — the concrete subclass is already
+        # known from type(self), and state is restored from __dict__.
+        return (_reconstruct_universal_scorer, (type(self),), self.__dict__)
+
     def _process_items(
         self, items_df: DataFrame, interactions_df: DataFrame, is_partitioned: bool = False
     ) -> Tuple[NDArray, DataFrame]:
@@ -118,6 +125,17 @@ class UniversalScorer(BaseScorer):
             "UniversalScorer dispatches to TabularUniversalScorer or "
             "EmbeddingUniversalScorer. Do not call _calculate_scores on the base class."
         )
+
+
+def _reconstruct_universal_scorer(cls):
+    """Pickle reconstructor that bypasses ``UniversalScorer``'s factory ``__new__``.
+
+    The factory ``__new__`` needs an ``estimator`` arg to decide which subclass
+    to build, but at unpickle time the concrete subclass (``TabularUniversalScorer``
+    or ``EmbeddingUniversalScorer``) is already known from ``cls``. We just need
+    a fresh instance of that subclass — state is restored from ``__dict__``.
+    """
+    return object.__new__(cls)
 
 
 class TabularUniversalScorer(UniversalScorer):

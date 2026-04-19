@@ -290,6 +290,105 @@ def test_score_with_set_new_items(setup_fixture):
         items_scores = scorer.score_items(interactions, users)
 
 
+def test_pickle_roundtrip_tabular_universal_scorer():
+    """Tabular UniversalScorer survives a pickle roundtrip with state intact."""
+    import pickle
+
+    from skrec.orchestrator import create_recommender_pipeline
+    from skrec.scorer.universal import TabularUniversalScorer
+
+    recommender = create_recommender_pipeline(
+        {
+            "recommender_type": "ranking",
+            "scorer_type": "universal",
+            "estimator_config": {
+                "ml_task": "classification",
+                "xgboost": {"n_estimators": 5, "max_depth": 2},
+            },
+            "recommender_params": {},
+        }
+    )
+    recommender.train(
+        interactions_ds=sample_binary_reward_interactions,
+        users_ds=sample_binary_reward_users,
+        items_ds=sample_binary_reward_items,
+    )
+    assert isinstance(recommender.scorer, TabularUniversalScorer)
+
+    users = sample_binary_reward_users.fetch_data()
+    interactions = users[["USER_ID"]].head(3)
+    before = recommender.scorer.score_items(interactions=interactions, users=users)
+
+    restored = pickle.loads(pickle.dumps(recommender))
+
+    assert type(restored.scorer) is type(recommender.scorer)
+    assert_array_almost_equal(
+        restored.scorer.score_items(interactions=interactions, users=users).values,
+        before.values,
+    )
+
+
+def test_pickle_roundtrip_embedding_universal_scorer(tmp_path):
+    """EmbeddingUniversalScorer survives a pickle roundtrip with state intact."""
+    import pickle
+
+    from skrec.constants import ITEM_ID_NAME, LABEL_NAME, USER_ID_NAME
+    from skrec.dataset.interactions_dataset import InteractionsDataset
+    from skrec.dataset.items_dataset import ItemsDataset
+    from skrec.dataset.users_dataset import UsersDataset
+    from skrec.orchestrator import create_recommender_pipeline
+    from skrec.scorer.universal import EmbeddingUniversalScorer
+
+    users_df = pd.DataFrame({USER_ID_NAME: ["u1", "u2", "u3"]})
+    items_df = pd.DataFrame({ITEM_ID_NAME: ["i1", "i2", "i3"]})
+    interactions_df = pd.DataFrame(
+        {
+            USER_ID_NAME: ["u1", "u1", "u2", "u2", "u3"],
+            ITEM_ID_NAME: ["i1", "i2", "i2", "i3", "i1"],
+            LABEL_NAME: [1.0, 0.0, 1.0, 1.0, 0.0],
+        }
+    )
+    users_path = tmp_path / "users.csv"
+    items_path = tmp_path / "items.csv"
+    interactions_path = tmp_path / "interactions.csv"
+    users_df.to_csv(users_path, index=False)
+    items_df.to_csv(items_path, index=False)
+    interactions_df.to_csv(interactions_path, index=False)
+
+    # MatrixFactorization is torch-free; keeps this test runnable on slim envs.
+    recommender = create_recommender_pipeline(
+        {
+            "recommender_type": "ranking",
+            "scorer_type": "universal",
+            "estimator_config": {
+                "estimator_type": "embedding",
+                "embedding": {
+                    "model_type": "matrix_factorization",
+                    "params": {"n_factors": 4, "epochs": 5, "random_state": 42},
+                },
+            },
+            "recommender_params": {},
+        }
+    )
+    recommender.train(
+        interactions_ds=InteractionsDataset(data_location=str(interactions_path)),
+        users_ds=UsersDataset(data_location=str(users_path)),
+        items_ds=ItemsDataset(data_location=str(items_path)),
+    )
+    assert isinstance(recommender.scorer, EmbeddingUniversalScorer)
+
+    test_users = pd.DataFrame({USER_ID_NAME: ["u1", "u2"]})
+    before = recommender.scorer.score_items(interactions=test_users, users=None)
+
+    restored = pickle.loads(pickle.dumps(recommender))
+
+    assert type(restored.scorer) is type(recommender.scorer)
+    assert_array_almost_equal(
+        restored.scorer.score_items(interactions=test_users, users=None).values,
+        before.values,
+    )
+
+
 def test_tuned_xgb_regressor_with_universal_scorer(setup_fixture):
     """Test that both XGBRegressorEstimator and TunedXGBRegressorEstimator work with UniversalScorer."""
     from skrec.estimator.datatypes import HPOType
