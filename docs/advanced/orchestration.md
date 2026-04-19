@@ -133,6 +133,38 @@ The factory validates these constraints at pipeline creation time and raises `Va
 | `embedding` estimator only works with `scorer_type: "universal"` | IndependentScorer/MulticlassScorer/MultioutputScorer reject embedding estimators |
 | `uplift` recommender requires `scorer_type: "independent"` or `"universal"` | UpliftRecommender needs T-Learner or S-Learner compatible scorer |
 
+## Programmatic Capability Introspection
+
+For tooling that needs to enumerate what the factory understands (system-prompt builders, config validators, UI pickers, etc.), `skrec.orchestrator` exposes three authoritative enum tuples plus a `capability_matrix()` accessor. These are the same values the factory validates against internally, so they stay in lockstep automatically.
+
+```python
+from skrec.orchestrator import (
+    RECOMMENDER_TYPES,
+    SCORER_TYPES,
+    ESTIMATOR_TYPES,
+    capability_matrix,
+)
+
+RECOMMENDER_TYPES  # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
+SCORER_TYPES       # ('universal', 'independent', 'multiclass', 'multioutput', 'sequential', 'hierarchical')
+ESTIMATOR_TYPES    # ('tabular', 'embedding', 'sequential')
+
+capability_matrix()
+# {
+#     "recommender_types": (...),
+#     "scorer_types": (...),
+#     "estimator_types": (...),
+#     "embedding_model_types": ("matrix_factorization", "ncf", "two_tower", ...),
+#     "sequential_model_types": ("sasrec_classifier", "sasrec_regressor", ...),
+#     "inference_method_types": ("mean_scalarization", "percentile_value", "predefined_value"),
+#     "retriever_types": ("popularity", "content_based", "embedding"),
+# }
+```
+
+Evaluator and metric enums are **not** included in `capability_matrix()` — those already live as proper `Enum` subclasses in `skrec.evaluator.datatypes.RecommenderEvaluatorType` and `skrec.metrics.datatypes.RecommenderMetricType` and are enumerable directly (e.g. `list(RecommenderEvaluatorType)`).
+
+The full compatibility reference (which scorer works with which estimator, retriever constraints, etc.) is on the [Capability Matrix](../user-guide/capability-matrix.md) page.
+
 ## Complete Examples
 
 ### 1. Tabular: XGBoost + Universal + Ranking
@@ -442,9 +474,9 @@ ValueError: 'recommender_type' must be specified in the configuration.
 
 # Typo in recommender_type
 >>> create_recommender_pipeline({..., "recommender_type": "ranknig"})
-NotImplementedError: Recommender type 'ranknig' not supported.
-    Supported types: 'ranking', 'bandits', 'sequential',
-    'hierarchical_sequential', 'uplift', 'gcsl'.
+ValueError: Unknown recommender_type 'ranknig'. Valid:
+    ('ranking', 'bandits', 'sequential', 'hierarchical_sequential',
+     'uplift', 'gcsl')
 
 # Incompatible estimator + scorer
 >>> create_recommender_pipeline({..., "estimator_type": "embedding", "scorer_type": "independent"})
