@@ -18,6 +18,8 @@ Recommender (business logic)  -->  Scorer (item scoring)  -->  Estimator (ML mod
 
 **Production readiness.** Config-driven pipeline factory with Optuna HPO, low-latency single-user inference (`recommend_online`), two-stage retrieval-then-ranking, and batch training.
 
+**Agent-friendly.** Optionally pair with [scikit-rec-agent](https://github.com/intuit/scikit-rec-agent/) so an LLM agent can build, train, and tune models against this library's contracts.
+
 **Learn by example.** Ten end-to-end Jupyter notebooks on MovieLens 1M cover ranking, bandits, uplift, sequential recommendations, multi-objective optimization, hyperparameter tuning, two-stage retrieval, and contextual two-tower models. Our SASRec achieves HR@10 = 0.8953 and NDCG@10 = 0.6331 on MovieLens-1M (leave-last-out, 1 positive + 100 negatives). Each notebook downloads data, trains, evaluates, and shows sample recommendations — ready to run.
 
 ## Installation
@@ -91,8 +93,8 @@ recommendations = recommender.recommend(interactions=interactions_df, users=user
 
 | Type | Models |
 |---|---|
-| **Tabular** | XGBoost, LightGBM, Logistic Regression, sklearn classifiers/regressors |
-| **Embedding** | Matrix Factorization, NCF, Two-Tower, DCN, DeepFM |
+| **Tabular** | XGBoost, LightGBM, Logistic Regression, sklearn classifiers/regressors, DeepFM |
+| **Embedding** | Matrix Factorization, NCF, Two-Tower, Deep Cross Network, Neural Factorization Machine |
 | **Sequential** | SASRec, HRNN |
 
 ### Evaluators
@@ -117,20 +119,42 @@ Two-stage retrieval: Popularity, Content-Based, Embedding-Based.
 
 ## Example Notebooks
 
+Notebooks are grouped by dataset under [examples/](examples/):
+
+### MovieLens-1M ([examples/movielens-1m/](examples/movielens-1m/))
+
 | Notebook | What it demonstrates |
 |---|---|
-| [Ranking with XGBoost](examples/ranking_xgboost_movielens1m.ipynb) | Feature-based ranking with demographics and genre features |
-| [Uplift Modeling](examples/uplift_modeling.ipynb) | S-Learner, T-Learner, X-Learner treatment effect estimation |
-| [GCSL Multi-Objective](examples/gcsl_multi_objective_movielens1m.ipynb) | Goal-conditioned recommendations — steer quality vs. novelty |
-| [HPO with Optuna](examples/hpo_xgboost_movielens1m.ipynb) | Hyperparameter tuning with TPE, GP, and CMA-ES samplers |
-| [Two-Stage Retrieval](examples/retrieval_two_stage.ipynb) | Popularity, content-based, and embedding retrieval + ranking |
-| [Two-Tower Models](examples/contextualized_two_tower_context_modes.ipynb) | Three context modes: user_tower, trilinear, scoring_layer |
-| [SASRec (Positives)](examples/sasrec_movielens1m_positives.ipynb) | Self-attentive sequential recommendation on positive interactions |
-| [SASRec (Ratings)](examples/sasrec_movielens1m_ratings.ipynb) | SASRec with explicit ratings as soft labels |
-| [SASRec (MSE)](examples/sasrec_movielens1m_ratings_mse.ipynb) | SASRec regressor with MSE loss |
-| [HRNN](examples/hrnn_movielens1m.ipynb) | Hierarchical RNN for session-aware recommendations |
+| [Ranking with XGBoost](examples/movielens-1m/ranking_xgboost_movielens1m.ipynb) | Feature-based ranking with demographics and genre features |
+| [GCSL Multi-Objective](examples/movielens-1m/gcsl_multi_objective_movielens1m.ipynb) | Goal-conditioned recommendations — steer quality vs. novelty |
+| [HPO with Optuna](examples/movielens-1m/hpo_xgboost_movielens1m.ipynb) | Hyperparameter tuning with TPE, GP, and CMA-ES samplers |
+| [Two-Tower Models](examples/movielens-1m/contextualized_two_tower_context_modes.ipynb) | Three context modes: user_tower, trilinear, scoring_layer |
+| [SASRec (Positives)](examples/movielens-1m/sasrec_movielens1m_positives.ipynb) | Self-attentive sequential recommendation on positive interactions |
+| [SASRec (Ratings)](examples/movielens-1m/sasrec_movielens1m_ratings.ipynb) | SASRec with explicit ratings as soft labels |
+| [SASRec (MSE)](examples/movielens-1m/sasrec_movielens1m_ratings_mse.ipynb) | SASRec regressor with MSE loss |
+| [HRNN](examples/movielens-1m/hrnn_movielens1m.ipynb) | Hierarchical RNN for session-aware recommendations |
 
-All notebooks use MovieLens 1M (downloaded automatically) and include training, evaluation, and sample recommendations.
+### Amazon Books ([examples/amazon-books/](examples/amazon-books/))
+
+| Notebook | What it demonstrates |
+|---|---|
+| [LightGBM](examples/amazon-books/lightgbm_amazon_books.ipynb) | Fast tabular ranking on Amazon Books with categorical book metadata |
+| [DeepFM](examples/amazon-books/deepfm_amazon_books.ipynb) | Sparse-feature interaction learning with FM + MLP + cross network |
+| [NCF](examples/amazon-books/ncf_amazon_books.ipynb) | Neural Collaborative Filtering with NeuMF + embedding-based two-stage retrieval |
+| [SASRec (Positives)](examples/amazon-books/sasrec_amazon_books_positives.ipynb) | Sequential recommendation — mirrors the original SASRec paper's Amazon protocol |
+
+### Generic ([examples/generic/](examples/generic/)) — dataset-agnostic library mechanics
+
+| Notebook | What it demonstrates |
+|---|---|
+| [Factory Pipeline](examples/generic/factory_pipeline_demo.ipynb) | Config-driven recommender construction on the shipped sample dataset |
+| [Two-Stage Retrieval](examples/generic/retrieval_two_stage.ipynb) | Popularity, content-based, and embedding retrieval + ranking on synthetic data |
+| [Uplift Modeling](examples/generic/uplift_modeling.ipynb) | S-Learner, T-Learner, X-Learner treatment effect estimation on synthetic data |
+
+The MovieLens-1M notebooks download data automatically from GroupLens. The four Amazon Books
+notebooks share a cached download from McAuley-Lab's *Amazon Reviews 2023* via HuggingFace
+`datasets` (the first run pays the download cost; subsequent runs reuse the cache).
+All notebooks include training, evaluation, and sample recommendations.
 
 ## Documentation
 

@@ -27,3 +27,6 @@ coverage.xml
 
 # OS
 .DS_Store
+
+# Example notebook data (auto-fetched/regenerated on first run; not tracked)
+examples/*/data/
