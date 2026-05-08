@@ -9,6 +9,8 @@ This library offers comprehensive hyperparameter optimization (HPO) capabilities
 1. **Estimator-level HPO**: Optimizes estimator parameters using ML metrics (e.g., log loss, accuracy)
 2. **Recommender-level HPO**: Optimizes the entire pipeline using recommendation metrics (e.g., NDCG@10)
 
+> **macOS users:** sweeps that mix tabular estimators (MF, ALS) and torch estimators (NCF, Two-Tower, DCN, NeuralFactorization) in one process can hit a numpy/PyTorch OpenMP runtime collision and segfault. See [Installation → macOS notes](../getting-started/installation.md#macos-notes) for the env-var workaround.
+
 ## Estimator-Level HPO
 
 ### Using Tuned Estimators

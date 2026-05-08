@@ -73,6 +73,24 @@ The library works in multiple environments:
 - Batch processing (Spark, Airflow)
 - Real-time inference (API endpoints)
 
+## macOS notes
+
+On macOS (especially Apple Silicon), if you train a tabular estimator (e.g. MF/ALS, which is numpy-heavy) and a torch estimator (NCF, Two-Tower, DCN, NeuralFactorization) in the **same Python process**, torch may segfault during training (process exits with status 139).
+
+This is a known interaction between numpy's bundled OpenBLAS+libomp and PyTorch's use of Apple Accelerate: two OpenMP runtimes loaded into one process can leave threading state that crashes subsequent BLAS calls. It is **not specific to scikit-rec** — any pipeline mixing numpy and torch on macOS is exposed.
+
+### Fix
+
+Set these environment variables **before** Python imports numpy or torch (in your shell, your launcher, or at the top of your script before any other imports):
+
+```bash
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+```
+
+The cost is single-threaded BLAS for the tabular training path, which is usually negligible at typical recommender-system data sizes. Linux installations are not affected and do not need these settings.
+
 ## Troubleshooting
 
 ### ImportError: No module named 'skrec'

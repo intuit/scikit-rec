@@ -115,6 +115,12 @@ All recommenders built on **`BaseRecommender`** share the evaluation session API
 
 ---
 
+## Mixing planes in one process (macOS)
+
+If you train across planes in a single Python process on macOS — for example a tabular MF estimator followed by a torch NCF/Two-Tower/DCN/NeuralFactorization estimator (or vice versa) inside the same script, notebook, or HPO sweep — you may hit a torch segfault (process exits with status 139). This is an OpenMP runtime collision between numpy's OpenBLAS and PyTorch's Apple Accelerate, not a scikit-rec issue. Set `OMP_NUM_THREADS`, `MKL_NUM_THREADS`, and `VECLIB_MAXIMUM_THREADS` to `1` before Python imports numpy or torch. See [Installation → macOS notes](../getting-started/installation.md#macos-notes) for details.
+
+---
+
 ## Related docs
 
 - [Architecture overview](architecture.md) — three layers and data flow  

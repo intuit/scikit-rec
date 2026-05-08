@@ -118,15 +118,15 @@ scorer = MultioutputScorer(estimator)
 - ⚠️ **Interactions**: **One row per user only**
 - ❌ **Users**: Not allowed
 - ❌ **Items**: Not allowed
-- 📊 **Outcome**: Multiple columns with prefix `OUTCOME_*` (e.g., `OUTCOME_item1`, `OUTCOME_click`)
+- 📊 **Outcome**: Multiple columns with prefix `ITEM_*` (e.g., `ITEM_item1`, `ITEM_click`)
 
 **Example Data**:
 ```python
 interactions_df = pd.DataFrame({
     "USER_ID": ["user_1", "user_2"],
-    "OUTCOME_item_A": [1, 0],  # Did user engage with item_A?
-    "OUTCOME_item_B": [0, 1],  # Did user engage with item_B?
-    "OUTCOME_item_C": [1, 0]   # Did user engage with item_C?
+    "ITEM_item_A": [1, 0],  # Did user engage with item_A?
+    "ITEM_item_B": [0, 1],  # Did user engage with item_B?
+    "ITEM_item_C": [1, 0]   # Did user engage with item_C?
 })
 ```
 
