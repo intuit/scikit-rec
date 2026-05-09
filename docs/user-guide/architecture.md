@@ -32,7 +32,7 @@
 - `UniversalScorer`: Single global model for all items (uses item features, supports embedding estimators)
 - `IndependentScorer`: Separate model per item
 - `MulticlassScorer`: Treat items as competing classes
-- `MultioutputScorer`: Multiple outcomes per prediction
+- `MultioutputScorer`: Wide-format multi-label binary classification or multi-target regression (one ``ITEM_<name>`` column per target)
 - `SequentialScorer`: Scores from SASRec interaction sequences
 - `HierarchicalScorer`: Scores from HRNN session hierarchies
 

@@ -966,8 +966,38 @@ def test_create_hierarchical_recommender_rejects_wrong_scorer(mock_scorer):
 # --- Tuned mode edge case ---
 
 
-def test_create_tuned_regressor_ignores_multioutput_scorer_type():
-    """Test that ml_task=regression with scorer_type=multioutput creates a plain regressor, not multioutput."""
+def test_create_tuned_regressor_with_multioutput_scorer_type():
+    """``ml_task=regression`` + ``scorer_type=multioutput`` builds a tuned
+    MultiOutputRegressor wrapper, not a plain regressor.
+
+    Previously the factory silently fell through to TunedXGBRegressorEstimator
+    even when the scorer expected a multi-target shape — making the regressor
+    mode of MultioutputScorer unreachable from the orchestrator path. The B3
+    fix added the multi-target regressor branch in both tuned and untuned
+    paths.
+    """
+    from skrec.estimator.datatypes import HPOType
+    from skrec.estimator.regression.multioutput_regressor import (
+        TunedMultiOutputRegressorEstimator,
+    )
+
+    config = {
+        "ml_task": "regression",
+        "hpo": {
+            "hpo_method": HPOType.RANDOMIZED_SEARCH_CV,
+            "param_space": {"n_estimators": [50, 100]},
+            "optimizer_params": {"n_iter": 1, "cv": 2},
+        },
+    }
+    estimator = create_estimator(config, scorer_type="multioutput")
+    assert isinstance(estimator, TunedMultiOutputRegressorEstimator)
+
+
+def test_create_tuned_regressor_without_multioutput_scorer_type():
+    """``ml_task=regression`` + no scorer hint (or non-multioutput) still
+    builds the plain TunedXGBRegressorEstimator — sanity check that the new
+    branch didn't change the default regressor path.
+    """
     from skrec.estimator.datatypes import HPOType
     from skrec.estimator.regression.xgb_regressor import TunedXGBRegressorEstimator
 
@@ -979,9 +1009,7 @@ def test_create_tuned_regressor_ignores_multioutput_scorer_type():
             "optimizer_params": {"n_iter": 1, "cv": 2},
         },
     }
-    # scorer_type="multioutput" is only meaningful for classification;
-    # for regression, the factory creates a TunedXGBRegressorEstimator regardless.
-    estimator = create_estimator(config, scorer_type="multioutput")
+    estimator = create_estimator(config, scorer_type="universal")
     assert isinstance(estimator, TunedXGBRegressorEstimator)
 
 

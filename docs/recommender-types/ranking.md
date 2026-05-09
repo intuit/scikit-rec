@@ -252,9 +252,12 @@ from skrec.scorer.multioutput import MultioutputScorer
 scorer = MultioutputScorer(estimator)
 recommender = RankingRecommender(scorer)
 ```
-- Multiple outcomes per user
-- One row per user with `OUTCOME_*` columns
-- **Does not require items or users dataset**
+- Wide-format multi-target scorer: one row per user, one ``ITEM_<name>`` column per target.
+- **Two modes**: classifier mode (`BaseClassifier` estimator, e.g. `MultiOutputClassifierEstimator`) treats every target as binary classification; regressor mode (`BaseRegressor` estimator, e.g. `MultiOutputRegressorEstimator`) treats every target as continuous regression. Multi-class targets (3+ classes per `ITEM_<name>`) are rejected at fit time — see [scorer migration paths](../user-guide/scorers.md#migration-paths-for-multi-class-targets).
+- **`recommend(top_k)` in classifier mode** ranks targets by per-target ``P(positive=1)`` and returns the top-K **target names** per user — same shape contract as long-format ranking recommenders. Degenerate targets (under `DegenerateTargetPolicy.CONSTANT`) are filtered out before ranking, with a warning logged once per recommender instance; `top_k > n_non_degenerate` is silently capped to the available count. Retrievers are not supported with `MultioutputScorer` and `RankingRecommender(MultioutputScorer(...), retriever=...)` raises at construction.
+- **`recommend()` in regressor mode** is rejected — predicted values across heterogeneous targets aren't comparable. Use `scorer.predict_targets()` for per-target point estimates.
+- **`evaluate()`** routes by metric category: ranking metrics for binary classifier mode, classification metrics (`ROC_AUC`, `PR_AUC`) per-label / macro for classifier mode, regression metrics (`RMSE`, `MAE`) per-target for regressor mode. See [MultioutputScorer evaluation](../user-guide/evaluation.md#multioutputscorer-evaluation).
+- **Does not require items or users dataset** — pass user features as plain columns inside the interactions DataFrame.
 
 **Learn more**: [Scorer Selection Guide](../user-guide/scorers.md)
 

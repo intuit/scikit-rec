@@ -14,8 +14,13 @@ from skrec.estimator.classification.xgb_classifier import (
 )
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.embedding.base_embedding_estimator import BaseEmbeddingEstimator
+from skrec.estimator.regression.multioutput_regressor import (
+    MultiOutputRegressorEstimator,
+    TunedMultiOutputRegressorEstimator,
+)
 from skrec.estimator.regression.xgb_regressor import (
     TunedXGBRegressorEstimator,
+    XGBRegressor,
     XGBRegressorEstimator,
 )
 from skrec.estimator.sequential.base_sequential_estimator import SequentialEstimator
@@ -383,6 +388,14 @@ def create_estimator(
                     param_space=param_space,
                     optimizer_params=optimizer_params,
                 )
+        elif scorer_type == "multioutput":
+            logger.info("Creating TunedMultiOutputRegressorEstimator")
+            estimator = TunedMultiOutputRegressorEstimator(
+                base_estimator=XGBRegressor,
+                hpo_method=hpo_method,
+                param_space=param_space,
+                optimizer_params=optimizer_params,
+            )
         else:
             logger.info("Creating TunedXGBRegressorEstimator")
             estimator = TunedXGBRegressorEstimator(
@@ -409,6 +422,9 @@ def create_estimator(
             else:
                 logger.info("Creating XGBClassifierEstimator")
                 estimator = XGBClassifierEstimator(xgb_config)
+        elif scorer_type == "multioutput":
+            logger.info("Creating MultiOutputRegressorEstimator with XGBRegressor")
+            estimator = MultiOutputRegressorEstimator(XGBRegressor, xgb_config)
         else:  # regression
             logger.info("Creating XGBRegressorEstimator")
             estimator = XGBRegressorEstimator(xgb_config)

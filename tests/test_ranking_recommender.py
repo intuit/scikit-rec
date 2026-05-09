@@ -32,7 +32,6 @@ from skrec.examples.datasets import (
     sample_continuous_reward_users,
     sample_multi_class_interactions,
     sample_multi_output_interactions,
-    sample_multi_output_multi_class_interactions,
 )
 from skrec.metrics.datatypes import RecommenderMetricType
 from skrec.recommender.ranking.ranking_recommender import RankingRecommender
@@ -202,10 +201,16 @@ def test_multioutput_recommender(setup_fixture):
     interactions = pd.DataFrame({"USER_ID": list_of_users, "age": list_of_age, "income": list_of_income})
     scores = multioutput_recommender.scorer.predict_classes(interactions=interactions)
     logger.info("Finished Scoring of a Multioutput Ranking Recommender.")
-    # predict_classes returns one predicted-class column per item; top_k is ignored
+    # predict_classes returns one predicted-class column per item.
     assert scores.shape == (6, 11)
+    # recommend() now does a real top-K ranking by per-target P(positive=1).
+    # Returns (n_users, top_k) of label names from the catalogue, NOT the
+    # prior shim shape that returned predict_classes ignoring top_k.
     recommendations = multioutput_recommender.recommend(interactions=interactions, top_k=3)
-    assert recommendations.shape == (6, 11)
+    assert recommendations.shape == (6, 3)
+    # Every returned label must come from the catalogue.
+    catalogue = set(multioutput_recommender.scorer.item_names)
+    assert set(recommendations.ravel().tolist()).issubset(catalogue)
 
 
 def test_multioutput_recommender_with_subset(setup_fixture):
@@ -236,52 +241,6 @@ def test_multioutput_recommender_with_subset(setup_fixture):
     with pytest.raises(ValueError, match=expected_error_msg):
         random_ds = sample_multi_output_interactions
         multioutput_recommender.train(interactions_ds=random_ds, users_ds=random_ds)
-
-
-def test_multi_output_multi_class_recommender(setup_fixture):
-    estimator = MultiOutputClassifierEstimator(XGBClassifier, setup_fixture["xgb_multioutput_params"])
-    scorer = MultioutputScorer(estimator)
-    multioutput_recommender = RankingRecommender(scorer)
-    # training
-    try:
-        multioutput_recommender.train(interactions_ds=sample_multi_output_multi_class_interactions)
-        logger.info("Finished Training of a Multioutput Ranking Recommender.")
-    except Exception as e:
-        pytest.fail("Training of a Multioutput Ranking Recommender Failed, error: " + str(e))
-
-    # recommending
-    list_of_users = ["Emma", "Jasper", "John", "Doe", "Smith", "Anna"]
-    feat1 = [28, 30, 41, 33, 100, 101]
-    feat2 = [10000, 20000, 30000, 40000, 50000, 60000]
-    feat3 = [1, 2, 3, 4, 5, 6]
-
-    interactions = pd.DataFrame({"USER_ID": list_of_users, "feat1": feat1, "feat2": feat2, "feat3": feat3})
-    item_scores = multioutput_recommender.scorer.predict_classes(interactions=interactions)
-    # predict_classes returns one predicted-class column per item: 3 items → (6, 3)
-    assert item_scores.shape == (6, 3)
-
-    item_scores = multioutput_recommender.scorer.predict_classes(interactions=interactions)
-    assert item_scores.shape == (6, 3)
-
-    # recommend() works for MultioutputScorer — top_k is ignored, all item predictions returned
-    interactions_copy = pd.DataFrame({"USER_ID": list_of_users, "feat1": feat1, "feat2": feat2, "feat3": feat3})
-    recommendations = multioutput_recommender.recommend(interactions=interactions_copy)
-    assert recommendations.shape == (6, 3)
-
-    features = pd.DataFrame({"feat1": feat1, "feat2": feat2, "feat3": feat3}).head(1)
-    item_scores = multioutput_recommender.scorer.score_fast(features)
-    # score_fast returns one predicted-class column per item
-    assert item_scores.shape == (1, 3)
-    interactions = pd.DataFrame({"feat1": feat1, "feat2": feat2, "feat3": feat3})
-
-    recommendations = multioutput_recommender.recommend_online(interactions=interactions.head(1))
-    assert recommendations.shape == (1, 3)
-
-    # recommend() fails without USER_ID when schema is active
-    expected_message = "Column 'USER_ID' not found in dataset"
-    with pytest.raises(RuntimeError) as excinfo:
-        multioutput_recommender.recommend(interactions=interactions.head(1))
-    assert expected_message in str(excinfo.value)
 
 
 def test_independent_models_recommender(setup_fixture):

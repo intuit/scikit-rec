@@ -517,7 +517,16 @@ class BaseScorer(ABC):
         interactions: Optional[DataFrame] = None,
         users: Optional[DataFrame] = None,
     ) -> NDArray[np.float64]:
-        """Internal: returns raw scores array, skipping DataFrame wrapping."""
+        """Internal: returns raw scores array, skipping DataFrame wrapping.
+
+        Default implementation returns ``score_items().to_numpy()``.
+        Subclasses MAY override when ``score_items`` returns a wider shape
+        than the per-item ranking layer expects — e.g.
+        :class:`~skrec.scorer.multioutput.MultioutputScorer` returns
+        per-class probability columns from ``score_items`` but the
+        ranking layer needs ``(N, n_targets)``, so it overrides
+        ``_score_items_np`` to call ``score_items_per_target`` instead.
+        """
         return self.score_items(interactions, users).to_numpy()
 
     def _score_fast_np(self, features: DataFrame) -> NDArray[np.float64]:

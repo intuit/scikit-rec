@@ -344,12 +344,17 @@ class BaseRecommender(ABC):
         Accepts separate single-row interaction and user DataFrames, applies
         schema validation, merges them, and returns the top-k item names.
 
-        **Return-type note for MultioutputScorer**: because ``MultioutputScorer``
-        predicts a class label per item category (e.g. genre, device) rather than
-        ranking independent items, this method returns a ``DataFrame`` of predicted
-        class labels (e.g. ``{ITEM_genre: "action", ITEM_device: "mobile"}``)
-        instead of the usual ``NDArray[str]`` of item names.  The ``top_k``
-        parameter is ignored in that path.
+        **Return-type note for MultioutputScorer**: this scorer returns one
+        prediction per ``ITEM_<name>`` target rather than ranking items, so
+        the result is a ``DataFrame`` whose columns are the targets:
+
+        - Classifier mode: each cell is the **predicted class label** for that
+          target (e.g. ``{ITEM_label_a: 1, ITEM_label_b: 0}``).
+        - Regressor mode: each cell is the **predicted continuous value**
+          (e.g. ``{ITEM_revenue: 12.4, ITEM_clicks: 3.0}``).
+
+        The ``top_k`` parameter is ignored in this path — every target is
+        always predicted.
 
         Args:
             interactions: Optional single-row DataFrame with interaction features.
@@ -358,7 +363,8 @@ class BaseRecommender(ABC):
 
         Returns:
             1D NDArray of top-k item names for the single user, or a DataFrame of
-            predicted class labels when using MultioutputScorer.
+            per-target predictions (class labels or continuous values, depending
+            on scorer mode) when using MultioutputScorer.
         """
         interactions = self._process_outcome_columns(interactions)
 

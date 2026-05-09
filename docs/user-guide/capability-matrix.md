@@ -38,7 +38,7 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 | **UniversalScorer** | **Yes** (factory yields `TabularUniversalScorer`) | **Yes** (`EmbeddingUniversalScorer`) | **No** (use `SequentialScorer`) |
 | **IndependentScorer** | **Yes** (single or dict of estimators) | **No** (raises at init) | **No** |
 | **MulticlassScorer** | **Yes** | **No** (raises at init) | **No** |
-| **MultioutputScorer** | **Yes** | **No** (raises at init) | **No** |
+| **MultioutputScorer** | **Yes** — accepts both `BaseClassifier` (e.g. `MultiOutputClassifierEstimator`, binary-only — multi-class targets rejected at fit) and `BaseRegressor` (e.g. `MultiOutputRegressorEstimator`, continuous targets) | **No** (raises at init) | **No** |
 | **SequentialScorer** | **No** | **No** | **Yes** |
 | **HierarchicalScorer** | **No** | **No** | **Yes** (HRNN estimators) |
 | **UpliftScorerAdapter** | **Yes** (internal tabular scorers) | **No** (not exposed for uplift) | **No** |
@@ -66,7 +66,7 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 | **Embedding UniversalScorer** | **No** | `score_fast` raises; use `recommend()`. |
 | **IndependentScorer** | **Yes** | When estimator is tabular; `score_fast` validates exactly one row. |
 | **MulticlassScorer** | **Yes** | Same one-row contract. |
-| **MultioutputScorer** | **Partial** | Returns a **DataFrame** of predicted labels per output column; **`top_k` is ignored** (documented on `BaseRecommender.recommend_online`). |
+| **MultioutputScorer** | **Partial** | Returns a **DataFrame** with one column per `ITEM_<name>` target — predicted **class labels** in classifier mode or predicted **continuous values** in regressor mode; **`top_k` is ignored** (documented on `BaseRecommender.recommend_online`). For ranking-style top-K-by-positive-probability output, use the batch `recommend()` path instead. |
 | **SequentialScorer** | **No** | `score_fast` raises. |
 | **UpliftScorerAdapter** | **No** | Use `recommend()`. |
 

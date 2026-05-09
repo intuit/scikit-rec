@@ -41,6 +41,83 @@ The `evaluate()` method accepts:
 
 **Learn more**: [Inference Guide](inference.md) for details on `score_items()` parameters
 
+## MultioutputScorer evaluation {: #multioutputscorer-evaluation }
+
+`RankingRecommender(MultioutputScorer(...))` is the only recommender wiring where `evaluate()` returns a per-label diagnostic shape and where the metric set varies by scorer mode. The override:
+
+- **Routes by metric category** to the appropriate computation (cross-target ranking, per-label classification, or per-target regression).
+- **Rejects mode/metric mismatches** at the eval boundary with precise errors pointing at the right alternatives.
+- **Returns a macro-averaged scalar by default** (`per_label=False`, the default) — preserves the `evaluate() -> float` contract callers expect.
+- **Returns `Dict[str, float]` when `per_label=True`** — one entry per target. (Rejected for ranking metrics, which are inherently cross-target.)
+
+### Mode × metric matrix
+
+| Scorer mode | Ranking metrics (`NDCG_AT_K`, `MRR_AT_K`, `MAP_AT_K`, `PRECISION_AT_K`, `RECALL_AT_K`, `AVERAGE_REWARD_AT_K`) | Classification metrics (`ROC_AUC`, `PR_AUC`) | Regression metrics (`RMSE`, `MAE`) |
+|---|---|---|---|
+| **Binary classifier** (every `ITEM_<name>` has 2 classes) | ✅ scalar (cross-target ranking against binary truth) | ✅ macro scalar or `Dict[str, float]` per label | ❌ `ValueError` — wrong estimator type |
+| **Regressor** (continuous targets) | ❌ `ValueError` — predicted values across heterogeneous targets aren't comparable | ❌ `ValueError` — wrong estimator type | ✅ macro scalar or `Dict[str, float]` per target |
+| **Multi-class classifier** (any `ITEM_<name>` has 3+ classes) | rejected at **fit time** before evaluation is reachable; see [scorer migration paths](scorers.md#migration-paths-for-multi-class-targets) |  |  |
+
+### Examples
+
+**Macro ROC-AUC across all binary targets** (default scalar return):
+
+```python
+macro_roc_auc = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type=RecommenderMetricType.ROC_AUC,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_items": logged_items, "logged_rewards": logged_rewards},
+)  # → 0.78 (single float)
+```
+
+**Per-label PR-AUC for diagnostics**:
+
+```python
+per_label = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type=RecommenderMetricType.PR_AUC,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_items": logged_items, "logged_rewards": logged_rewards},
+    per_label=True,
+)
+# → {'ITEM_label_a': 0.81, 'ITEM_label_b': 0.74, 'ITEM_label_dead': nan, ...}
+# Degenerate targets emit NaN per-label; the macro path filters them out.
+```
+
+**Cross-target NDCG@K** (binary classifier — "rank the K most-likely-positive labels per user"):
+
+```python
+ndcg = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type=RecommenderMetricType.NDCG_AT_K,
+    eval_top_k=10,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_items": logged_items, "logged_rewards": logged_rewards},
+)  # → 0.61 (single float)
+```
+
+**Per-target RMSE** (regressor mode):
+
+```python
+per_target_rmse = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type=RecommenderMetricType.RMSE,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_items": logged_items, "logged_rewards": logged_rewards},
+    per_label=True,
+)
+# → {'ITEM_revenue': 4.2, 'ITEM_minutes_engaged': 1.8, 'ITEM_clicks': 2.6}
+```
+
+### Notes
+
+- **Eval type**: only `RecommenderEvaluatorType.SIMPLE` is supported for `MultioutputScorer`. Counterfactual evaluators (IPS, DR, SNIPS) assume a long-format ranking-recommender shape.
+- **`logged_items`**: shape `(n_users, n_targets)`, every row is the same target-name vector matching `scorer.item_names`. The framework validates this and rejects duplicates / mismatches at the eval boundary.
+- **Row alignment**: `score_items_kwargs["interactions"]` and `eval_kwargs["logged_rewards"]` must have the same number of rows (validated explicitly).
+- **Binary contract is symmetric for classifier mode**: training y was validated to be `{0, 1}`, so `logged_rewards` for classifier-mode evaluation must also be in `{0, 1}` (NaN allowed as ignore-mask / not-observed). Non-binary values like `[0.0, 0.5, 0.0]` are rejected at the eval boundary with a precise error pointing at the same migration hint as fit-time validation. Regressor mode has no value-range contract on `logged_rewards`.
+- **Degenerate targets under `DegenerateTargetPolicy.CONSTANT`**: emit `nan` per-label for classification metrics (excluded from macro-mean); excluded entirely from ranking metric computation with a logged warning so constant predictions don't tie at the top of every per-user ranking.
+
 ## Contextual bandits and `evaluate()` {: #contextual-bandits-and-evaluate }
 
 [`ContextualBanditsRecommender`](../recommender-types/bandits.md#evaluation) applies a **bandit strategy** on top of scorer outputs. Offline `evaluate()` is **policy-aligned** wherever that strategy shapes rankings or target probabilities (same idea as `recommend()`):
@@ -178,6 +255,22 @@ reward = recommender.evaluate(
     eval_top_k=5,
     ...
 )
+```
+
+### Regression Metrics
+
+Used by `MultioutputScorer` in regressor mode — see [MultioutputScorer evaluation](#multioutputscorer-evaluation) for end-to-end examples.
+
+- **`RMSE`**: Root Mean Squared Error per target. Lower is better; `0.0` is a perfect predictor.
+- **`MAE`**: Mean Absolute Error per target. Lower is better; `0.0` is a perfect predictor.
+
+```python
+rmse = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type=RecommenderMetricType.RMSE,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_items": logged_items, "logged_rewards": logged_rewards},
+)  # macro-averaged across targets
 ```
 
 ## Evaluation Parameters

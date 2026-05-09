@@ -24,7 +24,8 @@ For continuous outcomes (revenue, time-spent, rating):
 
 ### Multi-output Estimators
 
-- **`MultiOutputClassifierEstimator`** - Wrapper for multioutput classification (multiple binary targets)
+- **`MultiOutputClassifierEstimator`** - Wrapper for multi-output classification (multiple **binary numeric** targets per user — values strictly in `{0, 1}`). Pairs with `MultioutputScorer` in classifier mode. The scorer-level `MultioutputScorer._validate_targets` (early, before the wrapper sees the data) enforces the strict `{0, 1}` value contract — strings and signed-integer encodings like `{-1, 1}` are rejected there. Bool columns ARE accepted (Python `True == 1` / `False == 0` in set membership, so `{True, False}` collapses to `{0, 1}`). The wrapper's own `_validate_binary_targets` (defense-in-depth pre-flight scan, so the wrapper is safe to use standalone) enforces the per-target cardinality contract — exactly two unique values per column, neither single-class nor 3+-class. See [scorer migration paths](scorers.md#migration-paths-for-multi-class-targets).
+- **`MultiOutputRegressorEstimator`** - Wrapper for multi-output regression (multiple continuous targets per user). Pairs with `MultioutputScorer` in regressor mode for predictions like per-user revenue, engagement minutes, click counts, etc.
 
 ### Embedding Estimators
 

@@ -3,6 +3,7 @@ from typing import Optional, Union
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 
 from skrec.estimator.base_estimator import BaseEstimator
 from skrec.estimator.datatypes import HPOType
@@ -24,7 +25,15 @@ class TunedEstimator(BaseEstimator):
     """
 
     def __init__(self, estimator_class, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
-        if estimator_class.__name__ == "MultiOutputClassifier":
+        # Both sklearn MultiOutputClassifier and MultiOutputRegressor require
+        # the base ``estimator=`` kwarg at construction; their tuned-mode
+        # ``param_space`` carries the base estimator under that key, which
+        # we pop before constructing the wrapper. ``issubclass`` (rather
+        # than a ``__name__`` string check) covers user-side subclasses and
+        # any future sklearn re-exports without churn.
+        if isinstance(estimator_class, type) and issubclass(
+            estimator_class, (MultiOutputClassifier, MultiOutputRegressor)
+        ):
             base_estimator = param_space.pop("estimator")
             estimator = estimator_class(estimator=base_estimator)
         else:

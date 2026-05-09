@@ -53,15 +53,6 @@ sample_multi_output_interactions = InteractionMultiOutputDataset(
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-# load multi-output multi-class sample dataset
-multi_output_multi_class_data_path = os.path.join(rt, "sample_multi_output_multi_class")
-sample_multi_output_multi_class_interactions = InteractionMultiOutputDataset(
-    data_location=os.path.join(multi_output_multi_class_data_path, "interactions.csv"),
-    client_schema_path=os.path.join(multi_output_multi_class_data_path, "interactions_schema.yaml"),
-)
-
-# ----------------------------------------------------------------------------------------------------------------------
-
 # load multi-class sample dataset
 multi_class_data_path = os.path.join(rt, "sample_multi_class")
 sample_multi_class_interactions = InteractionMultiClassDataset(
@@ -106,7 +97,6 @@ __all__ = [
     "sample_continuous_reward_users",
     # Multi-output datasets
     "sample_multi_output_interactions",
-    "sample_multi_output_multi_class_interactions",
     # Multi-class datasets
     "sample_multi_class_interactions",
     # Multi-outcome datasets

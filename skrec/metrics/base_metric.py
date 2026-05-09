@@ -64,6 +64,20 @@ class BaseClassificationMetric(BaseRecommenderMetric):
     THRESHOLD = 0.5
 
 
+class BaseRegressionMetric(BaseRecommenderMetric):
+    """Base class for metrics evaluating recommendations as a regression task.
+
+    These metrics treat ``recommendation_scores`` as predicted continuous
+    values and ``modified_rewards`` as the corresponding ground-truth
+    targets, computing point-wise error statistics (RMSE, MAE, ...). They
+    do not use ``recommendation_ranks`` and ignore ``top_k``.
+
+    Used primarily by :class:`~skrec.scorer.multioutput.MultioutputScorer`
+    in regressor mode, where each ``ITEM_<name>`` target is continuous and
+    per-target prediction error is the natural quality signal.
+    """
+
+
 class BasePolicyMetric(BaseRecommenderMetric):
     """
     Base class for metrics evaluating the overall policy-level performance.

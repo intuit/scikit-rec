@@ -5,12 +5,14 @@ from skrec.metrics.datatypes import RecommenderMetricType
 from skrec.metrics.expected_reward import ExpectedRewardMetric
 
 # Import concrete metric classes
+from skrec.metrics.MAE import MAEMetric
 from skrec.metrics.MAP import MAPMetric
 from skrec.metrics.MRR import MRRMetric
 from skrec.metrics.NDCG import NDCGMetric
 from skrec.metrics.PRAUC import PRAUCMetric
 from skrec.metrics.recall import RecallMetric
 from skrec.metrics.recommender_precision import PrecisionMetric
+from skrec.metrics.RMSE import RMSEMetric
 from skrec.metrics.ROCAUC import ROCAUCMetric
 
 
@@ -24,6 +26,8 @@ class RecommenderMetricFactory:
         ExpectedRewardMetric.TYPE: ExpectedRewardMetric,
         ROCAUCMetric.TYPE: ROCAUCMetric,
         PRAUCMetric.TYPE: PRAUCMetric,
+        RMSEMetric.TYPE: RMSEMetric,
+        MAEMetric.TYPE: MAEMetric,
         # Add alias for AVERAGE_REWARD_AT_K -> PrecisionMetric
         RecommenderMetricType.AVERAGE_REWARD_AT_K: PrecisionMetric,
     }

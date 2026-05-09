@@ -14,7 +14,7 @@ Recommender (business logic)  -->  Scorer (item scoring)  -->  Estimator (ML mod
 
 **Beyond ranking.** Contextual bandits (epsilon-greedy, static-action) and heterogeneous treatment effect estimation (T/S/X-Learner) are first-class paradigms, not afterthoughts. All share the same evaluation infrastructure, so you can directly compare a ranking policy against a bandit or uplift policy on the same logged data.
 
-**Production-grade evaluation.** The most complete offline policy evaluation suite in any recommendation library: IPS, Doubly Robust, SNIPS, Direct Method, Policy-Weighted, and Replay Match, paired with eight ranking and classification metrics (Precision, Recall, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward) — enabling counterfactual policy comparison from logged data with a single call.
+**Production-grade evaluation.** The most complete offline policy evaluation suite in any recommendation library: IPS, Doubly Robust, SNIPS, Direct Method, Policy-Weighted, and Replay Match, paired with ten ranking, classification, and regression metrics (Precision, Recall, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward, RMSE, MAE) — enabling counterfactual policy comparison from logged data with a single call. Multi-label classification and multi-target regression workloads (wide-format `MultioutputScorer`) get per-label diagnostics and macro-averaged metrics out of the same `evaluate()` API.
 
 **Production readiness.** Config-driven pipeline factory with Optuna HPO, low-latency single-user inference (`recommend_online`), two-stage retrieval-then-ranking, and batch training.
 
@@ -85,7 +85,7 @@ recommendations = recommender.recommend(interactions=interactions_df, users=user
 | `UniversalScorer` | Single global model using item features (auto-dispatches tabular vs. embedding) |
 | `IndependentScorer` | Separate model per item |
 | `MulticlassScorer` | Items as competing classes |
-| `MultioutputScorer` | Multiple outcomes per prediction |
+| `MultioutputScorer` | Wide-format multi-label binary classification or multi-target regression (one `ITEM_<name>` column per target) |
 | `SequentialScorer` | For sequential estimators (SASRec) |
 | `HierarchicalScorer` | For HRNN estimators |
 
@@ -111,7 +111,7 @@ recommendations = recommender.recommend(interactions=interactions_df, users=user
 
 ### Metrics
 
-Precision@k, Recall@k, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward.
+Precision@k, Recall@k, MAP, MRR, NDCG, ROC-AUC, PR-AUC, Expected Reward, RMSE, MAE (the last two for multi-target regression via `MultioutputScorer`).
 
 ### Retrievers
 

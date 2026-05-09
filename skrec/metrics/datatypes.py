@@ -14,5 +14,9 @@ class RecommenderMetricType(str, Enum):
     ROC_AUC = "roc_auc"
     PR_AUC = "pr_auc"
 
+    # Regression Metrics (per-target; used by MultioutputScorer in regressor mode)
+    RMSE = "rmse"
+    MAE = "mae"
+
     # Policy Metric
     EXPECTED_REWARD = "expected_reward"
