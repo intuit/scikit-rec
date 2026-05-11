@@ -112,6 +112,34 @@ print("\nTop 5 items for each user:")
 print(recommendations)
 ```
 
+## Optional: Config-driven quick start
+
+Instead of assembling the pipeline manually, use `skrec.orchestrator` to build a recommender from a configuration dictionary. This is ideal for automated workflows and agent-based systems.
+
+```python
+from skrec.orchestrator import create_recommender_pipeline
+
+config = {
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {
+        "ml_task": "classification",
+        "xgboost": {
+            "n_estimators": 100,
+            "max_depth": 5,
+            "learning_rate": 0.1,
+        },
+    },
+}
+
+recommender = create_recommender_pipeline(config)
+recommender.train(
+    interactions_ds=sample_binary_reward_interactions,
+    users_ds=sample_binary_reward_users,
+    items_ds=sample_binary_reward_items,
+)
+```
+
 ### Output Format
 
 The output is a NumPy array where:

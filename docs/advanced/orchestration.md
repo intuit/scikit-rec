@@ -31,6 +31,10 @@ recommender.train(
 recommendations = recommender.recommend(interactions=query_df, top_k=5)
 ```
 
+## Agent-Friendly Orchestration
+
+`scikit-rec` exposes a config-driven recommender factory that is especially useful for automated and LLM-based systems. The factory validates compatibility between recommender, scorer, and estimator types, and `capability_matrix()` can be used by tooling or an agent to enumerate supported options.
+
 ## Configuration Reference
 
 ### Top-Level Config (`RecommenderConfig`)

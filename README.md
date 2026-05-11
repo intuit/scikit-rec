@@ -1,5 +1,10 @@
 # scikit-rec
 
+[![CI](https://github.com/intuit/scikit-rec/actions/workflows/ci.yml/badge.svg)](https://github.com/intuit/scikit-rec/actions/workflows/ci.yml)
+[![Docs](https://github.com/intuit/scikit-rec/actions/workflows/docs.yml/badge.svg)](https://github.com/intuit/scikit-rec/actions/workflows/docs.yml)
+[![Python Package](https://img.shields.io/pypi/v/scikit-rec?color=blue&logo=python&logoColor=white)](https://pypi.org/project/scikit-rec)
+[![License](https://img.shields.io/github/license/intuit/scikit-rec?color=informational)](LICENSE)
+
 A composable, scikit-style recommender systems library.
 
 **scikit-rec** provides a 3-layer architecture that cleanly separates business logic, scoring strategy, and ML models. Any recommender works with any compatible scorer and estimator, giving you a mix-and-match toolkit for building recommendation systems.
@@ -31,9 +36,14 @@ pip install scikit-rec
 Optional extras:
 
 ```bash
-pip install scikit-rec[torch]    # Deep learning models (DeepFM, NCF, SASRec, HRNN, Two-Tower)
-pip install scikit-rec[aws]      # S3 data loading
+pip install scikit-rec[torch]          # Deep learning models (DeepFM, NCF, SASRec, HRNN, Two-Tower)
+pip install scikit-rec[aws]            # S3 data loading
+pip install scikit-rec[torch,aws]      # All optional extras
 ```
+
+Notes:
+- `scikit-rec[torch]` is required only for PyTorch-based estimators and deep learning pipelines.
+- `scikit-rec[aws]` adds S3 dataset loading support without pulling in Torch.
 
 ## Quick Start
 
@@ -64,6 +74,66 @@ interactions_df = sample_binary_reward_interactions.fetch_data()
 users_df = sample_binary_reward_users.fetch_data()
 recommendations = recommender.recommend(interactions=interactions_df, users=users_df, top_k=5)
 ```
+
+## Config-driven quick start
+
+The orchestrator API lets you build a pipeline from a configuration dictionary instead of wiring classes manually.
+
+```python
+from skrec.orchestrator import create_recommender_pipeline
+
+config = {
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {
+        "ml_task": "classification",
+        "xgboost": {
+            "n_estimators": 100,
+            "max_depth": 5,
+            "learning_rate": 0.1,
+        },
+    },
+}
+
+recommender = create_recommender_pipeline(config)
+recommender.train(
+    interactions_ds=sample_binary_reward_interactions,
+    users_ds=sample_binary_reward_users,
+    items_ds=sample_binary_reward_items,
+)
+```
+
+## Agent integration
+
+`scikit-rec` is designed to be used by agents and automated systems via its config-driven factory API.
+
+```python
+from skrec.orchestrator import create_recommender_pipeline, capability_matrix
+
+print(capability_matrix()["recommender_types"])
+
+config = {
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {
+        "ml_task": "classification",
+        "xgboost": {
+            "n_estimators": 100,
+            "max_depth": 5,
+            "learning_rate": 0.1,
+        },
+    },
+}
+
+recommender = create_recommender_pipeline(config)
+recommender.train(
+    interactions_ds=sample_binary_reward_interactions,
+    users_ds=sample_binary_reward_users,
+    items_ds=sample_binary_reward_items,
+)
+```
+
+This factory-based approach makes it easy for an LLM-driven agent to inspect available options, validate pipeline compatibility, and instantiate a recommender without hand-coded class wiring.
 
 ## Components
 
@@ -175,6 +245,14 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest tests/
 ```
+
+## Contributing
+
+Contributions are welcome! See `CONTRIBUTING.md` for guidance on feature requests, bug reports, and pull request workflow.
+
+## Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a respectful, inclusive community.
 
 ## License
 
