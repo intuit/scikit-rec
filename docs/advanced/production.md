@@ -327,14 +327,14 @@ def get_recommendations(user_id, user_features, top_k=5):
 
 ### 4. Thread Safety
 
-**Two components are not thread-safe for concurrent inference on a shared instance:**
+**`RankingRecommender`** is thread-safe for concurrent inference after training, whether or not a retriever is attached:
 
-- **`RankingRecommender` with a retriever attached** — per-user retrieval mutates the scorer's item subset. Do not share one instance across threads.
-- **`IndependentScorer`** — parallel inference and executor configuration mutate internal state.
+- **Without a retriever** — the scorer is accessed read-only; no state is mutated per call.
+- **With a retriever** — `_recommend_with_retriever` makes a shallow copy of the scorer at the start of each call, so per-user `item_subset` mutations are confined to that call stack and never touch the shared scorer instance.
 
-For multi-threaded serving (e.g. a Flask/FastAPI app), either:
+**`IndependentScorer`** is the one remaining exception — its parallel inference configuration mutates internal state. For multi-threaded serving with `IndependentScorer`, either:
 - Load one recommender instance **per worker process** (the safest approach, and the default for gunicorn/uvicorn multi-process deployments), or
-- Protect a shared instance with a lock if process-level isolation is not an option.
+- Protect the shared instance with a lock.
 
 ```python
 import threading
@@ -342,11 +342,9 @@ import threading
 _lock = threading.Lock()
 
 def thread_safe_recommend(interactions_df, users_df, top_k=5):
-    with _lock:
+    with _lock:  # only needed when using IndependentScorer
         return recommender.recommend(interactions=interactions_df, users=users_df, top_k=top_k)
 ```
-
-Recommenders **without** a retriever and using `UniversalScorer`, `MulticlassScorer`, or `MultioutputScorer` (tabular estimators) do not mutate state during inference and are safe to call from multiple threads after training.
 
 ### 5. Parallel Processing
 
