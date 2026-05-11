@@ -40,6 +40,7 @@ recommendations = recommender.recommend(interactions=query_df, top_k=5)
 | `recommender_type` | str | **Yes** | `"ranking"`, `"bandits"`, `"sequential"`, `"hierarchical_sequential"`, `"uplift"`, `"gcsl"` |
 | `scorer_type` | str | **Yes** | `"universal"`, `"independent"`, `"multiclass"`, `"multioutput"`, `"sequential"`, `"hierarchical"` |
 | `estimator_config` | dict | Yes | Estimator configuration (see below) |
+| `scorer_config` | dict | No | Per-scorer constructor kwargs (see below). Unsupported keys raise `ValueError` upfront. |
 | `recommender_params` | dict | No | Per-recommender parameters (see below) |
 
 ### Estimator Config (`EstimatorConfig`)
@@ -53,6 +54,16 @@ recommendations = recommender.recommend(interactions=query_df, top_k=5)
 | `weights` | dict | — | Sample/feature weighting (tabular only) |
 | `embedding` | dict | — | Embedding model config (embedding only) |
 | `sequential` | dict | — | Sequential model config (sequential only) |
+
+### Scorer Config (`ScorerConfig`)
+
+Per-scorer constructor kwargs. Optional; defaults preserve historical scorer behavior. The accepted keys depend on `scorer_type`; passing a key a scorer doesn't accept raises `ValueError` upfront. `capability_matrix()["scorer_config_keys"]` exposes the live whitelist for tooling.
+
+| Key | Used by | Type | Description |
+|-----|---------|------|-------------|
+| `on_degenerate_target` | `multioutput` | `DegenerateTargetPolicy` or `"raise"` / `"constant"` | Policy for single-class targets in the training slice. `"raise"` (default) aborts training with the offending column names; `"constant"` fits a constant predictor for degenerate columns and trains the rest. See [`MultioutputScorer` degenerate-target handling](../user-guide/scorers.md#degenerate-target-handling-on_degenerate_target). |
+
+Scorers without entries here (`multiclass`, `independent`, `universal`, `sequential`, `hierarchical`) accept no `scorer_config` keys today — passing any key raises.
 
 ### Embedding Config
 
@@ -158,6 +169,14 @@ capability_matrix()
 #     "sequential_model_types": ("sasrec_classifier", "sasrec_regressor", ...),
 #     "inference_method_types": ("mean_scalarization", "percentile_value", "predefined_value"),
 #     "retriever_types": ("popularity", "content_based", "embedding"),
+#     "scorer_config_keys": {
+#         "multioutput": ("on_degenerate_target",),
+#         "multiclass": (),
+#         "independent": (),
+#         "universal": (),
+#         "sequential": (),
+#         "hierarchical": (),
+#     },
 # }
 ```
 
