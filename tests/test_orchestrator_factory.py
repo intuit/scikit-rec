@@ -47,7 +47,7 @@ from skrec.scorer.base_scorer import BaseScorer
 from skrec.scorer.hierarchical import HierarchicalScorer
 from skrec.scorer.independent import IndependentScorer
 from skrec.scorer.multiclass import MulticlassScorer
-from skrec.scorer.multioutput import MultioutputScorer
+from skrec.scorer.multioutput import DegenerateTargetPolicy, MultioutputScorer
 from skrec.scorer.sequential import SequentialScorer
 from skrec.scorer.universal import UniversalScorer
 
@@ -563,6 +563,121 @@ def test_create_universal_scorer_accepts_embedding_estimator():
     embedding_estimator = MatrixFactorizationEstimator()
     scorer = create_scorer(embedding_estimator, {"scorer_type": "universal"})
     assert isinstance(scorer, UniversalScorer)
+
+
+# --- Tests for scorer_config plumbing ---
+
+
+def test_create_scorer_threads_on_degenerate_target_string(mock_estimator):
+    """scorer_config={'on_degenerate_target': 'constant'} reaches the scorer."""
+    scorer = create_scorer(
+        mock_estimator,
+        {"scorer_type": "multioutput", "scorer_config": {"on_degenerate_target": "constant"}},
+    )
+    assert isinstance(scorer, MultioutputScorer)
+    assert scorer.on_degenerate_target == DegenerateTargetPolicy.CONSTANT
+
+
+def test_create_scorer_threads_on_degenerate_target_enum(mock_estimator):
+    """scorer_config also accepts the enum member directly, not just the string."""
+    scorer = create_scorer(
+        mock_estimator,
+        {
+            "scorer_type": "multioutput",
+            "scorer_config": {"on_degenerate_target": DegenerateTargetPolicy.CONSTANT},
+        },
+    )
+    assert isinstance(scorer, MultioutputScorer)
+    assert scorer.on_degenerate_target == DegenerateTargetPolicy.CONSTANT
+
+
+def test_create_scorer_default_on_degenerate_target_is_raise(mock_estimator):
+    """Absent scorer_config preserves the historical RAISE default (back-compat)."""
+    scorer = create_scorer(mock_estimator, {"scorer_type": "multioutput"})
+    assert isinstance(scorer, MultioutputScorer)
+    assert scorer.on_degenerate_target == DegenerateTargetPolicy.RAISE
+
+
+@pytest.mark.parametrize("scorer_type", ["multiclass", "independent", "universal"])
+def test_create_scorer_rejects_unknown_scorer_config_key_tabular(mock_estimator, scorer_type):
+    """Tabular scorers with empty allowlists reject any scorer_config key."""
+    with pytest.raises(ValueError, match=rf"scorer_type='{scorer_type}' does not accept scorer_config keys"):
+        create_scorer(
+            mock_estimator,
+            {"scorer_type": scorer_type, "scorer_config": {"on_degenerate_target": "constant"}},
+        )
+
+
+@pytest.mark.parametrize("scorer_type", ["sequential", "hierarchical"])
+def test_create_scorer_rejects_unknown_scorer_config_key_sequential(mock_sequential_estimator, scorer_type):
+    """Sequential and hierarchical scorers also have empty allowlists; assert
+    the rejection contract holds for them too (not just the tabular branches).
+    A clearly bogus key (rather than ``on_degenerate_target``, which is real
+    on a *different* scorer) makes the test intent unambiguous.
+    """
+    with pytest.raises(ValueError, match=rf"scorer_type='{scorer_type}' does not accept scorer_config keys"):
+        create_scorer(
+            mock_sequential_estimator,
+            {"scorer_type": scorer_type, "scorer_config": {"totally_made_up": 42}},
+        )
+
+
+@pytest.mark.parametrize(
+    "scorer_type, fixture_name",
+    [
+        ("multioutput", "mock_estimator"),
+        ("multiclass", "mock_estimator"),
+        ("independent", "mock_estimator"),
+        ("universal", "mock_estimator"),
+        ("sequential", "mock_sequential_estimator"),
+        ("hierarchical", "mock_sequential_estimator"),
+    ],
+)
+def test_create_scorer_empty_scorer_config_accepted_for_every_scorer(request, scorer_type, fixture_name):
+    """Empty scorer_config={} must not trip the allowlist for any scorer
+    (graceful no-op). Covers every scorer_type with the right estimator
+    fixture so the post-validation construction path also gets exercised
+    — sequential/hierarchical need a SequentialEstimator to instantiate.
+    """
+    estimator = request.getfixturevalue(fixture_name)
+    scorer = create_scorer(estimator, {"scorer_type": scorer_type, "scorer_config": {}})
+    assert scorer is not None
+
+
+def test_create_scorer_explicit_none_scorer_config(mock_estimator):
+    """``scorer_config: None`` (vs. missing key) must be tolerated — the
+    ``config.get("scorer_config") or {}`` path resolves both to ``{}``.
+    Pin the behavior so a future refactor that swaps the ``or`` for
+    ``.get(..., {})`` would surface as a test failure for the None case.
+    """
+    scorer = create_scorer(mock_estimator, {"scorer_type": "multioutput", "scorer_config": None})
+    assert isinstance(scorer, MultioutputScorer)
+
+
+def test_create_scorer_rejects_unknown_key_lists_accepted_keys(mock_estimator):
+    """Error message names the offending key and the accepted-keys list."""
+    with pytest.raises(ValueError, match=r"'totally_made_up'"):
+        create_scorer(
+            mock_estimator,
+            {"scorer_type": "multioutput", "scorer_config": {"totally_made_up": 42}},
+        )
+
+
+def test_create_scorer_unknown_scorer_type_with_config_raises_not_implemented(mock_estimator):
+    """Unknown scorer_type with non-empty scorer_config falls through to
+    NotImplementedError, not the kwarg-validation ValueError. The gating at
+    ``scorer_type in _SCORER_CONFIG_ALLOWED`` exists specifically to preserve
+    this precedence — otherwise the user would see a misleading
+    "scorer_type='zzz' does not accept scorer_config keys" message implying
+    zzz is a valid scorer with restricted keys. Pinning this prevents a
+    refactor that reorders or strips the gate from silently regressing the
+    error message contract.
+    """
+    with pytest.raises(NotImplementedError, match=r"Scorer type 'zzz_unknown' not supported"):
+        create_scorer(
+            mock_estimator,
+            {"scorer_type": "zzz_unknown", "scorer_config": {"foo": 1}},
+        )
 
 
 # --- Tests for new recommender types ---
@@ -1126,6 +1241,29 @@ def test_e2e_bandits_pipeline():
     assert isinstance(pipeline.scorer, UniversalScorer)
 
 
+def test_e2e_multioutput_scorer_config_threaded_through_pipeline():
+    """``create_recommender_pipeline`` (the top-level entry point) threads
+    ``scorer_config`` through to the constructed scorer. Distinct from
+    ``test_create_scorer_threads_on_degenerate_target_string`` which only
+    exercises ``create_scorer`` directly — this proves the assembly path
+    (estimator → scorer → recommender) preserves the kwarg.
+
+    The fit/train roundtrip under CONSTANT is already covered by
+    ``tests/test_multioutput_evaluation.py``'s degenerate-target tests
+    (which build MultioutputScorer directly); duplicating it here would
+    add runtime cost without unique signal.
+    """
+    config = {
+        "recommender_type": "ranking",
+        "scorer_type": "multioutput",
+        "estimator_config": {"ml_task": "classification", "xgboost": {"n_estimators": 5}},
+        "scorer_config": {"on_degenerate_target": "constant"},
+    }
+    recommender = create_recommender_pipeline(config)
+    assert isinstance(recommender.scorer, MultioutputScorer)
+    assert recommender.scorer.on_degenerate_target == DegenerateTargetPolicy.CONSTANT
+
+
 # --- Tests for capability_matrix() and top-level enum tuples ---
 
 
@@ -1141,10 +1279,25 @@ def test_capability_matrix_has_expected_keys():
         "sequential_model_types",
         "inference_method_types",
         "retriever_types",
+        "scorer_config_keys",
     }
-    # All values should be tuples (immutable contract for callers).
-    for key, value in cm.items():
-        assert isinstance(value, tuple), f"{key} should be a tuple"
+    # The flat enum tuples carry an immutable contract for callers; the
+    # nested scorer_config_keys mapping (scorer_type -> tuple of keys) is a
+    # dict whose values are tuples.
+    tuple_keys = {
+        "recommender_types",
+        "scorer_types",
+        "estimator_types",
+        "embedding_model_types",
+        "sequential_model_types",
+        "inference_method_types",
+        "retriever_types",
+    }
+    for key in tuple_keys:
+        assert isinstance(cm[key], tuple), f"{key} should be a tuple"
+    assert isinstance(cm["scorer_config_keys"], dict)
+    for scorer_type, keys in cm["scorer_config_keys"].items():
+        assert isinstance(keys, tuple), f"scorer_config_keys[{scorer_type!r}] should be a tuple"
 
 
 def test_top_level_tuples_exposed():
@@ -1173,6 +1326,14 @@ def test_capability_matrix_reflects_private_maps():
     assert "sasrec_classifier" in cm["sequential_model_types"]
     assert "mean_scalarization" in cm["inference_method_types"]
     assert "popularity" in cm["retriever_types"]
+    # scorer_config_keys covers every scorer_type — empty tuples for scorers
+    # that take no scorer-level kwargs today are intentional (they pin the
+    # contract for the validation allowlist).
+    scorer_config_keys = cm["scorer_config_keys"]
+    assert set(scorer_config_keys.keys()) == set(cm["scorer_types"])
+    assert "on_degenerate_target" in scorer_config_keys["multioutput"]
+    assert scorer_config_keys["multiclass"] == ()
+    assert scorer_config_keys["universal"] == ()
 
 
 def test_create_recommender_pipeline_rejects_unknown_recommender_type():

@@ -43,7 +43,7 @@ from skrec.scorer.base_scorer import BaseScorer
 from skrec.scorer.hierarchical import HierarchicalScorer
 from skrec.scorer.independent import IndependentScorer
 from skrec.scorer.multiclass import MulticlassScorer
-from skrec.scorer.multioutput import MultioutputScorer
+from skrec.scorer.multioutput import DegenerateTargetPolicy, MultioutputScorer
 from skrec.scorer.sequential import SequentialScorer
 from skrec.scorer.universal import UniversalScorer
 from skrec.util.logger import get_logger
@@ -166,10 +166,32 @@ class RecommenderParams(TypedDict, total=False):
     retriever: RetrieverConfig
 
 
+class ScorerConfig(TypedDict, total=False):
+    """Per-scorer constructor kwargs.
+
+    Not every scorer accepts every key. The accepted-keys whitelist lives in
+    ``_SCORER_CONFIG_ALLOWED`` (and is mirrored in ``capability_matrix()``
+    under ``"scorer_config_keys"`` for external introspection). Passing a key
+    that the chosen ``scorer_type`` does not accept raises ``ValueError``
+    upfront in :func:`create_scorer` — same defensive posture as the
+    ``_NON_TABULAR_KEYS`` warning on ``estimator_config``.
+
+    Current mapping:
+
+    - ``multioutput``: ``on_degenerate_target``
+    - ``multiclass``, ``independent``, ``universal``, ``sequential``,
+      ``hierarchical``: (none yet — included in the whitelist as empty sets)
+    """
+
+    # --- multioutput ---
+    on_degenerate_target: Union[DegenerateTargetPolicy, str]
+
+
 class RecommenderConfig(TypedDict, total=False):
     recommender_type: str  # "ranking", "bandits", "sequential", "hierarchical_sequential", "uplift", "gcsl"
     scorer_type: str  # "multioutput", "multiclass", "independent", "universal", "sequential", "hierarchical"
     estimator_config: EstimatorConfig
+    scorer_config: ScorerConfig
     recommender_params: RecommenderParams
 
 
@@ -216,6 +238,19 @@ _RETRIEVER_MAP = {
 _NON_TABULAR_KEYS = {"embedding", "sequential"}
 _TABULAR_SCORER_TYPES = {"multioutput", "multiclass", "independent", "universal"}
 _EMBEDDING_INCOMPATIBLE_SCORERS = {"multioutput", "multiclass", "independent"}
+
+# Whitelist of scorer_config keys accepted per scorer_type. Extend when a new
+# scorer-level constructor kwarg lands. Empty sets are not redundant — they
+# pin the contract that the scorer takes no kwargs today, so passing one
+# raises rather than silently dropping the value.
+_SCORER_CONFIG_ALLOWED: Dict[str, frozenset] = {
+    "multioutput": frozenset({"on_degenerate_target"}),
+    "multiclass": frozenset(),
+    "independent": frozenset(),
+    "universal": frozenset(),
+    "sequential": frozenset(),
+    "hierarchical": frozenset(),
+}
 
 
 # --- Private Helpers ---
@@ -470,24 +505,51 @@ def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: 
             f"(got {type(estimator).__name__}). Use scorer_type='universal' with embedding estimators."
         )
 
+    # Guard: sequential/hierarchical scorers require a SequentialEstimator.
+    # Hoisted above the scorer_config validation block so estimator/scorer
+    # type-compat errors surface before kwarg-shape errors — a caller who
+    # passed both a tabular estimator AND a bad scorer_config key should see
+    # the more fundamental type mismatch first.
+    if scorer_type in ("sequential", "hierarchical") and not isinstance(estimator, SequentialEstimator):
+        raise TypeError(
+            f"{scorer_type.capitalize()} scorer requires a SequentialEstimator, got {type(estimator).__name__}."
+        )
+
+    # Validate scorer_config against the per-scorer whitelist. Gated on
+    # ``scorer_type in _SCORER_CONFIG_ALLOWED`` so unknown scorer_types fall
+    # through to the NotImplementedError below — otherwise a non-empty config
+    # plus an unknown scorer_type would surface as "scorer_type='zzz' does
+    # not accept scorer_config keys: [...]", which misleads (implying zzz is
+    # valid with restricted keys) and hides the real unsupported-scorer error.
+    scorer_config = dict(config.get("scorer_config") or {})
+    if scorer_type in _SCORER_CONFIG_ALLOWED:
+        allowed = _SCORER_CONFIG_ALLOWED[scorer_type]
+        unknown = set(scorer_config) - allowed
+        if unknown:
+            raise ValueError(
+                f"scorer_type={scorer_type!r} does not accept scorer_config keys: "
+                f"{sorted(unknown)}. Accepted keys: {sorted(allowed) or '(none)'}."
+            )
+
+    # Every branch spreads ``**scorer_config`` so adding a future scorer-level
+    # kwarg is a single-site edit (the whitelist) — the construction site no
+    # longer has to be touched in tandem. Today the whitelist enforces empty
+    # kwargs for every scorer except multioutput, so the spread is a no-op
+    # for the others.
     scorer: BaseScorer
 
     if scorer_type == "multioutput":
-        scorer = MultioutputScorer(estimator=estimator)
+        scorer = MultioutputScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "multiclass":
-        scorer = MulticlassScorer(estimator=estimator)
+        scorer = MulticlassScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "independent":
-        scorer = IndependentScorer(estimator=estimator)
+        scorer = IndependentScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "universal":
-        scorer = UniversalScorer(estimator=estimator)
+        scorer = UniversalScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "sequential":
-        if not isinstance(estimator, SequentialEstimator):
-            raise TypeError(f"Sequential scorer requires a SequentialEstimator, got {type(estimator).__name__}.")
-        scorer = SequentialScorer(estimator=estimator)
+        scorer = SequentialScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "hierarchical":
-        if not isinstance(estimator, SequentialEstimator):
-            raise TypeError(f"Hierarchical scorer requires a SequentialEstimator, got {type(estimator).__name__}.")
-        scorer = HierarchicalScorer(estimator=estimator)
+        scorer = HierarchicalScorer(estimator=estimator, **scorer_config)
     else:
         raise NotImplementedError(f"Scorer type '{scorer_type}' not supported.")
 
@@ -632,12 +694,18 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
     return recommender
 
 
-def capability_matrix() -> Dict[str, Tuple[str, ...]]:
+def capability_matrix() -> Dict[str, Union[Tuple[str, ...], Dict[str, Tuple[str, ...]]]]:
     """Authoritative enum tuples for every factory-recognized dimension.
 
     Callers (e.g., a system-prompt builder or a validator) can use this to
     stay in lockstep with scikit-rec's capabilities without hardcoding enum
     values or reaching into private registry maps.
+
+    The ``"scorer_config_keys"`` entry maps each scorer_type to the tuple of
+    ``scorer_config`` keys it accepts — empty tuple when the scorer takes no
+    scorer-level kwargs today. External consumers (e.g. the agent layer's
+    train_model schema) can use this to surface per-scorer knobs without
+    grepping source.
 
     Evaluator and metric enums are intentionally omitted — those live on
     ``skrec.evaluator.datatypes.RecommenderEvaluatorType`` and
@@ -652,4 +720,5 @@ def capability_matrix() -> Dict[str, Tuple[str, ...]]:
         "sequential_model_types": tuple(_SEQUENTIAL_ESTIMATOR_MAP.keys()),
         "inference_method_types": tuple(_INFERENCE_METHOD_MAP.keys()),
         "retriever_types": tuple(_RETRIEVER_MAP.keys()),
+        "scorer_config_keys": {k: tuple(sorted(v)) for k, v in _SCORER_CONFIG_ALLOWED.items()},
     }

@@ -200,6 +200,22 @@ scorer = MultioutputScorer(
 )
 ```
 
+**Through the factory.** Most callers reach `MultioutputScorer` via `create_recommender_pipeline` rather than direct construction. The same policy is reachable as a `scorer_config` block on the top-level config:
+
+```python
+from skrec.orchestrator.factory import create_recommender_pipeline
+
+config = {
+    "recommender_type": "ranking",
+    "scorer_type": "multioutput",
+    "estimator_config": {"ml_task": "classification"},
+    "scorer_config": {"on_degenerate_target": "constant"},  # or DegenerateTargetPolicy.CONSTANT
+}
+recommender = create_recommender_pipeline(config)
+```
+
+`scorer_config` accepts either the enum member or its string value. Passing keys a scorer doesn't accept raises `ValueError` upfront — the accepted keys per scorer are listed in `capability_matrix()["scorer_config_keys"]`.
+
 Under `CONSTANT`, `recommender.scorer.degenerate_targets` exposes the manifest of columns that fell back to constant prediction. Per-label classification metrics on degenerate targets emit `nan` (excluded from macro-mean), and ranking metrics drop them entirely (constant predictions would tie at the top of every per-user ranking and bias the metric).
 
 **`recommend(top_k)` also drops degenerate targets** before ranking. A `WARNING` is logged once per recommender instance listing the excluded targets. If `top_k` exceeds the count of non-degenerate targets, the request is silently capped at the available count with a warning — callers that pre-allocate by `top_k` should account for this. If every target is degenerate (only reachable when an `item_subset` selects only degenerate columns), `recommend()` raises with a pointer at `scorer.predict_classes()` for the constant per-target labels.
