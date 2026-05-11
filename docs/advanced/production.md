@@ -325,7 +325,30 @@ def get_recommendations(user_id, user_features, top_k=5):
     return recommendations
 ```
 
-### 4. Parallel Processing
+### 4. Thread Safety
+
+**Two components are not thread-safe for concurrent inference on a shared instance:**
+
+- **`RankingRecommender` with a retriever attached** — per-user retrieval mutates the scorer's item subset. Do not share one instance across threads.
+- **`IndependentScorer`** — parallel inference and executor configuration mutate internal state.
+
+For multi-threaded serving (e.g. a Flask/FastAPI app), either:
+- Load one recommender instance **per worker process** (the safest approach, and the default for gunicorn/uvicorn multi-process deployments), or
+- Protect a shared instance with a lock if process-level isolation is not an option.
+
+```python
+import threading
+
+_lock = threading.Lock()
+
+def thread_safe_recommend(interactions_df, users_df, top_k=5):
+    with _lock:
+        return recommender.recommend(interactions=interactions_df, users=users_df, top_k=top_k)
+```
+
+Recommenders **without** a retriever and using `UniversalScorer`, `MulticlassScorer`, or `MultioutputScorer` (tabular estimators) do not mutate state during inference and are safe to call from multiple threads after training.
+
+### 5. Parallel Processing
 
 #### For Independent Scorer
 

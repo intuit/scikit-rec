@@ -1,7 +1,13 @@
 import importlib
 from typing import Any, Dict, Optional, Tuple, Type, TypedDict, Union
 
+from lightgbm import LGBMClassifier, LGBMRegressor
+
 from skrec.estimator.base_estimator import BaseEstimator
+from skrec.estimator.classification.lightgbm_classifier import (
+    LightGBMClassifierEstimator,
+    TunedLightGBMClassifierEstimator,
+)
 from skrec.estimator.classification.multioutput_classifier import (
     MultiOutputClassifierEstimator,
     TunedMultiOutputClassifierEstimator,
@@ -14,6 +20,10 @@ from skrec.estimator.classification.xgb_classifier import (
 )
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.embedding.base_embedding_estimator import BaseEmbeddingEstimator
+from skrec.estimator.regression.lightgbm_regressor import (
+    LightGBMRegressorEstimator,
+    TunedLightGBMRegressorEstimator,
+)
 from skrec.estimator.regression.multioutput_regressor import (
     MultiOutputRegressorEstimator,
     TunedMultiOutputRegressorEstimator,
@@ -24,6 +34,8 @@ from skrec.estimator.regression.xgb_regressor import (
     XGBRegressorEstimator,
 )
 from skrec.estimator.sequential.base_sequential_estimator import SequentialEstimator
+from skrec.evaluator.datatypes import RecommenderEvaluatorType
+from skrec.metrics.datatypes import RecommenderMetricType
 from skrec.recommender.bandits.contextual_bandits import ContextualBanditsRecommender
 from skrec.recommender.base_recommender import BaseRecommender
 from skrec.recommender.gcsl.gcsl_recommender import GcslRecommender
@@ -91,6 +103,37 @@ class XGBConfig(TypedDict, total=False):
     random_state: int
 
 
+class LGBMConfig(TypedDict, total=False):
+    n_estimators: int
+    max_depth: int
+    learning_rate: float
+    subsample: float
+    colsample_bytree: float
+    num_leaves: int
+    min_child_samples: int
+    n_jobs: int
+    random_state: int
+
+
+class DeepFMConfig(TypedDict, total=False):
+    embedding_dim: int
+    hidden_dim1: int
+    hidden_dim2: int
+    hidden_dim3: int
+    batch_size: int
+    epochs: int
+    lr: float
+    l1_reg: float
+    l2_reg: float
+    dropout: float
+    cosine_tmax: int
+    device: Optional[str]
+    use_cross_layer: bool
+    num_cross_layers: int
+    use_batch_norm: bool
+    bn_momentum: float
+
+
 class HPOConfig(TypedDict, total=False):
     hpo_method: HPOType
     param_space: ParamSpace
@@ -114,11 +157,14 @@ class SequentialConfig(TypedDict, total=False):
 
 class EstimatorConfig(TypedDict, total=False):
     estimator_type: str  # "tabular" (default), "embedding", "sequential"
-    # --- tabular (existing) ---
+    # --- tabular (sklearn-compatible, no torch required) ---
     ml_task: str
     xgboost: XGBConfig
+    lightgbm: LGBMConfig
     hpo: HPOConfig
     weights: WeightsConfig
+    # --- deep tabular (tabular input, PyTorch training; requires scikit-rec[torch]) ---
+    deepfm: DeepFMConfig
     # --- embedding ---
     embedding: EmbeddingConfig
     # --- sequential ---
@@ -215,6 +261,12 @@ _SEQUENTIAL_ESTIMATOR_MAP: Dict[str, tuple] = {
     "hrnn_regressor": ("skrec.estimator.sequential.hrnn_estimator", "HRNNRegressorEstimator"),
 }
 
+# Deep tabular models: tabular input (flat feature row) but PyTorch training.
+# Lazy-imported so torch is not pulled in unless actually requested.
+_DEEP_TABULAR_ESTIMATOR_MAP: Dict[str, tuple] = {
+    "deepfm": ("skrec.estimator.classification.deep_fm_classifier", "DeepFMClassifier"),
+}
+
 
 def _resolve_lazy(registry: Dict[str, Tuple[str, str]], key: str) -> Type:
     """Resolve a lazy (module_path, class_name) entry to an actual class."""
@@ -234,6 +286,8 @@ _RETRIEVER_MAP = {
     "content_based": ContentBasedRetriever,
     "embedding": EmbeddingRetriever,
 }
+
+TABULAR_MODEL_TYPES: Tuple[str, ...] = ("xgboost", "lightgbm", "deepfm")
 
 _NON_TABULAR_KEYS = {"embedding", "sequential"}
 _TABULAR_SCORER_TYPES = {"multioutput", "multiclass", "independent", "universal"}
@@ -383,14 +437,44 @@ def create_estimator(
 
     ml_task = estimator_config.get("ml_task", "classification")
     xgb_config = estimator_config.get("xgboost", {})
+    lgbm_config = estimator_config.get("lightgbm")
+    deepfm_config = estimator_config.get("deepfm")
     hpo_config = estimator_config.get("hpo", {})
     weights_config = estimator_config.get("weights", {})
+
+    tabular_model_keys = [k for k in ("xgboost", "lightgbm", "deepfm") if estimator_config.get(k) is not None]
+    if len(tabular_model_keys) > 1:
+        raise ValueError(
+            f"Specify only one tabular model key in estimator_config, got: {tabular_model_keys}. Remove all but one."
+        )
+
+    # DeepFM: tabular input shape but PyTorch training. Lazy-imported so torch
+    # is not pulled at module load — only when deepfm is actually requested.
+    if deepfm_config is not None:
+        try:
+            cls = _resolve_lazy(_DEEP_TABULAR_ESTIMATOR_MAP, "deepfm")
+        except ImportError as e:
+            raise ImportError(
+                "DeepFMClassifier requires PyTorch. Install it with: pip install scikit-rec[torch]"
+            ) from e
+        if ml_task != "classification":
+            raise ValueError(
+                "DeepFMClassifier only supports ml_task='classification'. For regression use 'xgboost' or 'lightgbm'."
+            )
+        logger.info(f"Creating DeepFMClassifier with params: {deepfm_config}")
+        return cls(params=deepfm_config)
+
+    use_lightgbm = lgbm_config is not None
+    model_params = lgbm_config if use_lightgbm else xgb_config
 
     is_tuned_mode = bool(
         hpo_config.get("hpo_method") or hpo_config.get("param_space") or hpo_config.get("optimizer_params")
     )
 
-    logger.info(f"Creating estimator. ML Task: {ml_task}, Scorer Type Hint: {scorer_type}, Tuned Mode: {is_tuned_mode}")
+    logger.info(
+        f"Creating estimator. ML Task: {ml_task}, Model: {'lightgbm' if use_lightgbm else 'xgboost'}, "
+        f"Scorer Type Hint: {scorer_type}, Tuned Mode: {is_tuned_mode}"
+    )
 
     if ml_task not in {"classification", "regression"}:
         raise NotImplementedError(f"ML task {ml_task} not implemented.")
@@ -398,7 +482,6 @@ def create_estimator(
     estimator: BaseEstimator
 
     if is_tuned_mode:
-        # Ensure required HPO keys are present if is_tuned_mode is True
         if not all(k in hpo_config for k in ["hpo_method", "param_space", "optimizer_params"]):
             raise ValueError(
                 "Missing required HPO configuration keys (hpo_method, param_space, optimizer_params) for tuned mode."
@@ -409,9 +492,17 @@ def create_estimator(
 
         if ml_task == "classification":
             if scorer_type == "multioutput":
-                logger.info("Creating TunedMultiOutputClassifierEstimator")
+                base_cls = LGBMClassifier if use_lightgbm else XGBClassifier
+                logger.info(f"Creating TunedMultiOutputClassifierEstimator with {base_cls.__name__}")
                 estimator = TunedMultiOutputClassifierEstimator(
-                    base_estimator=XGBClassifier,
+                    base_estimator=base_cls,
+                    hpo_method=hpo_method,
+                    param_space=param_space,
+                    optimizer_params=optimizer_params,
+                )
+            elif use_lightgbm:
+                logger.info("Creating TunedLightGBMClassifierEstimator")
+                estimator = TunedLightGBMClassifierEstimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
@@ -423,30 +514,42 @@ def create_estimator(
                     param_space=param_space,
                     optimizer_params=optimizer_params,
                 )
-        elif scorer_type == "multioutput":
-            logger.info("Creating TunedMultiOutputRegressorEstimator")
-            estimator = TunedMultiOutputRegressorEstimator(
-                base_estimator=XGBRegressor,
-                hpo_method=hpo_method,
-                param_space=param_space,
-                optimizer_params=optimizer_params,
-            )
-        else:
-            logger.info("Creating TunedXGBRegressorEstimator")
-            estimator = TunedXGBRegressorEstimator(
-                hpo_method=hpo_method,
-                param_space=param_space,
-                optimizer_params=optimizer_params,
-            )
+        else:  # regression
+            if scorer_type == "multioutput":
+                base_cls = LGBMRegressor if use_lightgbm else XGBRegressor
+                logger.info(f"Creating TunedMultiOutputRegressorEstimator with {base_cls.__name__}")
+                estimator = TunedMultiOutputRegressorEstimator(
+                    base_estimator=base_cls,
+                    hpo_method=hpo_method,
+                    param_space=param_space,
+                    optimizer_params=optimizer_params,
+                )
+            elif use_lightgbm:
+                logger.info("Creating TunedLightGBMRegressorEstimator")
+                estimator = TunedLightGBMRegressorEstimator(
+                    hpo_method=hpo_method,
+                    param_space=param_space,
+                    optimizer_params=optimizer_params,
+                )
+            else:
+                logger.info("Creating TunedXGBRegressorEstimator")
+                estimator = TunedXGBRegressorEstimator(
+                    hpo_method=hpo_method,
+                    param_space=param_space,
+                    optimizer_params=optimizer_params,
+                )
     else:
         if ml_task == "classification":
             action_weight = weights_config.get("action_weight", 1)
             item_sample_weights = weights_config.get("item_sample_weights")
 
             if scorer_type == "multioutput":
-                logger.info("Creating MultiOutputClassifierEstimator with XGBClassifier")
-                # Pass base model class and its params separately
-                estimator = MultiOutputClassifierEstimator(XGBClassifier, xgb_config)
+                base_cls = LGBMClassifier if use_lightgbm else XGBClassifier
+                logger.info(f"Creating MultiOutputClassifierEstimator with {base_cls.__name__}")
+                estimator = MultiOutputClassifierEstimator(base_cls, model_params)
+            elif use_lightgbm:
+                logger.info("Creating LightGBMClassifierEstimator")
+                estimator = LightGBMClassifierEstimator(model_params)
             elif action_weight != 1 or item_sample_weights is not None:
                 logger.info("Creating WeightedXGBClassifierEstimator")
                 estimator = WeightedXGBClassifierEstimator(
@@ -457,12 +560,17 @@ def create_estimator(
             else:
                 logger.info("Creating XGBClassifierEstimator")
                 estimator = XGBClassifierEstimator(xgb_config)
-        elif scorer_type == "multioutput":
-            logger.info("Creating MultiOutputRegressorEstimator with XGBRegressor")
-            estimator = MultiOutputRegressorEstimator(XGBRegressor, xgb_config)
         else:  # regression
-            logger.info("Creating XGBRegressorEstimator")
-            estimator = XGBRegressorEstimator(xgb_config)
+            if scorer_type == "multioutput":
+                base_cls = LGBMRegressor if use_lightgbm else XGBRegressor
+                logger.info(f"Creating MultiOutputRegressorEstimator with {base_cls.__name__}")
+                estimator = MultiOutputRegressorEstimator(base_cls, model_params)
+            elif use_lightgbm:
+                logger.info("Creating LightGBMRegressorEstimator")
+                estimator = LightGBMRegressorEstimator(model_params)
+            else:
+                logger.info("Creating XGBRegressorEstimator")
+                estimator = XGBRegressorEstimator(xgb_config)
 
     return estimator
 
@@ -707,18 +815,20 @@ def capability_matrix() -> Dict[str, Union[Tuple[str, ...], Dict[str, Tuple[str,
     train_model schema) can use this to surface per-scorer knobs without
     grepping source.
 
-    Evaluator and metric enums are intentionally omitted — those live on
-    ``skrec.evaluator.datatypes.RecommenderEvaluatorType`` and
-    ``skrec.metrics.datatypes.RecommenderMetricType`` respectively and are
-    already enumerable via ``list(RecommenderEvaluatorType)``.
+    The ``"evaluator_types"`` and ``"metric_types"`` entries enumerate the
+    valid values for ``evaluate()`` — agents can use these directly without
+    having to import and introspect the enum classes separately.
     """
     return {
         "recommender_types": RECOMMENDER_TYPES,
         "scorer_types": SCORER_TYPES,
         "estimator_types": ESTIMATOR_TYPES,
+        "tabular_model_types": TABULAR_MODEL_TYPES,
         "embedding_model_types": tuple(_EMBEDDING_ESTIMATOR_MAP.keys()),
         "sequential_model_types": tuple(_SEQUENTIAL_ESTIMATOR_MAP.keys()),
         "inference_method_types": tuple(_INFERENCE_METHOD_MAP.keys()),
         "retriever_types": tuple(_RETRIEVER_MAP.keys()),
         "scorer_config_keys": {k: tuple(sorted(v)) for k, v in _SCORER_CONFIG_ALLOWED.items()},
+        "evaluator_types": tuple(e.value for e in RecommenderEvaluatorType),
+        "metric_types": tuple(m.value for m in RecommenderMetricType),
     }

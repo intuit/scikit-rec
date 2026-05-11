@@ -1,3 +1,4 @@
+import copy
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union, overload
 
 import numpy as np
@@ -378,6 +379,14 @@ class RankingRecommender(BaseRecommender):
             else {}
         )
 
+        # Shallow-copy the scorer so the per-user item_subset mutations below are
+        # confined to this call stack and never touch self.scorer. The trained
+        # estimator, item_names, and items_df are shared by reference (read-only
+        # after training); only item_subset and item_subset_df differ per call.
+        # This makes concurrent recommend() calls on the same instance safe:
+        # each gets its own local_scorer with independent item_subset state.
+        local_scorer = copy.copy(self.scorer)
+
         results = []
         for user_id in user_ids:
             candidates = candidates_per_user.get(user_id, [])
@@ -387,7 +396,7 @@ class RankingRecommender(BaseRecommender):
             user_users = user_groups.get(user_id)
 
             if candidates_str:
-                self.scorer.set_item_subset(candidates_str)
+                local_scorer.set_item_subset(candidates_str)
             else:
                 logger.warning(
                     "RankingRecommender: retriever returned no candidates for user %s — "
@@ -400,11 +409,15 @@ class RankingRecommender(BaseRecommender):
                 # CONTRACT: _score_items_np must not alter the active item subset;
                 # active_item_names must be captured after scoring to reflect the
                 # restricted subset set by set_item_subset() above.
-                scores_np = self.scorer._score_items_np(user_interactions, user_users)
-                active_item_names = self._get_item_names()
+                scores_np = local_scorer._score_items_np(user_interactions, user_users)
+                active_item_names = (
+                    np.asarray(local_scorer.item_subset, dtype=np.str_)
+                    if local_scorer.item_subset is not None
+                    else local_scorer.item_names
+                )
 
                 if not sampling_temperature:  # None or 0 → deterministic ranking
-                    available = self._get_available_items_count()
+                    available = len(local_scorer.item_subset or local_scorer.item_names or [])
                     if top_k > available:
                         logger.warning(
                             "Requested top_k (%d) is larger than available items (%d). Will return only %d items.",
@@ -422,7 +435,7 @@ class RankingRecommender(BaseRecommender):
                 # the single row to yield a flat (top_k,) array of item names.
                 results.append(active_item_names[recommended_idx][0])
             finally:
-                self.scorer.clear_item_subset()
+                local_scorer.clear_item_subset()
 
         return np.array(results)
 

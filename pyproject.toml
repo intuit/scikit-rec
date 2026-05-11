@@ -21,9 +21,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Required for PyTorch-based estimators: NCF, Two-Tower, DCN, NeuralFactorization,
+# SASRec, HRNN, DeepFM. XGBoost, LightGBM, sklearn, and Matrix Factorization (NumPy)
+# work without this extra.
 torch = [
     "torch>=2.2.0,<3.0.0",
 ]
+# Alias so users looking for "deep learning" find the right extra.
+deep = [
+    "torch>=2.2.0,<3.0.0",
+]
+# Required for S3 dataset loading (skrec.dataset.s3_data_reader).
 aws = [
     "boto3>=1.26.27,<3.0.0",
 ]

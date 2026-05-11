@@ -1,9 +1,6 @@
 # scikit-rec
 
-[![CI](https://github.com/intuit/scikit-rec/actions/workflows/ci.yml/badge.svg)](https://github.com/intuit/scikit-rec/actions/workflows/ci.yml)
-[![Docs](https://github.com/intuit/scikit-rec/actions/workflows/docs.yml/badge.svg)](https://github.com/intuit/scikit-rec/actions/workflows/docs.yml)
 [![Python Package](https://img.shields.io/pypi/v/scikit-rec?color=blue&logo=python&logoColor=white)](https://pypi.org/project/scikit-rec)
-[![License](https://img.shields.io/github/license/intuit/scikit-rec?color=informational)](LICENSE)
 
 A composable, scikit-style recommender systems library.
 
@@ -105,35 +102,24 @@ recommender.train(
 
 ## Agent integration
 
-`scikit-rec` is designed to be used by agents and automated systems via its config-driven factory API.
+`scikit-rec` is designed to be consumed by LLM agents via its config-driven factory and a `capability_matrix()` introspection API. The companion repo [scikit-rec-agent](https://github.com/intuit/scikit-rec-agent/) provides a ready-made conversational agent that uses this surface to guide a user through dataset preparation, model selection, training, and evaluation — no hand-coded class wiring required.
+
+### How the agent surface works
+
+`capability_matrix()` returns the authoritative set of valid types for every factory dimension. The factory validates its inputs against these same tuples, so the agent's knowledge is always in lockstep with what the library actually supports:
 
 ```python
-from skrec.orchestrator import create_recommender_pipeline, capability_matrix
+from skrec.orchestrator import capability_matrix
 
-print(capability_matrix()["recommender_types"])
-
-config = {
-    "recommender_type": "ranking",
-    "scorer_type": "universal",
-    "estimator_config": {
-        "ml_task": "classification",
-        "xgboost": {
-            "n_estimators": 100,
-            "max_depth": 5,
-            "learning_rate": 0.1,
-        },
-    },
-}
-
-recommender = create_recommender_pipeline(config)
-recommender.train(
-    interactions_ds=sample_binary_reward_interactions,
-    users_ds=sample_binary_reward_users,
-    items_ds=sample_binary_reward_items,
-)
+cm = capability_matrix()
+cm["recommender_types"]    # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
+cm["scorer_types"]         # ('universal', 'independent', 'multiclass', 'multioutput', 'sequential', 'hierarchical')
+cm["estimator_types"]      # ('tabular', 'embedding', 'sequential')
+cm["embedding_model_types"] # ('matrix_factorization', 'ncf', 'two_tower', ...)
+cm["scorer_config_keys"]   # per-scorer accepted kwargs, e.g. {"multioutput": ("on_degenerate_target",)}
 ```
 
-This factory-based approach makes it easy for an LLM-driven agent to inspect available options, validate pipeline compatibility, and instantiate a recommender without hand-coded class wiring.
+An agent can call `capability_matrix()` to populate its system prompt, then pass the user's choices directly to `create_recommender_pipeline()`. The factory validates compatibility upfront and raises a clear `ValueError` for any invalid combination before training begins.
 
 ## Components
 
@@ -155,7 +141,7 @@ This factory-based approach makes it easy for an LLM-driven agent to inspect ava
 | `UniversalScorer` | Single global model using item features (auto-dispatches tabular vs. embedding) |
 | `IndependentScorer` | Separate model per item |
 | `MulticlassScorer` | Items as competing classes |
-| `MultioutputScorer` | Wide-format multi-label binary classification or multi-target regression (one `ITEM_<name>` column per target) |
+| `MultioutputScorer` | Wide-format multi-label binary classification or multi-target regression (one `ITEM_<name>` column per target); accepts `scorer_config={"on_degenerate_target": "constant"}` to handle single-class training columns |
 | `SequentialScorer` | For sequential estimators (SASRec) |
 | `HierarchicalScorer` | For HRNN estimators |
 

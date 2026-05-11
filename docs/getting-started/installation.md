@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Python 3.9** or higher
+- **Python 3.10** or higher
 
 ## Install from PyPI
 
@@ -25,6 +25,10 @@ For PyTorch-based models (NCF, Two-Tower, DCN, NeuralFactorization, SASRec, HRNN
 ```bash
 pip install scikit-rec[torch]
 ```
+
+The base install already includes XGBoost, LightGBM, scikit-learn, and Matrix Factorization (NumPy-only). PyTorch is only required for the deep learning estimators listed above.
+
+> **Note for contributors:** If you are testing PyTorch-based estimators locally, install with `pip install -e ".[dev,torch]"` — the plain `.[dev]` install skips torch and those tests will be skipped automatically.
 
 ### AWS Support
 

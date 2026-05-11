@@ -6,6 +6,7 @@ import pytest
 
 from skrec.estimator.base_estimator import BaseEstimator
 from skrec.estimator.classification.base_classifier import BaseClassifier
+from skrec.estimator.classification.lightgbm_classifier import LightGBMClassifierEstimator
 from skrec.estimator.classification.multioutput_classifier import (
     MultiOutputClassifierEstimator,
 )
@@ -18,6 +19,8 @@ from skrec.estimator.embedding.deep_cross_network_estimator import DeepCrossNetw
 from skrec.estimator.embedding.matrix_factorization_estimator import MatrixFactorizationEstimator
 from skrec.estimator.embedding.ncf_estimator import NCFEstimator
 from skrec.estimator.embedding.neural_factorization_estimator import NeuralFactorizationEstimator
+from skrec.estimator.regression.lightgbm_regressor import LightGBMRegressorEstimator
+from skrec.estimator.regression.multioutput_regressor import MultiOutputRegressorEstimator
 from skrec.estimator.regression.xgb_regressor import XGBRegressorEstimator
 from skrec.estimator.sequential.base_sequential_estimator import SequentialEstimator
 from skrec.estimator.sequential.hrnn_estimator import HRNNClassifierEstimator, HRNNRegressorEstimator
@@ -1275,11 +1278,14 @@ def test_capability_matrix_has_expected_keys():
         "recommender_types",
         "scorer_types",
         "estimator_types",
+        "tabular_model_types",
         "embedding_model_types",
         "sequential_model_types",
         "inference_method_types",
         "retriever_types",
         "scorer_config_keys",
+        "evaluator_types",
+        "metric_types",
     }
     # The flat enum tuples carry an immutable contract for callers; the
     # nested scorer_config_keys mapping (scorer_type -> tuple of keys) is a
@@ -1288,10 +1294,13 @@ def test_capability_matrix_has_expected_keys():
         "recommender_types",
         "scorer_types",
         "estimator_types",
+        "tabular_model_types",
         "embedding_model_types",
         "sequential_model_types",
         "inference_method_types",
         "retriever_types",
+        "evaluator_types",
+        "metric_types",
     }
     for key in tuple_keys:
         assert isinstance(cm[key], tuple), f"{key} should be a tuple"
@@ -1370,3 +1379,105 @@ def test_create_recommender_pipeline_rejects_unknown_estimator_type():
                 "recommender_params": {},
             }
         )
+
+
+# --- Tests for LightGBM estimator paths ---
+
+
+@pytest.mark.parametrize(
+    "estimator_config, scorer_type, expected_type, expected_params",
+    [
+        # Classification — default params
+        ({"ml_task": "classification", "lightgbm": {}}, None, LightGBMClassifierEstimator, {}),
+        # Classification — custom params forwarded to underlying LGBMClassifier
+        (
+            {"ml_task": "classification", "lightgbm": {"n_estimators": 200, "num_leaves": 63}},
+            None,
+            LightGBMClassifierEstimator,
+            {"n_estimators": 200, "num_leaves": 63},
+        ),
+        # Regression — params forwarded to underlying LGBMRegressor
+        (
+            {"ml_task": "regression", "lightgbm": {"n_estimators": 100}},
+            None,
+            LightGBMRegressorEstimator,
+            {"n_estimators": 100},
+        ),
+        # Multioutput classification — type check only (MultiOutput wraps the base class)
+        ({"ml_task": "classification", "lightgbm": {}}, "multioutput", MultiOutputClassifierEstimator, {}),
+        # Multioutput regression
+        ({"ml_task": "regression", "lightgbm": {}}, "multioutput", MultiOutputRegressorEstimator, {}),
+    ],
+)
+def test_create_estimator_lightgbm_paths(estimator_config, scorer_type, expected_type, expected_params):
+    """LightGBM tabular model routes to the correct estimator wrapper and forwards params."""
+    estimator = create_estimator(estimator_config, scorer_type=scorer_type)
+    assert isinstance(estimator, expected_type)
+    if expected_params and hasattr(estimator, "_model"):
+        model_params = estimator._model.get_params()
+        for k, v in expected_params.items():
+            assert model_params[k] == v, f"LightGBM param '{k}': expected {v}, got {model_params[k]}"
+
+
+@patch("skrec.orchestrator.factory.create_scorer")
+@patch("skrec.orchestrator.factory.create_recommender")
+def test_create_recommender_pipeline_lightgbm(mock_create_recommender, mock_create_scorer):
+    """create_recommender_pipeline with lightgbm key produces a LightGBMClassifierEstimator."""
+    mock_create_scorer.return_value = MagicMock(spec=BaseScorer)
+    mock_create_recommender.return_value = MagicMock(spec=BaseRecommender)
+
+    config = {
+        "recommender_type": "ranking",
+        "scorer_type": "independent",
+        "estimator_config": {"ml_task": "classification", "lightgbm": {"n_estimators": 50}},
+    }
+    create_recommender_pipeline(config)
+
+    # Verify create_scorer received a real LightGBM estimator (not a mock)
+    called_estimator = mock_create_scorer.call_args[0][0]
+    assert isinstance(called_estimator, LightGBMClassifierEstimator)
+
+
+# --- Tests for DeepFM estimator paths ---
+
+
+@requires_torch
+def test_create_estimator_deepfm_classification():
+    """DeepFM key with ml_task='classification' produces a DeepFMClassifier."""
+    from skrec.estimator.classification.deep_fm_classifier import DeepFMClassifier
+
+    config = {"ml_task": "classification", "deepfm": {"embedding_dim": 8, "epochs": 1}}
+    estimator = create_estimator(config)
+    assert isinstance(estimator, DeepFMClassifier)
+
+
+def test_create_estimator_deepfm_regression_rejected():
+    """DeepFM does not support regression — factory must raise ValueError."""
+    config = {"ml_task": "regression", "deepfm": {}}
+    with pytest.raises(ValueError, match="DeepFMClassifier only supports ml_task='classification'"):
+        create_estimator(config)
+
+
+def test_create_estimator_deepfm_missing_torch():
+    """If torch is not importable, factory raises ImportError with an install hint."""
+    config = {"ml_task": "classification", "deepfm": {}}
+    with patch("skrec.orchestrator.factory._resolve_lazy", side_effect=ImportError("No module named 'torch'")):
+        with pytest.raises(ImportError, match="pip install scikit-rec\\[torch\\]"):
+            create_estimator(config)
+
+
+# --- Tests for multiple tabular keys rejection ---
+
+
+@pytest.mark.parametrize(
+    "estimator_config",
+    [
+        {"xgboost": {"n_estimators": 10}, "lightgbm": {"n_estimators": 10}},
+        {"xgboost": {"n_estimators": 10}, "deepfm": {}},
+        {"lightgbm": {"n_estimators": 10}, "deepfm": {}},
+    ],
+)
+def test_create_estimator_rejects_multiple_tabular_keys(estimator_config):
+    """Specifying more than one tabular model key raises ValueError."""
+    with pytest.raises(ValueError, match="Specify only one tabular model key"):
+        create_estimator(estimator_config)

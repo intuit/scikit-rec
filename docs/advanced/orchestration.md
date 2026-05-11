@@ -150,25 +150,28 @@ The factory validates these constraints at pipeline creation time and raises `Va
 
 ## Programmatic Capability Introspection
 
-For tooling that needs to enumerate what the factory understands (system-prompt builders, config validators, UI pickers, etc.), `skrec.orchestrator` exposes three authoritative enum tuples plus a `capability_matrix()` accessor. These are the same values the factory validates against internally, so they stay in lockstep automatically.
+For tooling that needs to enumerate what the factory understands (system-prompt builders, config validators, UI pickers, etc.), `skrec.orchestrator` exposes four authoritative enum tuples plus a `capability_matrix()` accessor. These are the same values the factory validates against internally, so they stay in lockstep automatically.
 
 ```python
 from skrec.orchestrator import (
     RECOMMENDER_TYPES,
     SCORER_TYPES,
     ESTIMATOR_TYPES,
+    TABULAR_MODEL_TYPES,
     capability_matrix,
 )
 
-RECOMMENDER_TYPES  # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
-SCORER_TYPES       # ('universal', 'independent', 'multiclass', 'multioutput', 'sequential', 'hierarchical')
-ESTIMATOR_TYPES    # ('tabular', 'embedding', 'sequential')
+RECOMMENDER_TYPES    # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
+SCORER_TYPES         # ('universal', 'independent', 'multiclass', 'multioutput', 'sequential', 'hierarchical')
+ESTIMATOR_TYPES      # ('tabular', 'embedding', 'sequential')
+TABULAR_MODEL_TYPES  # ('xgboost', 'lightgbm', 'deepfm')
 
 capability_matrix()
 # {
 #     "recommender_types": (...),
 #     "scorer_types": (...),
 #     "estimator_types": (...),
+#     "tabular_model_types": ("xgboost", "lightgbm", "deepfm"),
 #     "embedding_model_types": ("matrix_factorization", "ncf", "two_tower", ...),
 #     "sequential_model_types": ("sasrec_classifier", "sasrec_regressor", ...),
 #     "inference_method_types": ("mean_scalarization", "percentile_value", "predefined_value"),
@@ -181,10 +184,10 @@ capability_matrix()
 #         "sequential": (),
 #         "hierarchical": (),
 #     },
+#     "evaluator_types": (...),   # RecommenderEvaluatorType members
+#     "metric_types": (...),      # RecommenderMetricType members
 # }
 ```
-
-Evaluator and metric enums are **not** included in `capability_matrix()` — those already live as proper `Enum` subclasses in `skrec.evaluator.datatypes.RecommenderEvaluatorType` and `skrec.metrics.datatypes.RecommenderMetricType` and are enumerable directly (e.g. `list(RecommenderEvaluatorType)`).
 
 The full compatibility reference (which scorer works with which estimator, retriever constraints, etc.) is on the [Capability Matrix](../user-guide/capability-matrix.md) page.
 
@@ -506,6 +509,35 @@ ValueError: Unknown recommender_type 'ranknig'. Valid:
 ValueError: scorer_type 'independent' does not support embedding estimators.
     Use scorer_type='universal' with embedding estimators.
 ```
+
+## Factory scope
+
+The tabular estimator path supports **XGBoost**, **LightGBM**, and **DeepFM** natively. Pick one by adding its key to `estimator_config`:
+
+```python
+# XGBoost (default)
+create_recommender_pipeline({
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {"ml_task": "classification", "xgboost": {"n_estimators": 200}},
+})
+
+# LightGBM — same shape, just swap the key
+create_recommender_pipeline({
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {"ml_task": "classification", "lightgbm": {"n_estimators": 200, "num_leaves": 63}},
+})
+
+# DeepFM — requires scikit-rec[torch]; classification only
+create_recommender_pipeline({
+    "recommender_type": "ranking",
+    "scorer_type": "universal",
+    "estimator_config": {"ml_task": "classification", "deepfm": {"embedding_dim": 16, "epochs": 10}},
+})
+```
+
+Only one tabular key (`xgboost`, `lightgbm`, or `deepfm`) may be present in a single config — specifying more than one raises `ValueError`. For estimator types not covered here (custom sklearn models, etc.) you can still compose manually and pass the estimator directly to a scorer.
 
 ## Next Steps
 

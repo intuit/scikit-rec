@@ -1,3 +1,5 @@
+import os
+
 import boto3
 from moto import mock_aws
 
@@ -8,8 +10,11 @@ TEST_BUCKET = "test-bucket"
 
 @mock_aws
 def test_get_s3_stream():
-    s3 = boto3.resource("s3")
-    s3.create_bucket(Bucket=TEST_BUCKET, CreateBucketConfiguration={"LocationConstraint": "us-west-2"})
+    # moto's default region is us-east-1; omit LocationConstraint so the
+    # bucket creation matches the mocked endpoint region.
+    os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
+    s3 = boto3.resource("s3", region_name="us-east-1")
+    s3.create_bucket(Bucket=TEST_BUCKET)
     obj = s3.Object(TEST_BUCKET, "test.txt")
     obj.put(Body=b"test content")
 
