@@ -1135,24 +1135,24 @@ def test_preserved_inference_columns_registry():
 # ====================================================================== #
 
 
-def test_fix4_sort_multiclass_labels_integer_natural_order():
+def test_sort_multiclass_labels_integer_natural_order():
     """sorted(..., key=str) yields [1, 10, 2]; natural sort yields [1, 2, 10]."""
     assert sort_multiclass_labels([10, 1, 2]) == [1, 2, 10]
     assert sort_multiclass_labels({1, 2, 10}) == [1, 2, 10]
 
 
-def test_fix4_sort_multiclass_labels_eleven_integers_natural_order():
+def test_sort_multiclass_labels_eleven_integers_natural_order():
     """K=11 — the failure case the lex-sort bug hides: ['1', '10', '11', '2', ...]."""
     expected = list(range(11))
     assert sort_multiclass_labels(reversed(expected)) == expected
 
 
-def test_fix4_sort_multiclass_labels_strings_lex_order():
+def test_sort_multiclass_labels_strings_lex_order():
     """String labels still sort lex (no behavior change for the common case)."""
     assert sort_multiclass_labels(["c", "a", "b"]) == ["a", "b", "c"]
 
 
-def test_fix4_sort_multiclass_labels_floats_natural_order():
+def test_sort_multiclass_labels_floats_natural_order():
     assert sort_multiclass_labels([1.5, 0.5, 2.5]) == [0.5, 1.5, 2.5]
 
 
@@ -1161,7 +1161,7 @@ def test_fix4_sort_multiclass_labels_floats_natural_order():
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_3_orphan_item_column_rejected_at_inference():
+def test_orphan_item_column_rejected_at_inference():
     X, scorer, _ = _build_validation_scaffold()
     inf = X.copy()
     inf.insert(0, USER_ID_NAME, ["u"] * len(X))
@@ -1170,7 +1170,7 @@ def test_fix_r2_3_orphan_item_column_rejected_at_inference():
         scorer._validate_inference_interactions(inf)
 
 
-def test_fix_r2_3_orphan_item_rejection_runs_for_conditional_too():
+def test_orphan_item_rejection_runs_for_conditional_too():
     """Vanilla and conditional paths both pass through the orphan check."""
     rng = np.random.default_rng(0)
     n = 30
@@ -1200,7 +1200,7 @@ def test_fix_r2_3_orphan_item_rejection_runs_for_conditional_too():
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_4_score_fast_runs_full_validator_orphan_item():
+def test_score_fast_runs_full_validator_orphan_item():
     """score_fast must trigger the orphan-ITEM_* check (and by extension
     the whole validator) — previously it had its own narrow OBSERVED-only
     inline check, so other validation rules were skipped on the single-
@@ -1212,7 +1212,7 @@ def test_fix_r2_4_score_fast_runs_full_validator_orphan_item():
         scorer.score_fast(row)
 
 
-def test_fix_r2_4_score_fast_runs_multilabel_group_mask_validator():
+def test_score_fast_runs_multilabel_group_mask_validator():
     """Plan v3 test #5 single-row path: score_fast must reject partial-
     multilabel-group observation. Pre-fix score_fast skipped the validator
     so this check never fired through score_fast."""
@@ -1244,7 +1244,7 @@ def test_fix_r2_4_score_fast_runs_multilabel_group_mask_validator():
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_5_multilabel_column_level_imbalance_rejected():
+def test_multilabel_column_level_imbalance_rejected():
     """If one member's OBSERVED_* column is declared in the inference frame
     and another is absent, reject — the joint group-mask semantics break.
     Pre-fix: validator only checked consistency among PRESENT columns, so
@@ -1273,7 +1273,7 @@ def test_fix_r2_5_multilabel_column_level_imbalance_rejected():
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_b1_target_specs_key_with_dot_rejected_at_init():
+def test_target_specs_key_with_dot_rejected_at_init():
     """nn.ModuleDict rejects keys containing '.', so a group_key like
     'engagement.group' would crash inside _PerTargetHeads with a less-
     actionable error. Catch it at scorer construction with a clear msg."""
@@ -1282,7 +1282,7 @@ def test_fix_r2_b1_target_specs_key_with_dot_rejected_at_init():
         MixedTypeMultiTargetScorer(estimator=_StubMTE(target_specs), target_specs=target_specs)
 
 
-def test_fix_r2_b1_target_specs_key_with_whitespace_rejected():
+def test_target_specs_key_with_whitespace_rejected():
     target_specs = {"ITEM_my target": TargetType.BINARY}
     with pytest.raises(ValueError, match="whitespace"):
         MixedTypeMultiTargetScorer(estimator=_StubMTE(target_specs), target_specs=target_specs)
@@ -1294,7 +1294,7 @@ def test_fix_r2_b1_target_specs_key_with_whitespace_rejected():
 # --- M2: schema-apply preserve uses pandas index alignment ---
 
 
-def test_fix_r2_b2_schema_apply_preserve_aligns_by_index_under_row_filter():
+def test_schema_apply_preserve_aligns_by_index_under_row_filter():
     """If interactions_schema.apply() ever filters rows (current implementation
     doesn't, but the seam must be defended), preserved OBSERVED_* columns
     align by index — surviving rows keep their original values; filtered
@@ -1372,7 +1372,7 @@ def test_fix_r2_b2_schema_apply_preserve_aligns_by_index_under_row_filter():
 # --- P0-1: score_items preserves OBSERVED_* through batch schema-apply ---
 
 
-def test_fix_p0_1_score_items_preserves_observed_through_non_declaring_schema():
+def test_batch_score_items_preserves_observed_through_non_declaring_schema():
     """Pre-fix: only recommend_online wired the preservation hook. Batch
     score_items routed through InferenceInputPreparer.preprocess_inputs
     which called interactions_schema.apply() directly, silently stripping
@@ -1438,7 +1438,7 @@ def test_fix_p0_1_score_items_preserves_observed_through_non_declaring_schema():
 # --- P0-2: attn_dropout actually controls nn.MultiheadAttention dropout ---
 
 
-def test_p1_16_target_group_spec_rejects_duplicate_members():
+def test_target_group_spec_rejects_duplicate_members():
     """TargetGroupSpec with duplicate member columns must be rejected at
     both the scorer and the independent-estimator validation paths."""
     ts = {"g": {"type": TargetType.MULTILABEL, "columns": ["ITEM_a", "ITEM_a"]}}
@@ -1759,7 +1759,7 @@ def test_apply_interactions_schema_with_preservation_rejects_row_filter():
 # ====================================================================== #
 
 
-def test_v3_m1_schema_apply_round_trip_actually_calls_apply():
+def test_schema_apply_round_trip_actually_calls_apply():
     """The earlier V3-M1 test only checked
     preserved_inference_columns() returns the right names. This one
     actually invokes apply_interactions_schema_with_preservation on a

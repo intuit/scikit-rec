@@ -711,7 +711,7 @@ def test_multiclass_logged_rewards_nan_ignore_mask_end_to_end():
 # ====================================================================== #
 
 
-def test_fix1_evaluate_honors_observed_columns_for_conditional_estimator():
+def test_evaluate_honors_observed_columns_for_conditional_estimator():
     """The pre-fix code path called estimator.predict_proba_dict directly
     in _evaluate_mixed_type_multi_target, sidestepping the OBSERVED_* →
     observed dict construction. Result: conditioning was silently ignored
@@ -787,7 +787,7 @@ def test_fix1_evaluate_honors_observed_columns_for_conditional_estimator():
 # ====================================================================== #
 
 
-def test_fix3_logged_rewards_binary_non_numeric_rejected():
+def test_logged_rewards_binary_non_numeric_rejected():
     recommender, X, y, _ = _build_recommender_for_validation()
     inf = X.copy()
     inf.insert(0, USER_ID_NAME, [f"u{i}" for i in range(len(X))])
@@ -808,7 +808,7 @@ def test_fix3_logged_rewards_binary_non_numeric_rejected():
         )
 
 
-def test_fix3_logged_rewards_binary_out_of_range_rejected():
+def test_logged_rewards_binary_out_of_range_rejected():
     recommender, X, y, _ = _build_recommender_for_validation()
     inf = X.copy()
     inf.insert(0, USER_ID_NAME, [f"u{i}" for i in range(len(X))])
@@ -829,7 +829,7 @@ def test_fix3_logged_rewards_binary_out_of_range_rejected():
         )
 
 
-def test_fix3_logged_rewards_regression_non_numeric_rejected():
+def test_logged_rewards_regression_non_numeric_rejected():
     recommender, X, y, _ = _build_recommender_for_validation()
     inf = X.copy()
     inf.insert(0, USER_ID_NAME, [f"u{i}" for i in range(len(X))])
@@ -850,7 +850,7 @@ def test_fix3_logged_rewards_regression_non_numeric_rejected():
         )
 
 
-def test_fix3_logged_rewards_multiclass_unknown_class_rejected():
+def test_logged_rewards_multiclass_unknown_class_rejected():
     recommender, X, y, _ = _build_recommender_for_validation()
     inf = X.copy()
     inf.insert(0, USER_ID_NAME, [f"u{i}" for i in range(len(X))])
@@ -873,7 +873,7 @@ def test_fix3_logged_rewards_multiclass_unknown_class_rejected():
         )
 
 
-def test_fix3_logged_rewards_nan_tolerated_for_every_type():
+def test_logged_rewards_nan_tolerated_for_every_type():
     """NaN per-column is the ignore-mask; validation must not reject."""
     recommender, X, y, _ = _build_recommender_for_validation()
     inf = X.copy()
@@ -912,7 +912,7 @@ def test_fix3_logged_rewards_nan_tolerated_for_every_type():
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_2_degenerate_class_returns_nan_not_zero():
+def test_degenerate_class_returns_nan_not_zero():
     """A held-out slice with a single-class binary target → metric NaN
     (matches MultioutputScorer evaluation semantics). Pre-fix: ROC_AUC
     silently returned 0.0 (sklearn ValueError caught → 0.0)."""
@@ -956,7 +956,7 @@ def test_fix_r2_2_degenerate_class_returns_nan_not_zero():
 # ---------------------------------------------------------------------- #
 
 
-def test_p1_2_multiclass_evaluate_skips_nan_in_unknown_check():
+def test_multiclass_evaluate_skips_nan_in_unknown_check():
     """NaN values in multiclass ground truth must NOT trigger the
     unknown-label warning — NaN = "no logged outcome" by convention."""
     import warnings as _warnings
@@ -995,7 +995,7 @@ def test_p1_2_multiclass_evaluate_skips_nan_in_unknown_check():
     )
 
 
-def test_p1_1_regression_evaluate_rejects_inf_ground_truth():
+def test_regression_evaluate_rejects_inf_ground_truth():
     """inf in a REGRESSION logged_rewards column must be rejected up front;
     NaN remains allowed (mask)."""
     rng = np.random.default_rng(0)

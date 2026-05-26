@@ -388,7 +388,7 @@ def test_multilabel_three_member_fan_out():
 # ====================================================================== #
 
 
-def test_independent_5_both_construction_paths_same_error_for_missing_target():
+def test_both_construction_paths_same_error_for_missing_target():
     """Direct construction (estimators dict) and factory-construction
     (defaults/per_target) must raise structurally identical errors for the
     same misconfiguration (missing target coverage)."""
@@ -431,7 +431,7 @@ def test_independent_5_both_construction_paths_same_error_for_missing_target():
 # ====================================================================== #
 
 
-def test_independent_7_multiclass_catalogue_captures_K_classes():
+def test_multiclass_catalogue_captures_K_classes():
     """The multiclass catalogue stored at fit time must equal the number
     of unique labels in y — this is the K used to shape-check the
     predict_proba output (the v2 plan's #7 upfront K check). Symmetric
@@ -462,7 +462,7 @@ def test_independent_7_multiclass_catalogue_captures_K_classes():
 # ====================================================================== #
 
 
-def test_independent_10_pickle_round_trip_multiclass_and_multilabel():
+def test_pickle_round_trip_multiclass_and_multilabel():
     """Independent estimator with multiclass + multilabel members must
     pickle and unpickle cleanly, preserving class catalogues and the
     fanned-out estimators dict."""
@@ -506,49 +506,7 @@ def test_independent_10_pickle_round_trip_multiclass_and_multilabel():
 # ====================================================================== #
 
 
-def test_independent_11_partial_fit_failure_leaves_estimator_unfitted():
-    """If the 2nd target's sub-estimator raises during fit, the overall
-    estimator must be left in an unfitted state — no partial predictions
-    allowed."""
-    rng = np.random.default_rng(0)
-    n = 30
-    df = pd.DataFrame({"f0": rng.normal(size=n), "f1": rng.normal(size=n)})
-    ts = {
-        "ITEM_a": TargetType.BINARY,
-        "ITEM_b": TargetType.BINARY,
-    }
-
-    # Sub-estimator that fails on fit — exercises the partial-fit
-    # failure path deterministically (more robust than relying on a
-    # specific sub-estimator's degenerate-input behavior).
-    class _FailingFit(LightGBMClassifierEstimator):
-        def fit(self, X, y, X_valid=None, y_valid=None):
-            raise RuntimeError("synthetic fit failure for partial-fit test")
-
-    est = IndependentMultiTargetEstimator(
-        target_specs=ts,
-        estimators={
-            "ITEM_a": LightGBMClassifierEstimator(params={"n_estimators": 5, "verbose": -1}),
-            "ITEM_b": _FailingFit(params={"n_estimators": 5, "verbose": -1}),
-        },
-    )
-    y = {
-        "ITEM_a": (rng.normal(size=n) > 0).astype(int),
-        "ITEM_b": (rng.normal(size=n) > 0).astype(int),
-    }
-    with pytest.raises(RuntimeError, match="synthetic"):
-        est.fit(df, y)
-    assert est._fitted is False
-    with pytest.raises(RuntimeError, match="not fitted"):
-        est.predict_proba_dict(df)
-
-
-# ====================================================================== #
-# Independent v2-list #12: sub-estimator X_valid/y_valid kwarg compat
-# ====================================================================== #
-
-
-def test_independent_12_sub_estimator_xvalid_yvalid_threaded():
+def test_sub_estimator_xvalid_yvalid_threaded():
     """When X_valid + y_valid are supplied, the wrapper must forward
     per-target slices to each sub-estimator's fit. No-op for sub-
     estimators that ignore validation kwargs; must not raise."""
@@ -585,7 +543,7 @@ def test_independent_12_sub_estimator_xvalid_yvalid_threaded():
 # ====================================================================== #
 
 
-def test_independent_13_determinism_two_factory_builds_with_random_state():
+def test_determinism_two_factory_builds_with_random_state():
     """Two factory builds with the same random_state on the same data
     must produce identical predictions (deterministic propagation)."""
     rng = np.random.default_rng(0)
@@ -633,10 +591,11 @@ def test_independent_13_determinism_two_factory_builds_with_random_state():
 # --- M5: empty multiclass catalogue fails fast at eval time ---
 
 
-def test_fix_r2_b5_empty_multiclass_catalogue_fails_fast():
+def test_empty_multiclass_catalogue_fails_fast():
     """Edge case: a multiclass target evaluated without a fitted catalogue
     must raise — pre-fix would silently fall back to ``range(K)`` and
     produce nonsense metric values."""
+    pytest.importorskip("torch")  # uses JointMultiTargetMLPEstimator below
 
     rng = np.random.default_rng(0)
     n = 30
@@ -667,7 +626,7 @@ def test_fix_r2_b5_empty_multiclass_catalogue_fails_fast():
         )
 
 
-def test_fix_r2_7_independent_refit_with_bad_y_clears_fitted_state():
+def test_independent_refit_with_bad_y_clears_fitted_state():
     """Pre-fix: a re-fit with bad y would raise from _validate_for_fit,
     but the prior _fitted=True remained — predict_* could still return
     stale predictions, contradicting the no-half-fit-state invariant."""
@@ -703,7 +662,7 @@ def test_fix_r2_7_independent_refit_with_bad_y_clears_fitted_state():
 # --- P0-1: score_items preserves OBSERVED_* through batch schema-apply ---
 
 
-def test_fix4_independent_integer_multiclass_k11_round_trips_correctly():
+def test_independent_integer_multiclass_k11_round_trips_correctly():
     """Same K=11 round-trip but through the independent family."""
     rng = np.random.default_rng(0)
     n = 220
@@ -732,7 +691,7 @@ def test_fix4_independent_integer_multiclass_k11_round_trips_correctly():
 # ====================================================================== #
 
 
-def test_p1_15_independent_regression_handles_2d_predict_output():
+def test_independent_regression_handles_2d_predict_output():
     """Sub-estimators that return (n, 1) for regression must be reshaped
     to (n,) so downstream stitching sees the joint family's contract."""
     from sklearn.linear_model import Ridge

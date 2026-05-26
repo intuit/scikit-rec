@@ -837,7 +837,7 @@ def test_v3_conditional_2_correlation_both_families(estimator_cls, kwargs):
 # ====================================================================== #
 
 
-def test_v3_risk15_score_items_preserves_observed_through_non_declaring_schema():
+def test_scorer_score_items_with_conditional_estimator_uses_observed():
     """Parallel to the recommend_online OBSERVED-preservation test:
     score_items via the recommender (the batch path) must also preserve
     OBSERVED_* columns through a non-declaring interactions_schema. This
@@ -1025,7 +1025,7 @@ class _StubConditionalEstimator:
 # ---------------------------------------------------------------------- #
 
 
-def test_fix_r2_6_predict_with_observed_accepts_none():
+def test_predict_with_observed_accepts_none():
     """Protocol now declares observed: Optional[dict]=None; implementation
     has accepted None all along. Pin the contract by calling
     predict_with_observed(X) without the second argument."""
@@ -1079,7 +1079,7 @@ class _StubMTE:
 # --- P0-5: sample_training_mask requires generator ---
 
 
-def test_fix_p0_5_sample_training_mask_requires_generator():
+def test_sample_training_mask_requires_generator():
 
     with pytest.raises(TypeError, match="seeded torch.Generator"):
         sample_training_mask(
@@ -1096,7 +1096,7 @@ def test_fix_p0_5_sample_training_mask_requires_generator():
 # --- P0-6: conditional Transformer per-target tokens at d_model ---
 
 
-def test_fix_p0_6_conditional_transformer_label_tokens_match_num_targets():
+def test_conditional_transformer_label_tokens_match_num_targets():
     """The conditional Transformer must append exactly num_targets extra
     tokens at d_model width — not num_targets * label_embedding_dim scalar
     tokens. Capture the seq tensor at the encoder's forward via a hook on
@@ -1175,7 +1175,7 @@ def test_fix_p0_6_conditional_transformer_label_tokens_match_num_targets():
 # --- P0-7: independent.defaults upfront coverage validation ---
 
 
-def test_p1_12_conditional_unseen_label_demotes_to_unobserved():
+def test_conditional_unseen_label_demotes_to_unobserved():
     """When predict_with_observed receives a multiclass label not in the
     training-time catalogue, the row should be demoted to is_observed=0
     rather than silently zeroing the one-hot row while keeping

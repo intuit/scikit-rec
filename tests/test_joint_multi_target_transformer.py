@@ -209,7 +209,7 @@ def test_d_model_not_divisible_by_n_heads_rejected():
 # --- P0-2: attn_dropout actually controls nn.MultiheadAttention dropout ---
 
 
-def test_fix_p0_2_attn_dropout_honored_in_custom_encoder_layer():
+def test_attn_dropout_honored_in_custom_encoder_layer():
     """The custom encoder layer constructs nn.MultiheadAttention with
     dropout=attn_dropout (not post-hoc-assigned, which doesn't reliably
     take effect). Pin the wire: build an encoder with a distinctive
@@ -241,7 +241,7 @@ def test_fix_p0_2_attn_dropout_honored_in_custom_encoder_layer():
 # --- P0-3: warmup LR schedule actually wired through the optimizer ---
 
 
-def test_fix_p0_3_warmup_schedule_ramps_lr_then_holds():
+def test_warmup_schedule_ramps_lr_then_holds():
     """Wire test: build a vanilla joint Transformer with warmup_steps=10
     and lr=0.1; train for one batch at a time and capture the optimizer
     lr per step. Steps 1..10 should ramp linearly from ~0 → 0.1; step 11+
@@ -303,7 +303,7 @@ def test_fix_p0_3_warmup_schedule_ramps_lr_then_holds():
 # --- P0-4: gradient clipping actually applied during Transformer training ---
 
 
-def test_fix_p0_4_grad_clip_norm_applied_on_transformer():
+def test_grad_clip_norm_applied_on_transformer():
     """Wire test: monkey-patch torch.nn.utils.clip_grad_norm_ to record the
     max_norm it was called with. Train a Transformer for one batch with
     grad_clip_norm=0.5; assert clip_grad_norm_ was called with max_norm=0.5."""

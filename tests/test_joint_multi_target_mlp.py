@@ -290,7 +290,7 @@ def test_check_fitted_before_predict():
         est.predict_proba_dict(X)
 
 
-def test_fix4_joint_mlp_integer_multiclass_k11_round_trips_correctly():
+def test_joint_mlp_integer_multiclass_k11_round_trips_correctly():
     """End-to-end: train joint MLP on a K=11 integer multiclass target,
     confirm predictions land in the right class ID (not the lex-shuffled
     position the pre-fix code would have produced)."""
@@ -362,7 +362,7 @@ def _build_validation_scaffold():
 # --- M3: Joint fit rejects NaN in training y with a named error ---
 
 
-def test_fix_r2_b3_joint_fit_rejects_nan_in_y():
+def test_joint_fit_rejects_nan_in_y():
     X = pd.DataFrame({"f0": [0.1, 0.2, -0.3]})
     y = {"ITEM_a": np.array([1.0, np.nan, 0.0])}
     ts = {"ITEM_a": TargetType.BINARY}
@@ -377,7 +377,7 @@ def test_fix_r2_b3_joint_fit_rejects_nan_in_y():
 # --- M5: empty multiclass catalogue fails fast at eval time ---
 
 
-def test_fix_p0_4_mlp_default_no_grad_clip():
+def test_mlp_default_no_grad_clip():
     """Symmetric counter-test: vanilla joint MLP defaults to grad_clip_norm=None,
     so clip_grad_norm_ must NOT be called."""
     import torch.nn.utils as torch_nn_utils
@@ -415,7 +415,7 @@ def test_fix_p0_4_mlp_default_no_grad_clip():
 # ====================================================================== #
 
 
-def test_p1_7_regression_scaler_rejects_nan_input():
+def test_regression_scaler_rejects_nan_input():
     """_RegressionScaler.fit must raise on all-NaN input rather than
     silently producing NaN scalers that propagate to NaN gradients."""
     from skrec.estimator.classification._joint_multi_target_base import _RegressionScaler
@@ -430,7 +430,7 @@ def test_p1_7_regression_scaler_rejects_nan_input():
     assert "ITEM_rev" in scaler.scalers
 
 
-def test_p1_8_reject_zero_or_negative_epochs():
+def test_reject_zero_or_negative_epochs():
     """epochs=0 / negative must raise at fit-time, not silently skip
     training and leave the model at random init."""
     rng = np.random.default_rng(0)
@@ -448,7 +448,7 @@ def test_p1_8_reject_zero_or_negative_epochs():
         est.fit(X, y)
 
 
-def test_p1_9_object_dtype_nan_in_multiclass_y_detected():
+def test_object_dtype_nan_in_multiclass_y_detected():
     """Object-dtype y with None / np.nan sprinkled in must trigger the NaN
     guard via the pd.isna fallback (not the float-cast path that raises)."""
     rng = np.random.default_rng(0)
@@ -462,7 +462,7 @@ def test_p1_9_object_dtype_nan_in_multiclass_y_detected():
         est.fit(X, y)
 
 
-def test_p1_6_loss_target_count_invariant():
+def test_loss_target_count_invariant():
     """Joint loss reduction is mean-across-targets, not sum. The total
     loss for a 2-target problem should be roughly half the SUMMED-loss
     a sum-reduction would give — i.e., adding targets doesn't blow up

@@ -571,7 +571,7 @@ def test_contract_unrecognized_raises():
 # ====================================================================== #
 
 
-def test_factory_3_defaults_and_per_target_gap_fill():
+def test_defaults_and_per_target_gap_fill():
     """defaults covers some types; per_target covers specific names;
     union must cover every fanned-out target. The factory must compose
     them correctly (per_target overrides where present, defaults fill
@@ -614,7 +614,7 @@ def test_factory_3_defaults_and_per_target_gap_fill():
 # ====================================================================== #
 
 
-def test_factory_5_multilabel_member_per_target_overrides_group_default():
+def test_multilabel_member_per_target_overrides_group_default():
     """A multilabel member listed in per_target overrides the multilabel
     group default — name-key precedence holds even for fanned-out
     members."""
@@ -658,7 +658,7 @@ def test_factory_5_multilabel_member_per_target_overrides_group_default():
         (TargetType.BINARY, "lightgbm", False),
     ],
 )
-def test_factory_7_independent_compat_matrix(target_type, estimator_type, should_fail):
+def test_independent_compat_matrix(target_type, estimator_type, should_fail):
     """Walk through the independent_target_compat table and verify the
     rejection matrix: every (target_type, estimator_type) ∉ table must
     raise, and every ∈ table must construct."""
@@ -685,7 +685,7 @@ def test_factory_7_independent_compat_matrix(target_type, estimator_type, should
 # ====================================================================== #
 
 
-def test_factory_10_target_specs_object_identity_through_pipeline():
+def test_target_specs_object_identity_through_pipeline():
     """The target_specs dict the user passes via scorer_config must reach
     BOTH the scorer and the estimator without being mutated or copied.
     Identity equality (``is``) over the inner reference confirms no
@@ -721,7 +721,7 @@ def test_factory_10_target_specs_object_identity_through_pipeline():
 # ====================================================================== #
 
 
-def test_factory_11_contract_from_dataframe_empty_inputs():
+def test_contract_from_dataframe_empty_inputs():
     """contract_from_dataframe with an empty DataFrame must raise (no
     contract detectable); with target_specs={} the empty-dict check
     must not trip the truthiness branch."""
@@ -736,7 +736,7 @@ def test_factory_11_contract_from_dataframe_empty_inputs():
 # ====================================================================== #
 
 
-def test_fix2_capability_matrix_lists_conditional_modes():
+def test_capability_matrix_lists_conditional_modes():
     cm = capability_matrix()
     assert "conditional_joint_mlp" in cm["multi_target_model_types"]
     assert "conditional_joint_transformer" in cm["multi_target_model_types"]
@@ -744,7 +744,7 @@ def test_fix2_capability_matrix_lists_conditional_modes():
     assert MULTI_TARGET_MODEL_TYPES == cm["multi_target_model_types"]
 
 
-def test_fix2_create_estimator_conditional_joint_mlp():
+def test_create_estimator_conditional_joint_mlp():
     ts = {"ITEM_a": TargetType.BINARY}
     est = create_estimator(
         {
@@ -760,7 +760,7 @@ def test_fix2_create_estimator_conditional_joint_mlp():
     assert isinstance(est, ConditionalJointMultiTargetMLPEstimator)
 
 
-def test_fix2_create_estimator_conditional_joint_transformer():
+def test_create_estimator_conditional_joint_transformer():
     ts = {"ITEM_a": TargetType.BINARY}
     est = create_estimator(
         {
@@ -813,7 +813,7 @@ def _build_recommender_for_validation():
 # --- P0-7: independent.defaults upfront coverage validation ---
 
 
-def test_fix_p0_7_independent_missing_default_raises_upfront():
+def test_independent_missing_default_raises_upfront():
     """Pre-fix: missing default surfaced as a per-target ValueError deep
     in the per-target loop. Post-fix: a single upfront error lists EVERY
     missing default key so the user can fix the config in one round-trip."""
@@ -848,7 +848,7 @@ def test_fix_p0_7_independent_missing_default_raises_upfront():
     assert "multiclass" in msg
 
 
-def test_p1_18_contract_from_dataframe_honors_target_specs_intent():
+def test_contract_from_dataframe_honors_target_specs_intent():
     """contract_from_dataframe must return wide_mixed_type_multi_target
     whenever target_specs is passed, even for all-BINARY specs."""
     from skrec.orchestrator import contract_from_dataframe
@@ -867,7 +867,7 @@ def test_p1_18_contract_from_dataframe_honors_target_specs_intent():
     assert contract_from_dataframe(df, target_specs=ts) == "wide_mixed_type_multi_target"
 
 
-def test_p1_5_capability_matrix_derives_from_scorer_class_attr():
+def test_capability_matrix_derives_from_scorer_class_attr():
     """scorer_supports_observed_conditioning must be derived from each
     scorer class's supports_observed_conditioning attribute, not a
     hand-edited tuple."""
@@ -881,7 +881,7 @@ def test_p1_5_capability_matrix_derives_from_scorer_class_attr():
     assert "mixed_type_multi_target" in caps["scorer_supports_observed_conditioning"]
 
 
-def test_p1_14_independent_random_state_propagates():
+def test_independent_random_state_propagates():
     """multi_target.random_state must be plumbed into independent sub-
     estimator params when the sub-estimator's params don't set it."""
     target_specs = {"ITEM_a": TargetType.BINARY}
