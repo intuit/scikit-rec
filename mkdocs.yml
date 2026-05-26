@@ -53,6 +53,7 @@ nav:
       - Architecture: user-guide/architecture.md
       - Capability Matrix: user-guide/capability-matrix.md
       - Scorers: user-guide/scorers.md
+      - Decision Rule: user-guide/decision-rule.md
       - Estimators: user-guide/estimators.md
       - Training: user-guide/training.md
       - Inference: user-guide/inference.md

@@ -78,6 +78,22 @@ class BaseRegressionMetric(BaseRecommenderMetric):
     """
 
 
+class BaseMulticlassMetric(BaseRecommenderMetric):
+    """Base class for metrics evaluating multiclass classification per target.
+
+    Parallel to :class:`BaseClassificationMetric` but for K>2 classes. The
+    contract:
+      - ``recommendation_scores``: ``(n, K)`` class probabilities (rows sum
+        to 1; column order matches the training-time class catalogue).
+      - ``modified_rewards``: ``(n,)`` class indices into the same catalogue.
+        NaN-tolerant: rows with NaN labels are masked out.
+      - ``recommendation_ranks`` and ``top_k`` are unused.
+
+    Used by :class:`~skrec.scorer.mixed_type_multi_target.MixedTypeMultiTargetScorer`
+    for multiclass-typed targets.
+    """
+
+
 class BasePolicyMetric(BaseRecommenderMetric):
     """
     Base class for metrics evaluating the overall policy-level performance.

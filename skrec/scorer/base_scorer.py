@@ -44,8 +44,91 @@ class BaseScorer(ABC):
     item_subset: Optional[List[str]] = None
     item_subset_df: Optional[pd.DataFrame] = None
 
+    # Class-level capability flag — set True on scorers that accept
+    # ``OBSERVED_*`` columns at inference for real-time-label conditioning.
+    # ``capability_matrix()`` in skrec.orchestrator reads this attribute
+    # off each registered scorer class so the published table can never
+    # drift from the scorers' actual behavior. Default False — most
+    # scorers neither accept nor preserve OBSERVED_* columns.
+    supports_observed_conditioning: bool = False
+
+    # Class-level capability flag — set True on scorers whose output is
+    # per-target (one column per declared target) rather than per-item
+    # ranking. Recommender dispatch (recommend / recommend_online /
+    # evaluate) routes per-target scorers through a different code path
+    # because top-k ranking semantics don't apply. Read at runtime via
+    # ``getattr(self.scorer, "is_per_target_scorer", False)`` so a new
+    # per-target scorer is a one-line attribute override — no
+    # recommender-side isinstance ladder edit, no risk of forgetting to
+    # update one of the three dispatch sites. Default False.
+    is_per_target_scorer: bool = False
+
     def __init__(self, estimator: Union[BaseEstimator, SequentialEstimator]) -> None:
         self.estimator = estimator
+
+    def preserved_inference_columns(self) -> List[str]:
+        """Columns that must survive ``interactions_schema.apply()`` at inference.
+
+        ``DatasetSchema.apply()`` silently drops unknown columns with a
+        warning — convenient for stripping unrelated client columns, but
+        harmful when a scorer wants to validate auxiliary input columns
+        (e.g. ``OBSERVED_*`` for real-time-label conditioning) that aren't
+        in the client's declared schema. Scorers that need such columns
+        override this hook to declare them; ``BaseRecommender.recommend_online``
+        sets them aside before ``apply()`` and re-attaches after.
+
+        Default: empty list. Most scorers don't need this — vanilla
+        :class:`MixedTypeMultiTargetScorer` is the only scorer that
+        overrides today (returns the set of ``OBSERVED_*`` column names
+        matching declared targets, unconditionally — see the scorer
+        docstring for the "always preserve" rationale).
+
+        **Opt-in registry** (intentional defaults — pinned by
+        ``tests/test_review_fixes.py::test_preserved_inference_columns_registry``):
+
+        +----------------------------------+--------------------------------------+
+        | Scorer                           | Returns (default unless overridden)  |
+        +==================================+======================================+
+        | :class:`MultioutputScorer`       | ``[]`` (no auxiliary columns)        |
+        +----------------------------------+--------------------------------------+
+        | :class:`MulticlassScorer`        | ``[]``                               |
+        +----------------------------------+--------------------------------------+
+        | :class:`IndependentScorer`       | ``[]``                               |
+        +----------------------------------+--------------------------------------+
+        | :class:`UniversalScorer`         | ``[]``                               |
+        +----------------------------------+--------------------------------------+
+        | :class:`SequentialScorer`        | ``[]``                               |
+        +----------------------------------+--------------------------------------+
+        | :class:`HierarchicalScorer`      | ``[]``                               |
+        +----------------------------------+--------------------------------------+
+        | :class:`MixedTypeMultiTargetScorer` | per-target ``OBSERVED_<suffix>`` |
+        +----------------------------------+--------------------------------------+
+
+        A new scorer that wants OBSERVED-like conditioning MUST override
+        both this method and :attr:`supports_observed_conditioning` (and
+        usually :meth:`preserved_inference_column_prefixes` for typo
+        detection). The opt-in registry test pins the table above so a
+        future scorer that forgets to opt out has to update the test
+        first — failure mode is "test red," not "silent OBSERVED leak."
+        """
+        return []
+
+    def preserved_inference_column_prefixes(self) -> List[str]:
+        """Column-name prefixes that must survive ``interactions_schema.apply()``.
+
+        Complements :meth:`preserved_inference_columns` for the case where
+        a scorer wants to admit typos / unknown suffixes into validation
+        rather than silently lose them to the schema's unknown-column
+        strip. Without this, a typo'd ``OBSERVED_revenuee`` would be
+        stripped before
+        :meth:`MixedTypeMultiTargetScorer._validate_inference_interactions`
+        runs, and the user would see "interactions had no OBSERVED" rather
+        than "did you mean OBSERVED_revenue?".
+
+        Default: empty list. Overridden by
+        :class:`MixedTypeMultiTargetScorer` to ``[OBSERVED_PREFIX]``.
+        """
+        return []
 
     def set_item_subset(self, item_subset: List[str]) -> None:
         """Restrict scoring and recommendations to a subset of the item catalogue.

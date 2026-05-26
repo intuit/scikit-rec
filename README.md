@@ -142,6 +142,7 @@ An agent can call `capability_matrix()` to populate its system prompt, then pass
 | `IndependentScorer` | Separate model per item |
 | `MulticlassScorer` | Items as competing classes |
 | `MultioutputScorer` | Wide-format multi-label binary classification or multi-target regression (one `ITEM_<name>` column per target); accepts `scorer_config={"on_degenerate_target": "constant"}` to handle single-class training columns |
+| `MixedTypeMultiTargetScorer` | Wide-format scorer for **heterogeneous per-target types** (binary + regression + multiclass + multilabel groups) in one model. Three estimator families: joint MLP, joint Transformer (FT-Transformer-style), independent (per-target sub-estimators). Per-target metric dispatch returns `Dict[str, float]`. See [scorers guide](docs/user-guide/scorers.md#5-mixedtypemultitargetscorer) |
 | `SequentialScorer` | For sequential estimators (SASRec) |
 | `HierarchicalScorer` | For HRNN estimators |
 

@@ -18,5 +18,8 @@ class RecommenderMetricType(str, Enum):
     RMSE = "rmse"
     MAE = "mae"
 
+    # Multiclass Metrics (per-target; used by MixedTypeMultiTargetScorer)
+    MULTICLASS_ACCURACY = "multiclass_accuracy"
+
     # Policy Metric
     EXPECTED_REWARD = "expected_reward"

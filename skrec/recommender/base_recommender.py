@@ -368,11 +368,14 @@ class BaseRecommender(ABC):
         """
         interactions = self._process_outcome_columns(interactions)
 
-        interactions_schema = self._inference.build_trimmed_interactions_schema(strip_user_id=True)
-        if interactions_schema and interactions is not None:
-            interactions = interactions_schema.apply(interactions)
+        # Route through the shared preservation primitive — same seam used
+        # by InferenceInputPreparer.preprocess_inputs for batch scoring.
+        # Centralising in one helper means both batch and single-row paths
+        # honour scorer.preserved_inference_columns() (e.g. OBSERVED_* for
+        # v3 conditional inference).
+        interactions = self._inference.apply_interactions_schema_with_preservation(interactions, strip_user_id=True)
 
-        if self.users_schema:
+        if getattr(self, "users_schema", None):
             users = self._inference.apply_users_schema(users, strip_user_id=True)
 
         parts = [df for df in [interactions, users] if df is not None]
@@ -387,6 +390,17 @@ class BaseRecommender(ABC):
         active_item_names = self._get_item_names()
 
         if isinstance(self.scorer, MultioutputScorer):
+            return self.scorer.score_fast(features)[list(active_item_names)]
+        # Capability-flag dispatch: any scorer that publishes
+        # ``is_per_target_scorer = True`` is routed through the
+        # wide-format score_fast path, not the top-k ranking path. Adding
+        # a new per-target scorer is then a one-line attribute flip on
+        # the subclass — no edit here required. Dispatch order matters:
+        # this arm MUST precede _score_fast_np, which assumes a
+        # rankable-scalar shape that doesn't apply to per-target output.
+        # ``is True`` (not just truthy) — same MagicMock-spec rationale
+        # as the constructor-side check in RankingRecommender.__init__.
+        if getattr(self.scorer, "is_per_target_scorer", False) is True:
             return self.scorer.score_fast(features)[list(active_item_names)]
 
         scores_np = self.scorer._score_fast_np(features)

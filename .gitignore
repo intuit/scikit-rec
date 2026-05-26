@@ -30,3 +30,4 @@ coverage.xml
 
 # Example notebook data (auto-fetched/regenerated on first run; not tracked)
 examples/*/data/
+

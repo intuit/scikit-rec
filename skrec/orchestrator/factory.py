@@ -1,6 +1,7 @@
 import importlib
-from typing import Any, Dict, Optional, Tuple, Type, TypedDict, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict, Union
 
+import pandas as pd
 from lightgbm import LGBMClassifier, LGBMRegressor
 
 from skrec.estimator.base_estimator import BaseEstimator
@@ -54,6 +55,11 @@ from skrec.retriever.popularity_retriever import PopularityRetriever
 from skrec.scorer.base_scorer import BaseScorer
 from skrec.scorer.hierarchical import HierarchicalScorer
 from skrec.scorer.independent import IndependentScorer
+from skrec.scorer.mixed_type_multi_target import (
+    TARGET_TYPE_TO_METRICS,
+    MixedTypeMultiTargetScorer,
+    TargetType,
+)
 from skrec.scorer.multiclass import MulticlassScorer
 from skrec.scorer.multioutput import DegenerateTargetPolicy, MultioutputScorer
 from skrec.scorer.sequential import SequentialScorer
@@ -79,6 +85,7 @@ SCORER_TYPES: Tuple[str, ...] = (
     "independent",
     "multiclass",
     "multioutput",
+    "mixed_type_multi_target",
     "sequential",
     "hierarchical",
 )
@@ -113,6 +120,51 @@ class LGBMConfig(TypedDict, total=False):
     min_child_samples: int
     n_jobs: int
     random_state: int
+
+
+class MultiTargetIndependentTypeConfig(TypedDict, total=False):
+    """Single (TargetType → sub-estimator) selection inside ``independent.defaults``.
+
+    Maps one declared target type (e.g. ``"binary"``) to the chosen
+    sub-estimator type name and its params.
+    """
+
+    estimator_type: str  # "xgboost", "lightgbm", "logreg", "sklearn"
+    params: Dict[str, Any]
+
+
+class MultiTargetIndependentConfig(TypedDict, total=False):
+    """``independent`` sub-config for ``mode="independent"``.
+
+    Resolved per fanned-out target: first a name-keyed override in
+    ``per_target`` is checked; if absent, the ``TargetType``-keyed default
+    in ``defaults`` is used. Both maps may be omitted only when the other
+    covers every declared target.
+    """
+
+    defaults: Dict[str, MultiTargetIndependentTypeConfig]  # keyed by TargetType.value
+    per_target: Dict[str, MultiTargetIndependentTypeConfig]  # keyed by target name
+
+
+class MultiTargetConfig(TypedDict, total=False):
+    """``multi_target`` sub-config under ``estimator_config``.
+
+    Selects one of the three v2 multi-target estimator families and supplies
+    its hyperparameters. For ``mode="independent"`` the ``independent``
+    block holds per-target sub-estimator specs; the joint modes use ``params``
+    directly.
+    """
+
+    mode: str  # "joint_mlp" | "joint_transformer" | "independent"
+    params: Dict[str, Any]  # joint_mlp / joint_transformer hyperparameters
+    independent: MultiTargetIndependentConfig
+    # Top-level random seed used by ``_create_multi_target_estimator`` to
+    # propagate ``random_state`` into independent-mode sub-estimator
+    # ``params`` dicts that don't already set one. Joint modes read
+    # ``params["seed"]`` directly via their estimator constructors. None →
+    # no auto-injection (each sub-estimator picks its own default, which
+    # may be unseeded — runs are non-reproducible).
+    random_state: Optional[int]
 
 
 class DeepFMConfig(TypedDict, total=False):
@@ -169,6 +221,8 @@ class EstimatorConfig(TypedDict, total=False):
     embedding: EmbeddingConfig
     # --- sequential ---
     sequential: SequentialConfig
+    # --- multi_target (ml_task="multi_target") ---
+    multi_target: MultiTargetConfig
 
 
 class InferenceMethodConfig(TypedDict, total=False):
@@ -231,6 +285,8 @@ class ScorerConfig(TypedDict, total=False):
 
     # --- multioutput ---
     on_degenerate_target: Union[DegenerateTargetPolicy, str]
+    # --- mixed_type_multi_target ---
+    target_specs: Dict[str, Any]  # dict[str, TargetType | TargetGroupSpec]
 
 
 class RecommenderConfig(TypedDict, total=False):
@@ -288,10 +344,31 @@ _RETRIEVER_MAP = {
 }
 
 TABULAR_MODEL_TYPES: Tuple[str, ...] = ("xgboost", "lightgbm", "deepfm")
+MULTI_TARGET_MODEL_TYPES: Tuple[str, ...] = (
+    "joint_mlp",
+    "joint_transformer",
+    "independent",
+    # v3: conditional joint families accept OBSERVED_* columns at inference
+    # via the ConditionalMultiTargetEstimator Protocol. Independent +
+    # conditional is NOT supported (v3 locked decision #1).
+    "conditional_joint_mlp",
+    "conditional_joint_transformer",
+)
 
 _NON_TABULAR_KEYS = {"embedding", "sequential"}
-_TABULAR_SCORER_TYPES = {"multioutput", "multiclass", "independent", "universal"}
-_EMBEDDING_INCOMPATIBLE_SCORERS = {"multioutput", "multiclass", "independent"}
+_TABULAR_SCORER_TYPES = {
+    "multioutput",
+    "multiclass",
+    "independent",
+    "universal",
+    "mixed_type_multi_target",
+}
+_EMBEDDING_INCOMPATIBLE_SCORERS = {
+    "multioutput",
+    "multiclass",
+    "independent",
+    "mixed_type_multi_target",
+}
 
 # Whitelist of scorer_config keys accepted per scorer_type. Extend when a new
 # scorer-level constructor kwarg lands. Empty sets are not redundant — they
@@ -302,8 +379,53 @@ _SCORER_CONFIG_ALLOWED: Dict[str, frozenset] = {
     "multiclass": frozenset(),
     "independent": frozenset(),
     "universal": frozenset(),
+    "mixed_type_multi_target": frozenset({"target_specs"}),
     "sequential": frozenset(),
     "hierarchical": frozenset(),
+}
+
+# scorer_type → concrete scorer class. Used by ``capability_matrix()`` to
+# derive capability flags (e.g., ``supports_observed_conditioning``) from
+# the scorer class attributes themselves rather than maintaining a parallel
+# hand-edited table that drifts. Kept aligned with the ``create_scorer``
+# dispatch chain below — a unit test pins them in lockstep.
+_SCORER_TYPE_TO_CLASS: Dict[str, type] = {
+    "multioutput": MultioutputScorer,
+    "multiclass": MulticlassScorer,
+    "independent": IndependentScorer,
+    "universal": UniversalScorer,
+    "mixed_type_multi_target": MixedTypeMultiTargetScorer,
+    "sequential": SequentialScorer,
+    "hierarchical": HierarchicalScorer,
+}
+
+# Curated sub-estimator types per declared target type for
+# ``IndependentMultiTargetEstimator``. Drives factory-time composition AND
+# the ``capability_matrix()["independent_target_compat"]`` table that
+# scikit-rec-agent reads for pre-flight validation.
+#
+# Notable omission: ``xgboost`` for MULTICLASS. XGBClassifierEstimator's
+# inplace_predict path returns (n, 2K) instead of (n, K) on multiclass
+# targets — see the defensive shape guard in IndependentMultiTargetEstimator.
+# Routing multiclass → XGB at factory time would hit that guard at predict
+# time; better to keep XGB out of the multiclass-compat list so the factory
+# rejects the misconfiguration up-front with a clear list of alternatives.
+_INDEPENDENT_TARGET_COMPAT: Dict[TargetType, Tuple[str, ...]] = {
+    TargetType.BINARY: ("xgboost", "lightgbm", "logreg", "sklearn"),
+    TargetType.REGRESSION: ("xgboost", "lightgbm", "sklearn"),
+    TargetType.MULTICLASS: ("lightgbm", "logreg"),
+    # MULTILABEL row is NOT consulted by the factory compose loop
+    # below — ``_fanned_out_targets_with_types`` flattens each multilabel
+    # member into a BINARY entry, so ``_create_independent_sub_estimator``
+    # only ever sees BINARY at the multilabel call site. The MULTILABEL
+    # entry exists for the agent-side pre-flight validator that reads
+    # ``capability_matrix()["independent_target_compat"]`` and wants to
+    # display the group-level capability (which estimator types the agent
+    # may suggest to a user writing a per-target spec keyed by group
+    # type). Do NOT drop this row without also updating the agent
+    # surface — that's how dropping it would silently break a UX
+    # downstream rather than producing a clean compose-time error here.
+    TargetType.MULTILABEL: ("xgboost", "lightgbm", "logreg", "sklearn"),
 }
 
 
@@ -364,6 +486,250 @@ def _create_inference_method(config: InferenceMethodConfig) -> BaseInference:
     return cls(**params)
 
 
+def _create_independent_sub_estimator(
+    target_type: TargetType, estimator_type: str, params: Optional[Dict[str, Any]]
+) -> BaseEstimator:
+    """Construct one sub-estimator for ``IndependentMultiTargetEstimator``.
+
+    Lookup is keyed by (target_type, estimator_type). Out-of-compat
+    combinations are rejected before construction. Lazy imports keep this
+    factory free of import-time dependency on every estimator class.
+
+    Args:
+        target_type: Declared target type — drives compatibility check + class choice.
+        estimator_type: One of ``_INDEPENDENT_TARGET_COMPAT[target_type]``.
+        params: Hyperparameters forwarded to the sub-estimator constructor.
+
+    Returns:
+        A ``BaseClassifier`` for binary/multiclass/multilabel targets, a
+        ``BaseRegressor`` for regression targets.
+    """
+    compat = _INDEPENDENT_TARGET_COMPAT[target_type]
+    if estimator_type not in compat:
+        raise ValueError(
+            f"estimator_type {estimator_type!r} not compatible with target type "
+            f"{target_type.value!r}. Compatible types: {sorted(compat)}."
+        )
+    params = params or {}
+
+    # Lazy imports: pulling these eagerly would balloon factory import time.
+    if target_type in (
+        TargetType.BINARY,
+        TargetType.MULTICLASS,
+        TargetType.MULTILABEL,
+    ):
+        if estimator_type == "xgboost":
+            from skrec.estimator.classification.xgb_classifier import XGBClassifierEstimator
+
+            return XGBClassifierEstimator(params=params)
+        if estimator_type == "lightgbm":
+            from skrec.estimator.classification.lightgbm_classifier import (
+                LightGBMClassifierEstimator,
+            )
+
+            # Silence LGBM's stdout chatter unless caller explicitly overrides.
+            lgbm_params = {"verbose": -1, **params}
+            return LightGBMClassifierEstimator(params=lgbm_params)
+        if estimator_type == "logreg":
+            from skrec.estimator.classification.logreg_classifier import (
+                LogisticRegressionClassifierEstimator,
+            )
+
+            return LogisticRegressionClassifierEstimator(params=params)
+        if estimator_type == "sklearn":
+            from sklearn.linear_model import LogisticRegression
+
+            from skrec.estimator.classification.sklearn_universal_classifier import (
+                SklearnUniversalClassifierEstimator,
+            )
+
+            return SklearnUniversalClassifierEstimator(LogisticRegression, params)
+    elif target_type == TargetType.REGRESSION:
+        if estimator_type == "xgboost":
+            from skrec.estimator.regression.xgb_regressor import XGBRegressorEstimator
+
+            return XGBRegressorEstimator(params=params)
+        if estimator_type == "lightgbm":
+            from skrec.estimator.regression.lightgbm_regressor import (
+                LightGBMRegressorEstimator,
+            )
+
+            lgbm_params = {"verbose": -1, **params}
+            return LightGBMRegressorEstimator(params=lgbm_params)
+        if estimator_type == "sklearn":
+            from sklearn.linear_model import Ridge
+
+            from skrec.estimator.regression.sklearn_universal_regressor import (
+                SklearnUniversalRegressorEstimator,
+            )
+
+            return SklearnUniversalRegressorEstimator(Ridge, params)
+
+    # Should be unreachable — compat table covered every case above.
+    raise NotImplementedError(
+        f"No sub-estimator mapping for target_type={target_type.value!r}, estimator_type={estimator_type!r}."
+    )
+
+
+def _create_multi_target_estimator(
+    multi_target_config: "MultiTargetConfig",
+    target_specs: Dict[str, Any],
+) -> BaseEstimator:
+    """Compose one of the three v2 multi-target estimator families from config.
+
+    Lazy-imports the concrete classes (torch-heavy for joint families) so
+    importing the factory itself does not require PyTorch.
+    """
+    mode = multi_target_config.get("mode")
+    if mode not in MULTI_TARGET_MODEL_TYPES:
+        raise ValueError(f"multi_target.mode must be one of {MULTI_TARGET_MODEL_TYPES}; got {mode!r}.")
+
+    if mode == "joint_mlp":
+        from skrec.estimator.classification.joint_multi_target_mlp import (
+            JointMultiTargetMLPEstimator,
+        )
+
+        params = multi_target_config.get("params", {})
+        logger.info("Creating JointMultiTargetMLPEstimator")
+        return JointMultiTargetMLPEstimator(target_specs=target_specs, params=params)
+
+    if mode == "joint_transformer":
+        from skrec.estimator.classification.joint_multi_target_transformer import (
+            JointMultiTargetTransformerEstimator,
+        )
+
+        params = multi_target_config.get("params", {})
+        logger.info("Creating JointMultiTargetTransformerEstimator")
+        return JointMultiTargetTransformerEstimator(target_specs=target_specs, params=params)
+
+    if mode == "conditional_joint_mlp":
+        # v3: same MLP encoder + per-target heads as joint_mlp, plus a label
+        # encoder fed by per-(row, target) Bernoulli masking. Accepts
+        # OBSERVED_* at inference via predict_with_observed.
+        from skrec.estimator.classification.conditional_joint_multi_target_mlp import (
+            ConditionalJointMultiTargetMLPEstimator,
+        )
+
+        params = multi_target_config.get("params", {})
+        logger.info("Creating ConditionalJointMultiTargetMLPEstimator")
+        return ConditionalJointMultiTargetMLPEstimator(target_specs=target_specs, params=params)
+
+    if mode == "conditional_joint_transformer":
+        # v3: FT-Transformer-style feature tokenizer + label tokenizer for
+        # per-target observed-label inputs.
+        from skrec.estimator.classification.conditional_joint_multi_target_transformer import (
+            ConditionalJointMultiTargetTransformerEstimator,
+        )
+
+        params = multi_target_config.get("params", {})
+        logger.info("Creating ConditionalJointMultiTargetTransformerEstimator")
+        return ConditionalJointMultiTargetTransformerEstimator(target_specs=target_specs, params=params)
+
+    # mode == "independent"
+    from skrec.estimator.classification.independent_multi_target import (
+        IndependentMultiTargetEstimator,
+    )
+
+    independent_config = multi_target_config.get("independent") or {}
+    defaults: Dict[str, Any] = independent_config.get("defaults", {}) or {}
+    per_target: Dict[str, Any] = independent_config.get("per_target", {}) or {}
+    fanned_out = _fanned_out_targets_with_types(target_specs)
+
+    # Top-level random_state → per-sub-estimator ``random_state`` (only when
+    # the sub-estimator's params don't already specify one). Without this
+    # plumbing, every independent-mode run is non-reproducible by default
+    # because xgb/lgbm/sklearn estimators each pick their own internal RNG
+    # at construction. We never overwrite a caller-supplied value — that's
+    # an explicit override and must take precedence.
+    top_seed = multi_target_config.get("random_state")
+
+    # Upfront coverage validation (v2 plan asks for this explicitly).
+    # We check value presence (``is None``) rather than key membership
+    # so a caller who sets ``defaults["binary"] = None`` doesn't slip
+    # past the upfront check only to crash later on the post-lookup
+    # assert. Either path means "no resolvable spec for this target."
+    missing_default_keys = sorted(
+        {
+            defaults_key
+            for fanned_name, _, defaults_key in fanned_out
+            if per_target.get(fanned_name) is None and defaults.get(defaults_key) is None
+        }
+    )
+    if missing_default_keys:
+        raise ValueError(
+            f"Independent mode missing coverage. The following declared target "
+            f"type(s) have no defaults entry and no per_target override: "
+            f"{missing_default_keys}. Either add a 'defaults' entry for each "
+            f"missing type, or add a 'per_target' override for the specific "
+            f"target column(s). Declared targets: "
+            f"{[name for name, _, _ in fanned_out]}."
+        )
+
+    # Compose sub-estimators per fanned-out target. Lookup precedence:
+    # name-keyed override in per_target beats group-keyed default in defaults.
+    # For multilabel members the defaults key is "multilabel" (not "binary")
+    # so the user-facing config table stays consistent with the v2 plan.
+    estimators: Dict[str, BaseEstimator] = {}
+    for fanned_name, sub_target_type, defaults_key in fanned_out:
+        spec_block = per_target.get(fanned_name)
+        if spec_block is None:
+            spec_block = defaults.get(defaults_key)
+        # Unreachable after the upfront ``is None`` coverage check above
+        # — kept as a defence-in-depth assertion for future refactors.
+        assert spec_block is not None, (
+            f"Internal: missing spec for {fanned_name!r} after upfront "
+            f"coverage validation (should have been caught earlier)."
+        )
+        estimator_type = spec_block.get("estimator_type")
+        if not estimator_type:
+            raise ValueError(f"Spec for target {fanned_name!r} missing 'estimator_type'.")
+        params = dict(spec_block.get("params") or {})
+        if top_seed is not None and "random_state" not in params:
+            params["random_state"] = int(top_seed)
+        estimators[fanned_name] = _create_independent_sub_estimator(
+            target_type=sub_target_type,
+            estimator_type=estimator_type,
+            params=params,
+        )
+
+    logger.info(
+        "Creating IndependentMultiTargetEstimator with %d sub-estimators",
+        len(estimators),
+    )
+    return IndependentMultiTargetEstimator(target_specs=target_specs, estimators=estimators)
+
+
+def _fanned_out_targets_with_types(
+    target_specs: Dict[str, Any],
+) -> List[Tuple[str, TargetType, str]]:
+    """Flatten target_specs into ``(fanned_out_name, sub_estimator_target_type, defaults_lookup_key)``.
+
+    Three slots:
+      - ``fanned_out_name``: the column name (simple target name or
+        multilabel member column).
+      - ``sub_estimator_target_type``: the ``TargetType`` used for compat-
+        checking the sub-estimator (multilabel members → BINARY at the
+        sub-estimator level because each is its own binary classifier).
+      - ``defaults_lookup_key``: which key in ``independent.defaults`` to
+        fall back on when no ``per_target`` override exists. Multilabel
+        members look up ``"multilabel"`` (the group-level default), NOT
+        ``"binary"`` — keeps the user-facing config table honest.
+    """
+    out: List[Tuple[str, TargetType, str]] = []
+    for key, spec in target_specs.items():
+        if isinstance(spec, TargetType):
+            out.append((key, spec, spec.value))
+        elif isinstance(spec, dict):
+            group_type = spec.get("type")
+            if isinstance(group_type, str):
+                group_type = TargetType(group_type)
+            for col in spec.get("columns", []):
+                out.append((col, TargetType.BINARY, group_type.value))
+        else:
+            raise ValueError(f"target_specs[{key!r}] must be a TargetType or dict; got {type(spec).__name__}.")
+    return out
+
+
 def _create_retriever(config: RetrieverConfig) -> BaseCandidateRetriever:
     """Create a candidate retriever from config."""
     retriever_type = config.get("type")
@@ -383,7 +749,9 @@ def _create_retriever(config: RetrieverConfig) -> BaseCandidateRetriever:
 
 # --- Factory Functions ---
 def create_estimator(
-    estimator_config: EstimatorConfig, scorer_type: Optional[str] = None
+    estimator_config: EstimatorConfig,
+    scorer_type: Optional[str] = None,
+    target_specs: Optional[Dict[str, Any]] = None,
 ) -> Union[BaseEstimator, SequentialEstimator]:
     """
     Factory function to create an estimator instance based on its specific configuration.
@@ -436,6 +804,41 @@ def create_estimator(
         )
 
     ml_task = estimator_config.get("ml_task", "classification")
+
+    # Surface the "config has multi_target but ml_task isn't multi_target"
+    # mismatch as a hard error rather than silently dropping the
+    # multi_target block. Before this guard, a user who set up
+    # ``multi_target=...`` but forgot to set ``ml_task="multi_target"``
+    # would silently route through the xgb/lgbm/deepfm path and produce
+    # a single-output estimator — the per-target schema would never reach
+    # the model. Symmetric to the existing _NON_TABULAR_KEYS warning.
+    if ml_task != "multi_target" and "multi_target" in estimator_config:
+        raise ValueError(
+            f"estimator_config has a 'multi_target' block but ml_task="
+            f"{ml_task!r} — multi_target requires ml_task='multi_target'. "
+            f"Either set ml_task='multi_target' (and provide target_specs "
+            f"via scorer_config) or remove the 'multi_target' block."
+        )
+
+    # Multi-target ml_task is handled before the xgb/lgbm/deepfm fork:
+    # composition happens off the `multi_target` sub-config, not the per-
+    # backend tabular keys, and the resulting estimator is an instance of
+    # one of the v2 MultiTargetEstimator implementations.
+    if ml_task == "multi_target":
+        if target_specs is None or not target_specs:
+            raise ValueError(
+                "ml_task='multi_target' requires target_specs (non-empty). "
+                "Pass it via scorer_config['target_specs']; "
+                "create_recommender_pipeline threads it through automatically."
+            )
+        mt_config: MultiTargetConfig = estimator_config.get("multi_target") or {}
+        if not mt_config:
+            raise ValueError(
+                "ml_task='multi_target' requires estimator_config['multi_target'] "
+                f"(must include 'mode' from {MULTI_TARGET_MODEL_TYPES})."
+            )
+        return _create_multi_target_estimator(mt_config, target_specs)
+
     xgb_config = estimator_config.get("xgboost", {})
     lgbm_config = estimator_config.get("lightgbm")
     deepfm_config = estimator_config.get("deepfm")
@@ -477,7 +880,10 @@ def create_estimator(
     )
 
     if ml_task not in {"classification", "regression"}:
-        raise NotImplementedError(f"ML task {ml_task} not implemented.")
+        raise NotImplementedError(
+            f"ML task {ml_task!r} not implemented for tabular path. Valid: "
+            f"'classification', 'regression', 'multi_target'."
+        )
 
     estimator: BaseEstimator
 
@@ -575,7 +981,11 @@ def create_estimator(
     return estimator
 
 
-def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: RecommenderConfig) -> BaseScorer:
+def create_scorer(
+    estimator: Union[BaseEstimator, SequentialEstimator],
+    config: RecommenderConfig,
+    scorer_config: Optional[Dict[str, Any]] = None,
+) -> BaseScorer:
     """
     Factory function to create a scorer instance based on the overall recommender configuration.
 
@@ -583,6 +993,11 @@ def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: 
         estimator: The estimator instance to be used by the scorer.
         config: The main recommender configuration dictionary.
                 Expected key: 'scorer_type'.
+        scorer_config: Optional pre-extracted scorer_config dict. When
+            supplied (typical from ``create_recommender_pipeline``),
+            takes precedence over ``config.get("scorer_config")`` —
+            avoids mutating the caller's ``config`` dict to thread the
+            single-read snapshot.
 
     Returns:
         An instance of a BaseScorer subclass.
@@ -629,7 +1044,15 @@ def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: 
     # plus an unknown scorer_type would surface as "scorer_type='zzz' does
     # not accept scorer_config keys: [...]", which misleads (implying zzz is
     # valid with restricted keys) and hides the real unsupported-scorer error.
-    scorer_config = dict(config.get("scorer_config") or {})
+    #
+    # Prefer the explicit scorer_config argument when supplied (the
+    # pipeline factory threads its single-read snapshot through this way
+    # so we don't have to mutate the caller's config dict). Fall back to
+    # reading from config for standalone create_scorer callers.
+    if scorer_config is None:
+        scorer_config = dict(config.get("scorer_config") or {})
+    else:
+        scorer_config = dict(scorer_config)
     if scorer_type in _SCORER_CONFIG_ALLOWED:
         allowed = _SCORER_CONFIG_ALLOWED[scorer_type]
         unknown = set(scorer_config) - allowed
@@ -654,6 +1077,15 @@ def create_scorer(estimator: Union[BaseEstimator, SequentialEstimator], config: 
         scorer = IndependentScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "universal":
         scorer = UniversalScorer(estimator=estimator, **scorer_config)
+    elif scorer_type == "mixed_type_multi_target":
+        # target_specs is required and validated upstream in
+        # create_recommender_pipeline; defensive check here in case create_scorer
+        # is called standalone.
+        if not scorer_config.get("target_specs"):
+            raise ValueError(
+                "scorer_type='mixed_type_multi_target' requires scorer_config['target_specs'] (non-empty)."
+            )
+        scorer = MixedTypeMultiTargetScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "sequential":
         scorer = SequentialScorer(estimator=estimator, **scorer_config)
     elif scorer_type == "hierarchical":
@@ -793,9 +1225,41 @@ def create_recommender_pipeline(config: RecommenderConfig) -> BaseRecommender:
             f"recommender_type 'uplift' requires scorer_type 'independent' or 'universal', got '{scorer_type}'."
         )
 
+    # Mixed-type multi-target cross-cutting checks:
+    #   - scorer_type='mixed_type_multi_target' requires non-empty target_specs
+    #     in scorer_config (target_specs is the scorer's required kwarg, but
+    #     it also drives estimator construction in ml_task='multi_target').
+    #   - ml_task='multi_target' is only valid with the matching scorer_type.
+    #
+    # Single-read invariant: snapshot ``scorer_config`` once here and
+    # pass the snapshot through to ``create_scorer`` via its
+    # ``scorer_config`` keyword. We deliberately do NOT write the
+    # snapshot back into ``config`` — that mutated the caller's dict
+    # and broke "same config → two pipeline builds" idempotency. The
+    # ``scorer_config`` parameter on ``create_scorer`` is the explicit
+    # plumbing for the single read.
+    scorer_config_block = dict(config.get("scorer_config") or {})
+    target_specs = scorer_config_block.get("target_specs")
+    estimator_ml_task = estimator_config.get("ml_task")
+    if scorer_type == "mixed_type_multi_target":
+        if not target_specs:
+            raise ValueError(
+                "scorer_type='mixed_type_multi_target' requires scorer_config['target_specs'] (non-empty)."
+            )
+        if estimator_ml_task != "multi_target":
+            raise ValueError(
+                f"scorer_type='mixed_type_multi_target' requires "
+                f"estimator_config['ml_task']='multi_target' (got {estimator_ml_task!r})."
+            )
+    if estimator_ml_task == "multi_target" and scorer_type != "mixed_type_multi_target":
+        raise ValueError(
+            f"estimator_config['ml_task']='multi_target' requires "
+            f"scorer_type='mixed_type_multi_target' (got {scorer_type!r})."
+        )
+
     # Create components using their respective factory functions
-    estimator = create_estimator(estimator_config, scorer_type=scorer_type)
-    scorer = create_scorer(estimator, config)
+    estimator = create_estimator(estimator_config, scorer_type=scorer_type, target_specs=target_specs)
+    scorer = create_scorer(estimator, config, scorer_config=scorer_config_block)
     recommender = create_recommender(scorer, config)
 
     logger.info("Recommender pipeline created successfully.")
@@ -826,9 +1290,122 @@ def capability_matrix() -> Dict[str, Union[Tuple[str, ...], Dict[str, Tuple[str,
         "tabular_model_types": TABULAR_MODEL_TYPES,
         "embedding_model_types": tuple(_EMBEDDING_ESTIMATOR_MAP.keys()),
         "sequential_model_types": tuple(_SEQUENTIAL_ESTIMATOR_MAP.keys()),
+        "multi_target_model_types": MULTI_TARGET_MODEL_TYPES,
         "inference_method_types": tuple(_INFERENCE_METHOD_MAP.keys()),
         "retriever_types": tuple(_RETRIEVER_MAP.keys()),
         "scorer_config_keys": {k: tuple(sorted(v)) for k, v in _SCORER_CONFIG_ALLOWED.items()},
         "evaluator_types": tuple(e.value for e in RecommenderEvaluatorType),
         "metric_types": tuple(m.value for m in RecommenderMetricType),
+        # Multi-target capabilities — read by scikit-rec-agent for pre-flight
+        # validation. Sources of truth: TARGET_TYPE_TO_METRICS in
+        # skrec.scorer.mixed_type_multi_target; _INDEPENDENT_TARGET_COMPAT here.
+        "target_types": tuple(t.value for t in TargetType),
+        "target_type_metric_compat": {t.value: TARGET_TYPE_TO_METRICS[t] for t in TargetType},
+        "independent_target_compat": {t.value: tuple(sorted(_INDEPENDENT_TARGET_COMPAT[t])) for t in TargetType},
+        # v3: MixedTypeMultiTargetScorer supports OBSERVED_* conditioning when
+        # paired with a ConditionalMultiTargetEstimator. Vanilla estimators
+        # still reject OBSERVED_* at the scorer's inference validator.
+        #
+        # Derived from the per-scorer ``supports_observed_conditioning``
+        # class attribute (BaseScorer default False; MixedTypeMultiTarget
+        # overrides to True). Adding a new scorer that opts in is then a
+        # one-line attribute set on the subclass — no manual sync of this
+        # table required, no drift risk.
+        "scorer_supports_observed_conditioning": tuple(
+            sorted(
+                stype
+                for stype, scls in _SCORER_TYPE_TO_CLASS.items()
+                if getattr(scls, "supports_observed_conditioning", False)
+            )
+        ),
     }
+
+
+def contract_from_dataframe(
+    df: pd.DataFrame,
+    target_specs: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Detect the scikit-rec dataset contract from a DataFrame's shape.
+
+    Returns one of:
+        - ``"long_interactions"`` — ``(USER_ID, ITEM_ID, OUTCOME)`` triples
+        - ``"long_with_timestamp"`` — long + ``TIMESTAMP``
+        - ``"wide_multioutput"`` — one row per user + ≥2 ``ITEM_*`` columns
+          (all-binary contract; pairs with ``MultioutputScorer``)
+        - ``"wide_mixed_type_multi_target"`` — wide format with heterogeneous
+          ``TargetType`` declarations (pairs with ``MixedTypeMultiTargetScorer``).
+          **Requires** ``target_specs`` to disambiguate from wide_multioutput.
+        - ``"multiclass"`` — one row per user, ``ITEM_ID`` IS the class
+        - ``"prebuilt_sequences"`` — list-typed columns present
+        - ``"sessions"`` — ``SESSION_SEQUENCES`` column present
+
+    The detection rules:
+        - List-dtype columns → ``prebuilt_sequences`` / ``sessions``
+        - ``USER_ID`` + ``ITEM_ID`` + ``OUTCOME`` → long-format
+        - ``USER_ID`` + ≥2 ``ITEM_*`` columns + ``target_specs`` containing
+          any non-BINARY type or any ``TargetGroupSpec`` →
+          ``wide_mixed_type_multi_target``; otherwise ``wide_multioutput``
+        - ``USER_ID`` + ``ITEM_ID`` only (no OUTCOME) → ``multiclass``
+
+    Co-located in ``skrec.orchestrator`` so scikit-rec-agent and other
+    external callers share one source of contract detection — preventing
+    silent misroute of mixed-type data to ``MultioutputScorer``.
+
+    Args:
+        df: Source DataFrame to classify.
+        target_specs: Optional declared per-target schema. Required when
+            distinguishing ``wide_mixed_type_multi_target`` from
+            ``wide_multioutput`` — without it, the heuristic defaults to
+            ``wide_multioutput`` (legacy behavior).
+
+    Returns:
+        Contract identifier string.
+
+    Raises:
+        ValueError: If no contract matches.
+    """
+    cols = set(df.columns)
+
+    # Session / sequence detection: list-dtype columns are the signal.
+    list_cols = [c for c in df.columns if df[c].dtype == object and df[c].apply(lambda v: isinstance(v, list)).any()]
+    if list_cols:
+        if "SESSION_SEQUENCES" in cols:
+            return "sessions"
+        return "prebuilt_sequences"
+
+    has_user = "USER_ID" in cols
+    has_item = "ITEM_ID" in cols
+    has_outcome = "OUTCOME" in cols
+    has_timestamp = "TIMESTAMP" in cols
+
+    # Long-format triples.
+    if has_user and has_item and has_outcome:
+        return "long_with_timestamp" if has_timestamp else "long_interactions"
+
+    # Wide-format detection: USER_ID + ≥2 ITEM_* columns (excluding ITEM_ID).
+    item_prefix_cols = [c for c in df.columns if c.startswith("ITEM_") and c != "ITEM_ID"]
+    if has_user and len(item_prefix_cols) >= 2:
+        # Intent signal: if the caller passed target_specs at all, they have
+        # explicitly opted into the per-target-typed scorer family. Honor
+        # that intent even when every declared type is BINARY — the user
+        # presumably wants the per-target output contract (one column per
+        # declared target, deterministic order) that
+        # MixedTypeMultiTargetScorer provides, not MultioutputScorer's
+        # implicit "all binary, all columns" contract. Without this branch,
+        # all-BINARY target_specs would silently fall through to
+        # wide_multioutput and the caller's intent (e.g., subset of columns,
+        # multilabel group declaration with all-binary members) would be
+        # ignored.
+        if target_specs:
+            return "wide_mixed_type_multi_target"
+        return "wide_multioutput"
+
+    # Multiclass: user + item_id only.
+    if has_user and has_item and not has_outcome:
+        return "multiclass"
+
+    raise ValueError(
+        f"Cannot detect scikit-rec contract from columns: {sorted(cols)}. "
+        f"Expected one of the known shapes (long_interactions, wide_multioutput, "
+        f"wide_mixed_type_multi_target, multiclass, prebuilt_sequences, sessions)."
+    )

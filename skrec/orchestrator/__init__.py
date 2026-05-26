@@ -1,6 +1,8 @@
 # Orchestrator module for assembling recommender pipelines
+from skrec.estimator.classification import MultiTargetEstimator
 from skrec.orchestrator.factory import (
     ESTIMATOR_TYPES,
+    MULTI_TARGET_MODEL_TYPES,
     RECOMMENDER_TYPES,
     SCORER_TYPES,
     TABULAR_MODEL_TYPES,
@@ -10,6 +12,9 @@ from skrec.orchestrator.factory import (
     HPOConfig,
     InferenceMethodConfig,
     LGBMConfig,
+    MultiTargetConfig,
+    MultiTargetIndependentConfig,
+    MultiTargetIndependentTypeConfig,
     RecommenderConfig,
     RecommenderParams,
     RetrieverConfig,
@@ -18,27 +23,41 @@ from skrec.orchestrator.factory import (
     WeightsConfig,
     XGBConfig,
     capability_matrix,
+    contract_from_dataframe,
     create_estimator,
     create_recommender,
     create_recommender_pipeline,
     create_scorer,
 )
+from skrec.scorer.mixed_type_multi_target import TargetGroupSpec, TargetType
 
 __all__ = [
+    # Factory entry points
     "create_recommender_pipeline",
     "create_estimator",
     "create_scorer",
     "create_recommender",
     "capability_matrix",
+    "contract_from_dataframe",
+    # Enums / tuples
     "RECOMMENDER_TYPES",
     "SCORER_TYPES",
     "ESTIMATOR_TYPES",
     "TABULAR_MODEL_TYPES",
+    "MULTI_TARGET_MODEL_TYPES",
+    # Multi-target public types
+    "TargetType",
+    "TargetGroupSpec",
+    "MultiTargetEstimator",
+    # TypedDicts
     "RecommenderConfig",
     "ScorerConfig",
     "EstimatorConfig",
     "EmbeddingConfig",
     "SequentialConfig",
+    "MultiTargetConfig",
+    "MultiTargetIndependentConfig",
+    "MultiTargetIndependentTypeConfig",
     "RecommenderParams",
     "InferenceMethodConfig",
     "RetrieverConfig",

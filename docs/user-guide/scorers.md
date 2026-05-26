@@ -226,7 +226,7 @@ Targets with 3+ classes are rejected at fit time. Choose one:
 
 1. **Single multi-class target** → use [`MulticlassScorer`](#3-multiclassscorer) in long format.
 2. **Multiple multi-class targets** → one-hot encode each into binary columns (e.g. `ITEM_X` with classes `{A, B, C}` becomes `ITEM_X_A`, `ITEM_X_B`, `ITEM_X_C`, each binary).
-3. **Heterogeneous target types (mix of binary, regression, multi-class)** → wait for the planned mixed-type multi-target scorer.
+3. **Heterogeneous target types (mix of binary, regression, multi-class)** → use [`MixedTypeMultiTargetScorer`](#5-mixedtypemultitargetscorer) below.
 
 **Pros**:
 - Multi-label binary classification with cross-target ranking semantics
@@ -242,7 +242,222 @@ Targets with 3+ classes are rejected at fit time. Choose one:
 
 ---
 
-## 5. SequentialScorer
+## 5. MixedTypeMultiTargetScorer
+
+**How it works**: Wide-format scorer for **heterogeneous per-target types** in one model. Unlike `MultioutputScorer` (binary-only OR continuous-only — every target must share a mode), this scorer declares each target's type explicitly via `target_specs` and supports BINARY + REGRESSION + MULTICLASS + MULTILABEL groups in the same training frame.
+
+```python
+from skrec.scorer.mixed_type_multi_target import (
+    MixedTypeMultiTargetScorer, TargetType, TargetGroupSpec,
+)
+from skrec.estimator.classification import JointMultiTargetMLPEstimator
+
+target_specs = {
+    "ITEM_clicked":  TargetType.BINARY,
+    "ITEM_revenue":  TargetType.REGRESSION,
+    "ITEM_action":   TargetType.MULTICLASS,
+    "engagement":    TargetGroupSpec(
+        type=TargetType.MULTILABEL,
+        columns=["ITEM_email_open", "ITEM_app_open"],
+    ),
+}
+estimator = JointMultiTargetMLPEstimator(target_specs=target_specs)
+scorer = MixedTypeMultiTargetScorer(estimator=estimator, target_specs=target_specs)
+```
+
+**`target_specs` syntax:**
+
+| Target type | Spec value | Column name |
+|---|---|---|
+| BINARY | `TargetType.BINARY` | Key IS the column name (must be `ITEM_`-prefixed); values in `{0, 1}` |
+| REGRESSION | `TargetType.REGRESSION` | Key IS the column name; numeric values |
+| MULTICLASS | `TargetType.MULTICLASS` | Key IS the column name; any hashable labels (≥2 unique) |
+| MULTILABEL group | `TargetGroupSpec(type=..., columns=[...])` | Key is a non-`ITEM_` group identifier; each member column is `ITEM_`-prefixed and binary |
+
+**Three estimator families, one scorer:**
+
+| Family | Class | When to pick |
+|---|---|---|
+| **Joint MLP** | `JointMultiTargetMLPEstimator` | Shared feature encoder + per-target heads. Default; good baseline when targets are correlated. |
+| **Joint Transformer** | `JointMultiTargetTransformerEstimator` | FT-Transformer-style feature tokenization + CLS pooling. Better when pairwise feature interactions matter. |
+| **Independent** | `IndependentMultiTargetEstimator` | One scikit-rec sub-estimator per target (XGB, LightGBM, LogReg, sklearn). Use when targets are independent OR you want per-target estimator-type flexibility. **Loses** the multilabel-group inductive bias. |
+
+All three implement the `MultiTargetEstimator` Protocol; the scorer accepts any.
+
+**Output column conventions:**
+
+`score_items` (wide DataFrame, one row per user, no `USER_ID` column):
+
+| Target type | Output columns |
+|---|---|
+| BINARY | `ITEM_<col>_0`, `ITEM_<col>_1` |
+| REGRESSION | `ITEM_<col>` (de-normalized) |
+| MULTICLASS | `ITEM_<col>_<class_label>` per class |
+| MULTILABEL | `ITEM_<member>_0`, `ITEM_<member>_1` per member |
+
+`predict_targets` (one column per fanned-out target):
+
+| Target type | Output column |
+|---|---|
+| BINARY | `ITEM_<col>` (predicted label 0/1) |
+| REGRESSION | `ITEM_<col>` (predicted value) |
+| MULTICLASS | `ITEM_<col>` (predicted class label; original dtype preserved) |
+| MULTILABEL | `ITEM_<member>` (predicted label 0/1) per member |
+
+**Evaluation (always returns `Dict[str, float]`):**
+
+Heterogeneous target types have no honest macro aggregation. Per-`TargetType` metric dispatch:
+
+| Target type | Compatible metrics |
+|---|---|
+| BINARY / MULTILABEL member | `ROC_AUC`, `PR_AUC` |
+| REGRESSION | `RMSE`, `MAE` |
+| MULTICLASS | `MULTICLASS_ACCURACY` (new v2 metric) |
+
+```python
+result = recommender.evaluate(
+    eval_type=RecommenderEvaluatorType.SIMPLE,
+    metric_type={
+        "ITEM_clicked":     RecommenderMetricType.ROC_AUC,
+        "ITEM_revenue":     RecommenderMetricType.RMSE,
+        "ITEM_action":      RecommenderMetricType.MULTICLASS_ACCURACY,
+        "ITEM_email_open":  RecommenderMetricType.ROC_AUC,
+        "ITEM_app_open":    RecommenderMetricType.ROC_AUC,
+    },
+    eval_top_k=10,
+    score_items_kwargs={"interactions": valid_df},
+    eval_kwargs={"logged_rewards": valid_targets_wide},
+)
+# → {"ITEM_clicked": 0.83, "ITEM_revenue": 12.7, "ITEM_action": 0.71, ...}
+```
+
+For metrics outside the named set (log-loss, macro-F1, business metrics), use the **`score_per_target` escape hatch** with sklearn callables:
+
+```python
+from sklearn.metrics import log_loss, f1_score
+
+metrics = scorer.score_per_target(
+    interactions=valid_df,
+    y_true=valid_targets_wide,
+    metric_callables={
+        TargetType.BINARY:     lambda y, p: log_loss(y, p[:, 1]),
+        TargetType.MULTICLASS: lambda y, p: f1_score(y, p.argmax(axis=1), average="macro"),
+        "ITEM_revenue":        lambda y, p: float(np.mean((p - y) ** 2)),  # name override
+    },
+)
+```
+
+Restricted to `RecommenderEvaluatorType.SIMPLE` (counterfactual evaluators assume a long-format ranking shape that doesn't apply). Ranking metrics are rejected with a pointer to `score_per_target` and `predict_targets`.
+
+**Factory config:**
+
+```python
+config = {
+    "recommender_type": "ranking",
+    "scorer_type": "mixed_type_multi_target",
+    "scorer_config": {"target_specs": target_specs},
+    "estimator_config": {
+        "ml_task": "multi_target",
+        "multi_target": {
+            "mode": "joint_mlp",  # or joint_transformer, independent
+            "params": {"hidden_dim": 128, "num_layers": 3, "epochs": 10},
+        },
+    },
+}
+recommender = create_recommender_pipeline(config)
+```
+
+For `mode="independent"`, supply per-type defaults and optional per-target overrides:
+
+```python
+"multi_target": {
+    "mode": "independent",
+    "independent": {
+        "defaults": {
+            "binary":     {"estimator_type": "xgboost",  "params": {"n_estimators": 100}},
+            "regression": {"estimator_type": "lightgbm", "params": {"n_estimators": 200}},
+            "multiclass": {"estimator_type": "lightgbm", "params": {}},
+            "multilabel": {"estimator_type": "xgboost",  "params": {}},  # per-member
+        },
+        "per_target": {
+            "ITEM_revenue":    {"estimator_type": "lightgbm", "params": {"n_estimators": 500}},
+            "ITEM_email_open": {"estimator_type": "logreg",   "params": {"max_iter": 200}},
+        },
+    },
+},
+```
+
+Compatible sub-estimator types per declared target type (also published in `capability_matrix()["independent_target_compat"]`):
+
+| Target type | Sub-estimator types |
+|---|---|
+| BINARY | `xgboost`, `lightgbm`, `logreg`, `sklearn` |
+| REGRESSION | `xgboost`, `lightgbm`, `sklearn` |
+| MULTICLASS | `lightgbm`, `logreg` (xgboost excluded — `inplace_predict` has a multiclass shape bug) |
+| MULTILABEL (per member) | `xgboost`, `lightgbm`, `logreg`, `sklearn` |
+
+**Dataset Requirements:**
+- ⚠️ **Interactions**: One row per user; declared target columns + feature columns
+- ❌ **Users**: Not allowed
+- ❌ **Items**: Not allowed
+
+### Real-time-label conditioning (v3)
+
+For scenarios where the caller has observed the ground truth for **some** targets at inference time (e.g. a real-time event arrived) and wants those values to condition predictions for the **remaining** targets, use a conditional estimator paired with `OBSERVED_<suffix>` columns:
+
+```python
+from skrec.estimator.classification import (
+    ConditionalJointMultiTargetMLPEstimator,
+)
+
+estimator = ConditionalJointMultiTargetMLPEstimator(
+    target_specs=target_specs,
+    params={"epochs": 10, "mask_prob": 0.5, "label_embedding_dim": 8},
+)
+estimator.fit(X_train, y_train)
+scorer = MixedTypeMultiTargetScorer(estimator=estimator, target_specs=target_specs)
+```
+
+At inference, add `OBSERVED_<suffix>` columns matching declared `ITEM_<suffix>` targets:
+
+```python
+inference_df = pd.DataFrame({
+    "USER_ID": ["u1"],
+    "feat_0": [0.5], "feat_1": [-0.3],
+    "OBSERVED_clicked": [1.0],         # observed for this row
+    "OBSERVED_revenue": [np.nan],      # not observed; predict from features
+    "OBSERVED_action":  [np.nan],
+    "OBSERVED_email_open": [np.nan],   # multilabel group members must mask together
+    "OBSERVED_app_open":  [np.nan],
+})
+predictions = scorer.predict_targets(interactions=inference_df)
+```
+
+`OBSERVED_*` semantics:
+
+- **Vanilla estimators** (`JointMultiTargetMLPEstimator`, `JointMultiTargetTransformerEstimator`, `IndependentMultiTargetEstimator`) reject any `OBSERVED_*` column with a clean error pointing at the conditional families.
+- **Conditional estimators** permit them. NaN per cell means "not observed for this row, predict from features." Multilabel group members **must mask together per row** (all observed or all NaN); partial-group observation raises an explicit error.
+- `OBSERVED_*` columns are auto-preserved through `interactions_schema.apply()` even when the client schema doesn't declare them, via the `BaseScorer.preserved_inference_columns()` hook — so `recommend_online` works without per-deployment schema changes.
+
+Available in v3. Independent + conditional is NOT supported (cross-target observed-as-features is structurally different; revisited in v4+ if ever).
+
+**Compared to `MultioutputScorer`:**
+
+|  | `MultioutputScorer` | `MixedTypeMultiTargetScorer` |
+|---|---|---|
+| Target type | All binary OR all continuous | Heterogeneous per target |
+| Output of `evaluate()` | `float` (macro) or `Dict[str, float]` via `per_label=True` | `Dict[str, float]` only |
+| Multiclass support | ❌ (3+ class targets rejected) | ✅ |
+| Multilabel groups (joint loss) | ❌ | ✅ via `TargetGroupSpec` |
+| Estimator pluralism | Single `MultiOutputClassifier`/`MultiOutputRegressor` | Joint MLP / joint Transformer / independent (any combination) |
+
+**When to use**: heterogeneous target types in one model (e.g., predict clicks AND revenue AND user-tier-class in one frame); deep tabular models on multi-target data; per-target estimator type flexibility (independent mode).
+
+See also: [Decision rule](decision-rule.md) for the full joint-vs-independent / mixed-type-vs-multioutput tree.
+
+---
+
+## 6. SequentialScorer
 
 **How it works**: Wraps a `SequentialEstimator` (SASRec) that scores all items from a user's interaction sequence in a single forward pass.
 
@@ -262,7 +477,7 @@ scorer = SequentialScorer(estimator)  # estimator must be a SequentialEstimator
 
 ---
 
-## 6. HierarchicalScorer
+## 7. HierarchicalScorer
 
 **How it works**: Wraps a `SequentialEstimator` (HRNN) that models session-structured interaction histories with a two-level GRU hierarchy.
 

@@ -8,6 +8,7 @@ from skrec.metrics.expected_reward import ExpectedRewardMetric
 from skrec.metrics.MAE import MAEMetric
 from skrec.metrics.MAP import MAPMetric
 from skrec.metrics.MRR import MRRMetric
+from skrec.metrics.multiclass_accuracy import MulticlassAccuracy
 from skrec.metrics.NDCG import NDCGMetric
 from skrec.metrics.PRAUC import PRAUCMetric
 from skrec.metrics.recall import RecallMetric
@@ -28,6 +29,7 @@ class RecommenderMetricFactory:
         PRAUCMetric.TYPE: PRAUCMetric,
         RMSEMetric.TYPE: RMSEMetric,
         MAEMetric.TYPE: MAEMetric,
+        MulticlassAccuracy.TYPE: MulticlassAccuracy,
         # Add alias for AVERAGE_REWARD_AT_K -> PrecisionMetric
         RecommenderMetricType.AVERAGE_REWARD_AT_K: PrecisionMetric,
     }

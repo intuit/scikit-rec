@@ -2,6 +2,7 @@ import copy
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union, overload
 
 import numpy as np
+import pandas as pd
 from numpy.typing import NDArray
 from pandas import DataFrame
 
@@ -24,6 +25,11 @@ from skrec.retriever.content_based_retriever import ContentBasedRetriever
 from skrec.retriever.embedding_retriever import EmbeddingRetriever
 from skrec.retriever.popularity_retriever import PopularityRetriever
 from skrec.scorer.base_scorer import BaseScorer
+from skrec.scorer.mixed_type_multi_target import (
+    TARGET_TYPE_TO_METRICS,
+    MixedTypeMultiTargetScorer,
+    TargetType,
+)
 from skrec.scorer.multiclass import MulticlassScorer
 from skrec.scorer.multioutput import MultioutputScorer
 from skrec.util.logger import get_logger
@@ -80,6 +86,25 @@ class RankingRecommender(BaseRecommender):
                 "drop the retriever, or melt your data to long format and use "
                 "UniversalScorer / IndependentScorer / MulticlassScorer."
             )
+        # Symmetric rejection for any per-target scorer (capability-flag
+        # check rather than an isinstance ladder — picks up future
+        # per-target scorers automatically). recommend() short-circuits
+        # to predict_targets for these scorers and never consults the
+        # retriever; quietly attaching one would build the index in
+        # train() and silently discard it at recommend time.
+        #
+        # ``is True`` (not truthy) so MagicMock(spec=BaseScorer) tests —
+        # which produce a MagicMock for any attribute access — don't
+        # trip this guard. Real scorers set the class attribute to
+        # literal True/False.
+        if retriever is not None and getattr(scorer, "is_per_target_scorer", False) is True:
+            raise ValueError(
+                f"{type(scorer).__name__} is a per-target scorer and does not "
+                f"support a retriever — recommend() short-circuits to "
+                f"predict_targets() for per-target output, so the "
+                f"candidate-retrieval-then-rank pattern doesn't apply. "
+                f"Drop the retriever to use this scorer."
+            )
         super().__init__(scorer)
         self.retriever = retriever
         # Set once during _recommend_multioutput when degenerate-target
@@ -96,6 +121,12 @@ class RankingRecommender(BaseRecommender):
         # in place: `train()` resets this flag so the new manifest's
         # targets get a fresh warning.
         self._warned_degenerate_recommend: bool = False
+        # Same once-per-instance throttle pattern for the per-target
+        # ``top_k != 1`` warning emitted from ``recommend()``. Without
+        # this, high-QPS callers using a non-1 default top_k would get
+        # a warning on every request — symmetric with
+        # ``_warned_degenerate_recommend`` for the multioutput path.
+        self._warned_per_target_top_k: bool = False
 
     def train(
         self,
@@ -132,6 +163,17 @@ class RankingRecommender(BaseRecommender):
         # Without this, the flag stuck from the previous fit would silence
         # the new manifest's warning.
         self._warned_degenerate_recommend = False
+        # Reset the per-target top_k throttle for the same reason:
+        # symmetry with the degenerate flag (the constructor docstring
+        # describes both flags as once-per-instance, and re-training
+        # restarts the "instance lifecycle" in user-facing terms). A
+        # caller who tunes top_k mid-experiment then retrains expects
+        # to see the warning the first time the new training surfaces
+        # it. The flag is API-misuse signalling, not data-dependent,
+        # but matching the degenerate reset keeps both flags' lifecycle
+        # rules identical and avoids the doc/runtime asymmetry the
+        # round-4 review called out.
+        self._warned_per_target_top_k = False
 
         if self.retriever is not None:
             # Validate required inputs before training starts — fail fast with a clear
@@ -214,7 +256,12 @@ class RankingRecommender(BaseRecommender):
             corrupt each other's candidate sets. Use one instance per thread,
             or call ``recommend()`` sequentially.
         """
-        if isinstance(self.scorer, MultioutputScorer) or isinstance(self.scorer, MulticlassScorer):
+        # ``is True`` (not just truthy) so a MagicMock(spec=BaseScorer)
+        # whose attribute access auto-generates a truthy MagicMock
+        # doesn't take this branch — consistent with the constructor /
+        # preprocess_inputs / score-fast dispatch checks.
+        is_per_target = getattr(self.scorer, "is_per_target_scorer", False) is True
+        if isinstance(self.scorer, MultioutputScorer) or isinstance(self.scorer, MulticlassScorer) or is_per_target:
             if users is not None:
                 raise ValueError("For this scorer, users should be set to None!")
         if isinstance(self.scorer, MultioutputScorer):
@@ -224,6 +271,35 @@ class RankingRecommender(BaseRecommender):
                 sampling_temperature=sampling_temperature or 0,
                 replace=replace,
             )
+        if is_per_target:
+            # Per-target scorers predict per-target values, not item ranks.
+            # recommend() short-circuits to predict_targets — same pattern
+            # as MultioutputScorer but returns the per-target scorer's wide
+            # DataFrame of per-target point estimates rather than per-target
+            # class labels. top_k is meaningless here; warn rather than fail
+            # because callers passing default top_k=1 still expect to get
+            # results. Capability-flag dispatch avoids an isinstance ladder
+            # — any future per-target scorer that opts in is handled here
+            # without a recommender-side edit.
+            if top_k is not None and top_k != 1 and not self._warned_per_target_top_k:
+                logger.warning(
+                    "Per-target scorer.recommend() ignores top_k; the scorer "
+                    "returns one prediction per declared target rather than a "
+                    "ranked item list. (This warning fires once per recommender "
+                    "instance.)"
+                )
+                self._warned_per_target_top_k = True
+            # Route through _preprocess_inputs so the per-target recommend
+            # path gets the same schema apply + type coercion that
+            # score_items and evaluate apply. Without this, calling
+            # recommend() and score_items() on the same frame would
+            # produce inconsistently coerced X (object-dtype columns
+            # surviving recommend but being float-coerced through
+            # score_items). The OBSERVED_* preservation primitive
+            # underneath is the same one the other paths use, so
+            # conditional inference via recommend() also Just Works.
+            interactions_proc, _ = self._preprocess_inputs(interactions, None)
+            return self.scorer.predict_targets(interactions=interactions_proc)
 
         if self.retriever is None:
             # Normalise None → 0 (deterministic) so BaseRecommender.recommend(),
@@ -580,6 +656,19 @@ class RankingRecommender(BaseRecommender):
             ``MultioutputScorer``: ``float`` (macro-averaged) by default,
             or ``Dict[str, float]`` when ``per_label=True``.
         """
+        # Capability-flag dispatch: per-target scorers route through the
+        # per-target evaluate path. The MixedTypeMultiTargetScorer is the
+        # only scorer that opts in today; flipping a future scorer's
+        # ``is_per_target_scorer`` to True picks up this dispatch
+        # automatically. ``is True`` (not truthy) for consistency with
+        # the recommend()/recommend_online/__init__ checks.
+        if getattr(self.scorer, "is_per_target_scorer", False) is True:
+            return self._evaluate_mixed_type_multi_target(
+                eval_type=eval_type,
+                metric_type=metric_type,
+                score_items_kwargs=score_items_kwargs,
+                eval_kwargs=eval_kwargs,
+            )
         if isinstance(self.scorer, MultioutputScorer):
             return self._evaluate_multioutput(
                 eval_type=eval_type,
@@ -898,3 +987,313 @@ class RankingRecommender(BaseRecommender):
                 "category each target fell into."
             )
         return float(finite.mean())
+
+    # --- MixedTypeMultiTargetScorer-aware evaluate ---------------------- #
+    #
+    # Per-target dispatch by declared TargetType. Always returns
+    # ``Dict[str, float]`` — heterogeneous target types have no honest
+    # macro aggregation. Restricted to ``RecommenderEvaluatorType.SIMPLE``;
+    # ranking metrics rejected with an explicit pointer at
+    # ``score_per_target`` and ``predict_targets``.
+    def _evaluate_mixed_type_multi_target(
+        self,
+        eval_type: RecommenderEvaluatorType,
+        metric_type: Union[RecommenderMetricType, Dict[str, RecommenderMetricType]],
+        score_items_kwargs: Optional[Mapping[str, DataFrame]],
+        eval_kwargs: Optional[Mapping[str, Any]],
+    ) -> Dict[str, float]:
+        scorer: MixedTypeMultiTargetScorer = self.scorer  # type: ignore[assignment]
+
+        if eval_type != RecommenderEvaluatorType.SIMPLE:
+            raise ValueError(
+                f"MixedTypeMultiTargetScorer evaluation only supports "
+                f"RecommenderEvaluatorType.SIMPLE; got {eval_type.name}. "
+                f"Counterfactual evaluators (IPS, DR, SNIPS) assume a long-format "
+                f"ranking-recommender shape that does not apply to per-target "
+                f"prediction."
+            )
+
+        # Reject any non-interactions kwarg (including non-None ``users``)
+        # explicitly. MultioutputScorer's evaluate path rejects
+        # non-None users for the same reason — per-target / per-label
+        # scorers don't merge a separate users frame, so passing one
+        # here silently does nothing and misleads the caller. Symmetric
+        # rejection avoids that surprise.
+        if score_items_kwargs:
+            for k, v in score_items_kwargs.items():
+                if k == "interactions":
+                    continue
+                if k == "users" and v is None:
+                    continue
+                raise ValueError(
+                    f"score_items_kwargs[{k!r}] is not supported by "
+                    f"per-target MixedTypeMultiTargetScorer.evaluate. "
+                    f"Only {{'interactions': df}} is accepted (and an "
+                    f"optional users=None, ignored for symmetry with "
+                    f"MultioutputScorer)."
+                )
+        if not score_items_kwargs or "interactions" not in score_items_kwargs:
+            raise ValueError(
+                "MixedTypeMultiTargetScorer.evaluate requires score_items_kwargs"
+                "={'interactions': df} to compute predictions."
+            )
+
+        interactions = score_items_kwargs["interactions"]
+        if not eval_kwargs or "logged_rewards" not in eval_kwargs:
+            raise ValueError(
+                "MixedTypeMultiTargetScorer evaluation requires eval_kwargs with "
+                "'logged_rewards' (a wide DataFrame matching predict_targets's "
+                "output column set — one column per fanned-out target)."
+            )
+        logged_rewards: DataFrame = eval_kwargs["logged_rewards"]
+        if not isinstance(logged_rewards, DataFrame):
+            raise TypeError(f"'logged_rewards' must be a wide DataFrame; got {type(logged_rewards).__name__}.")
+
+        required = list(scorer._fanned_out_target_columns)
+        missing = set(required) - set(logged_rewards.columns)
+        extra = set(logged_rewards.columns) - set(required)
+        if missing:
+            raise ValueError(f"logged_rewards missing target column(s): {sorted(missing)}.")
+        if extra:
+            raise ValueError(f"logged_rewards has unknown column(s) not in target_specs: {sorted(extra)}.")
+        if len(logged_rewards) != len(interactions):
+            raise ValueError(
+                f"interactions has {len(interactions)} rows but logged_rewards "
+                f"has {len(logged_rewards)} rows. Pass row-aligned slices for both."
+            )
+
+        # Hoist the interactions-side validator above the per-column
+        # logged_rewards checks. A caller with BOTH a malformed
+        # interactions frame (vanilla estimator + OBSERVED_*, orphan
+        # ITEM_*, partial multilabel group, …) AND a malformed
+        # logged_rewards frame sees the more architectural error first
+        # — fixing logged_rewards then discovering the OBSERVED problem
+        # on a second run would cost an extra debug cycle. Schema
+        # apply + preserve + validate happen in one shot so the loop
+        # below already knows the interactions are well-formed.
+        interactions_proc, _users_proc = self._preprocess_inputs(interactions, None)
+        scorer._validate_inference_interactions(interactions_proc)
+
+        # Per-column type validation against the declared target_specs.
+        # Fail-fast at the eval boundary; without this, a string-valued
+        # regression column or a stray binary value silently propagates
+        # into the metric and poisons the result. NaNs are tolerated for
+        # every type (per the v2 plan's "ignore-mask" semantics).
+        multiclass_classes = scorer._get_multiclass_classes()
+        for fanned_name in required:
+            target_type = scorer._target_type_for_fanned(fanned_name)
+            col = logged_rewards[fanned_name]
+            non_nan = col.dropna()
+            if non_nan.empty:
+                continue  # all-NaN columns are handled later by per-metric NaN policy
+            if target_type in (TargetType.BINARY, TargetType.MULTILABEL):
+                # MULTILABEL members are binary at the fanned-out level.
+                if not pd.api.types.is_numeric_dtype(non_nan):
+                    raise ValueError(
+                        f"logged_rewards column {fanned_name!r} (declared "
+                        f"{target_type.value}) must be numeric in {{0, 1}}; "
+                        f"got dtype {col.dtype}."
+                    )
+                unique_vals = set(np.asarray(non_nan).tolist())
+                allowed = {0, 1, 0.0, 1.0, True, False}
+                if not unique_vals.issubset(allowed):
+                    raise ValueError(
+                        f"logged_rewards column {fanned_name!r} (declared "
+                        f"{target_type.value}) has values outside "
+                        f"{{0, 1}}: {sorted(unique_vals, key=str)}."
+                    )
+            elif target_type == TargetType.REGRESSION:
+                if not pd.api.types.is_numeric_dtype(col):
+                    raise ValueError(
+                        f"logged_rewards column {fanned_name!r} (declared "
+                        f"REGRESSION) must be numeric; got dtype {col.dtype}."
+                    )
+                # inf would silently propagate into the metric (e.g. MSE
+                # → inf, MAE → inf) and poison every downstream
+                # aggregation. NaN stays allowed — that's the "row has no
+                # logged outcome" signal — but inf is unambiguously
+                # malformed input. Reject upfront with the offending
+                # row count so the caller can locate the source.
+                col_arr = np.asarray(non_nan, dtype=np.float64)
+                inf_count = int(np.isinf(col_arr).sum())
+                if inf_count:
+                    raise ValueError(
+                        f"logged_rewards column {fanned_name!r} (declared "
+                        f"REGRESSION) contains {inf_count} non-finite "
+                        f"value(s) (inf/-inf). NaN is allowed (treated as "
+                        f"'no logged outcome' and masked from the metric); "
+                        f"inf is not."
+                    )
+            elif target_type == TargetType.MULTICLASS:
+                catalogue = set(multiclass_classes.get(fanned_name, []))
+                if not catalogue:
+                    # Estimator wasn't fitted with a multiclass catalogue —
+                    # skip (this path is unreachable in practice; defensive).
+                    continue
+                unknown = set(non_nan.tolist()) - catalogue
+                if unknown:
+                    raise ValueError(
+                        f"logged_rewards column {fanned_name!r} (declared "
+                        f"MULTICLASS) contains label(s) not in the training-"
+                        f"time class catalogue: {sorted(unknown, key=str)}. "
+                        f"Catalogue: {sorted(catalogue, key=str)}."
+                    )
+
+        # Compute predictions once. Route through scorer._estimator_predict_proba
+        # rather than calling the estimator's predict_proba_dict directly —
+        # the wrapper builds the OBSERVED_* → observed dict for conditional
+        # estimators (v3). Going direct would silently bypass conditioning
+        # at evaluate time even when the caller supplied OBSERVED_* columns
+        # in the interactions frame. (interactions_proc was prepared and
+        # validated upstream of the per-column type loop above.)
+        X_inference = scorer._extract_X_inference(interactions_proc)
+        proba_dict = scorer._estimator_predict_proba(X_inference, interactions_proc)
+
+        result: Dict[str, float] = {}
+        for fanned_name in required:
+            target_type = scorer._target_type_for_fanned(fanned_name)
+            # Resolve metric for this fanned-out target.
+            if isinstance(metric_type, dict):
+                if fanned_name not in metric_type:
+                    raise ValueError(
+                        f"metric_type dict is missing entry for target "
+                        f"{fanned_name!r}. Provide entries for every "
+                        f"declared target or pass a single broadcast value."
+                    )
+                resolved = metric_type[fanned_name]
+            else:
+                resolved = metric_type
+            # Reject ranking metrics with a clear pointer. For multilabel
+            # members the lookup must consider BOTH the BINARY head
+            # contract (the fanned-out semantics) AND the MULTILABEL
+            # group declaration — same precedence rule as
+            # _metric_lookup_types_for_fanned uses for score_per_target.
+            # Without this union, TARGET_TYPE_TO_METRICS[MULTILABEL]
+            # would be unreachable through evaluate even though
+            # MULTILABEL metrics happen to coincide with BINARY today.
+            lookup_types = scorer._metric_lookup_types_for_fanned(fanned_name)
+            compat: tuple = ()
+            for tt in lookup_types:
+                compat = compat + TARGET_TYPE_TO_METRICS[tt]
+            # De-dupe while preserving order.
+            seen_metrics: set = set()
+            compat = tuple(m for m in compat if not (m in seen_metrics or seen_metrics.add(m)))
+            if resolved.value not in compat:
+                raise ValueError(
+                    f"metric_type {resolved.name} is not compatible with target "
+                    f"{fanned_name!r} (declared {target_type.value}). Compatible "
+                    f"metrics: {sorted(compat)}. For metrics outside this set, "
+                    f"use scorer.score_per_target(metric_callables=...)."
+                )
+            metric_obj = RecommenderMetricFactory.create(resolved)
+            if isinstance(metric_obj, BaseRankingMetric):
+                # Defensive: should be unreachable thanks to the compat check
+                # above (no TargetType maps to a ranking metric), but pin
+                # the contract.
+                raise ValueError(
+                    "Ranking metrics are not applicable to per-target prediction. "
+                    "Use score_per_target or predict_targets for per-target "
+                    "evaluation."
+                )
+
+            # Slice predictions per target type.
+            y_true = logged_rewards[fanned_name].to_numpy()
+            preds = proba_dict[fanned_name]
+            if target_type in (TargetType.BINARY, TargetType.MULTILABEL):
+                # Existing BaseClassificationMetric ravels both inputs and
+                # masks NaN ground truth. predict_proba_dict returns (n, 2);
+                # pass the positive-class column.
+                y_score = preds[:, 1]
+            elif target_type == TargetType.REGRESSION:
+                y_score = preds  # already (n,)
+            elif target_type == TargetType.MULTICLASS:
+                # (n, K). MULTICLASS_ACCURACY expects ground-truth class
+                # indices into the training-time catalogue.
+                classes = scorer._get_multiclass_classes().get(fanned_name, [])
+                if not classes:
+                    # Fail fast: this means the estimator wasn't fit on this
+                    # multiclass target, or the catalogue was wiped post-fit.
+                    # Falling back to range(K) would silently produce
+                    # nonsense metric values.
+                    raise RuntimeError(
+                        f"Multiclass target {fanned_name!r} has no class "
+                        f"catalogue on the fitted estimator. The estimator "
+                        f"must be fit with this target's labels before "
+                        f"evaluate() can map ground truth to class indices. "
+                        f"Got empty _multiclass_classes[{fanned_name!r}]."
+                    )
+                label_to_idx = {lbl: i for i, lbl in enumerate(classes)}
+                # Unknown labels here are defensive — the per-column
+                # validator above already rejects unknown multiclass
+                # labels, so reaching this branch with an unknown label
+                # means a validator bypass. Warn loudly rather than
+                # silently coercing to NaN.
+                #
+                # NaN ground-truth values are NOT unknown labels — they
+                # represent "no logged outcome" and are intentionally
+                # masked-out by the metric's NaN handling. Filter them
+                # out before the catalogue check so we don't fire a
+                # spurious warning every time logged_rewards has missing
+                # rows.
+                unknown_labels = sorted(
+                    {
+                        v
+                        for v in y_true.tolist()
+                        if not (isinstance(v, float) and np.isnan(v)) and v is not None and v not in label_to_idx
+                    },
+                    key=str,
+                )
+                if unknown_labels:
+                    import warnings as _warnings
+
+                    _warnings.warn(
+                        f"Multiclass target {fanned_name!r} has logged_rewards "
+                        f"label(s) not in the training-time catalogue: "
+                        f"{unknown_labels}. These rows will be masked to NaN "
+                        f"and excluded from the metric. (Upstream validator "
+                        f"should have caught this — investigate.)",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                y_true = np.array(
+                    [
+                        np.nan
+                        if (isinstance(v, float) and np.isnan(v)) or v is None
+                        else (label_to_idx[v] if v in label_to_idx else np.nan)
+                        for v in y_true.tolist()
+                    ],
+                    dtype=float,
+                )
+                y_score = preds
+            else:  # pragma: no cover
+                raise AssertionError(f"Unhandled target type {target_type}")
+
+            # Degenerate-target masking (mirrors _evaluate_multioutput's
+            # behaviour at ranking_recommender.py ~880): for classification
+            # metrics on binary / multilabel-member targets, single-class
+            # held-out slices have UNDEFINED metric value — ROC_AUC's
+            # sklearn implementation raises ValueError, which the metric
+            # class swallows and returns 0.0. A "0.0" looks like a broken
+            # model; "NaN" honestly signals "metric undefined for this
+            # column," matching the MultioutputScorer semantics callers
+            # already rely on.
+            if target_type in (TargetType.BINARY, TargetType.MULTILABEL):
+                # By the time we reach this point, the per-column type
+                # validation above has confirmed y_true is numeric in
+                # {0, 1} (with NaN allowed). The dtype-conditional fallback
+                # that used to live here is unreachable; drop it.
+                non_nan_true = y_true[~np.isnan(y_true.astype(float))]
+                unique_classes = set(np.asarray(non_nan_true).tolist())
+                # Strip the {0,1} expected set to detect single-class.
+                if len(unique_classes & {0, 1, 0.0, 1.0, True, False}) < 2:
+                    result[fanned_name] = float("nan")
+                    continue
+
+            value = metric_obj.calculate(
+                recommendation_ranks=np.empty((len(y_true), 0)),
+                modified_rewards=y_true,
+                recommendation_scores=y_score,
+                top_k=None,
+            )
+            result[fanned_name] = float(value)
+        return result

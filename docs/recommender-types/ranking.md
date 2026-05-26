@@ -259,7 +259,31 @@ recommender = RankingRecommender(scorer)
 - **`evaluate()`** routes by metric category: ranking metrics for binary classifier mode, classification metrics (`ROC_AUC`, `PR_AUC`) per-label / macro for classifier mode, regression metrics (`RMSE`, `MAE`) per-target for regressor mode. See [MultioutputScorer evaluation](../user-guide/evaluation.md#multioutputscorer-evaluation).
 - **Does not require items or users dataset** — pass user features as plain columns inside the interactions DataFrame.
 
-**Learn more**: [Scorer Selection Guide](../user-guide/scorers.md)
+### Mixed-Type Multi-Target Scorer
+```python
+from skrec.scorer.mixed_type_multi_target import (
+    MixedTypeMultiTargetScorer, TargetType, TargetGroupSpec,
+)
+from skrec.estimator.classification import JointMultiTargetMLPEstimator
+
+target_specs = {
+    "ITEM_clicked":  TargetType.BINARY,
+    "ITEM_revenue":  TargetType.REGRESSION,
+    "ITEM_action":   TargetType.MULTICLASS,
+    "engagement":    TargetGroupSpec(type=TargetType.MULTILABEL,
+                                     columns=["ITEM_email_open", "ITEM_app_open"]),
+}
+estimator = JointMultiTargetMLPEstimator(target_specs=target_specs)
+scorer = MixedTypeMultiTargetScorer(estimator=estimator, target_specs=target_specs)
+recommender = RankingRecommender(scorer)
+```
+- Wide-format scorer for **heterogeneous per-target types** (binary + regression + multiclass + multilabel) in one model. Accepts any `MultiTargetEstimator` (joint MLP, joint Transformer, or independent).
+- **`recommend()`** short-circuits to `scorer.predict_targets()` — returns a wide DataFrame with one column per fanned-out target (multilabel groups fan out into per-member columns). `top_k` is ignored (warning logged); per-target prediction isn't ranking. Passing `users != None` raises a clean error.
+- **`evaluate()`** dispatches per-`TargetType` and **always returns `Dict[str, float]`** — heterogeneous types have no honest macro aggregation. Restricted to `RecommenderEvaluatorType.SIMPLE`; ranking metrics rejected with a pointer to `score_per_target`. See [decision rule](../user-guide/decision-rule.md) for the dispatch table and [scorers.md](../user-guide/scorers.md#5-mixedtypemultitargetscorer) for the full contract.
+- **Does not require items or users dataset** — features go in `interactions` as plain columns.
+- **Real-time-label conditioning (v3)**: pair with `ConditionalJointMultiTargetMLPEstimator` or `ConditionalJointMultiTargetTransformerEstimator` and pass `OBSERVED_<suffix>` columns at inference (NaN per cell = unobserved). Vanilla estimators still reject `OBSERVED_*` with a pointer to the conditional families. See [scorers.md](../user-guide/scorers.md#real-time-label-conditioning-v3) and [decision-rule.md](../user-guide/decision-rule.md#real-time-label-conditioning-v3-available).
+
+**Learn more**: [Scorer Selection Guide](../user-guide/scorers.md) · [Decision rule](../user-guide/decision-rule.md)
 
 ## Evaluation
 

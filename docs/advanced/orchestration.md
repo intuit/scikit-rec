@@ -158,13 +158,15 @@ from skrec.orchestrator import (
     SCORER_TYPES,
     ESTIMATOR_TYPES,
     TABULAR_MODEL_TYPES,
+    MULTI_TARGET_MODEL_TYPES,
     capability_matrix,
 )
 
-RECOMMENDER_TYPES    # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
-SCORER_TYPES         # ('universal', 'independent', 'multiclass', 'multioutput', 'sequential', 'hierarchical')
-ESTIMATOR_TYPES      # ('tabular', 'embedding', 'sequential')
-TABULAR_MODEL_TYPES  # ('xgboost', 'lightgbm', 'deepfm')
+RECOMMENDER_TYPES         # ('ranking', 'bandits', 'sequential', 'hierarchical_sequential', 'uplift', 'gcsl')
+SCORER_TYPES              # ('universal', 'independent', 'multiclass', 'multioutput', 'mixed_type_multi_target', 'sequential', 'hierarchical')
+ESTIMATOR_TYPES           # ('tabular', 'embedding', 'sequential')
+TABULAR_MODEL_TYPES       # ('xgboost', 'lightgbm', 'deepfm')
+MULTI_TARGET_MODEL_TYPES  # ('joint_mlp', 'joint_transformer', 'independent')
 
 capability_matrix()
 # {
@@ -174,22 +176,46 @@ capability_matrix()
 #     "tabular_model_types": ("xgboost", "lightgbm", "deepfm"),
 #     "embedding_model_types": ("matrix_factorization", "ncf", "two_tower", ...),
 #     "sequential_model_types": ("sasrec_classifier", "sasrec_regressor", ...),
+#     "multi_target_model_types": ("joint_mlp", "joint_transformer", "independent"),
 #     "inference_method_types": ("mean_scalarization", "percentile_value", "predefined_value"),
 #     "retriever_types": ("popularity", "content_based", "embedding"),
 #     "scorer_config_keys": {
 #         "multioutput": ("on_degenerate_target",),
+#         "mixed_type_multi_target": ("target_specs",),
 #         "multiclass": (),
-#         "independent": (),
-#         "universal": (),
-#         "sequential": (),
-#         "hierarchical": (),
+#         # ...
 #     },
-#     "evaluator_types": (...),   # RecommenderEvaluatorType members
-#     "metric_types": (...),      # RecommenderMetricType members
+#     "evaluator_types": (...),
+#     "metric_types": (...),  # includes "multiclass_accuracy" (new in v2)
+#     # Multi-target capabilities (consumed by scikit-rec-agent for pre-flight validation):
+#     "target_types": ("binary", "regression", "multiclass", "multilabel"),
+#     "target_type_metric_compat": {
+#         "binary":     ("roc_auc", "pr_auc"),
+#         "regression": ("rmse", "mae"),
+#         "multiclass": ("multiclass_accuracy",),
+#         "multilabel": ("roc_auc", "pr_auc"),
+#     },
+#     "independent_target_compat": {
+#         "binary":     ("lightgbm", "logreg", "sklearn", "xgboost"),
+#         "regression": ("lightgbm", "sklearn", "xgboost"),
+#         "multiclass": ("lightgbm", "logreg"),  # xgboost excluded — see scorers.md
+#         "multilabel": ("lightgbm", "logreg", "sklearn", "xgboost"),
+#     },
+#     # Forward-compat flag for v3: empty in v2; populates with scorer names
+#     # supporting OBSERVED_* conditioning when v3 conditional estimators land.
+#     "scorer_supports_observed_conditioning": (),
 # }
 ```
 
-The full compatibility reference (which scorer works with which estimator, retriever constraints, etc.) is on the [Capability Matrix](../user-guide/capability-matrix.md) page.
+### Multi-target capabilities
+
+The four `target_*`/`independent_*`/`scorer_supports_*` keys above were added in v2 to support `MixedTypeMultiTargetScorer`. They let external tooling (like scikit-rec-agent) validate `target_specs`, metric/target compatibility, and per-target sub-estimator type choices without mirroring scikit-rec internals.
+
+The dispatch tables (`target_type_metric_compat`, `independent_target_compat`) are mirrors of in-code constants. Gate 7 in `tests/test_mixed_type_multi_target_gates.py` asserts the runtime, capability matrix, and human-canonical doc table all agree.
+
+For shape-detection symmetry between scikit-rec and scikit-rec-agent, `skrec.orchestrator` also exposes `contract_from_dataframe(df, target_specs=None)` which classifies a DataFrame into one of: `long_interactions`, `long_with_timestamp`, `wide_multioutput`, `wide_mixed_type_multi_target`, `multiclass`, `prebuilt_sequences`, `sessions`. Mixed-type vs multioutput disambiguation requires `target_specs`.
+
+The full compatibility reference (which scorer works with which estimator, retriever constraints, etc.) is on the [Capability Matrix](../user-guide/capability-matrix.md) page; the joint-vs-independent decision tree and per-`TargetType` metric dispatch table are on the [Decision rule](../user-guide/decision-rule.md) page.
 
 ## Complete Examples
 

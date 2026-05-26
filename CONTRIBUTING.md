@@ -90,6 +90,22 @@ skrec/
 2. Implement `score_items(interactions, users, items)` and `score_fast(features_df)` if supporting `recommend_online`.
 3. Add it to `SCORER_TYPES` in `factory.py`, add a branch in `create_scorer()`, and add an entry (even an empty `frozenset`) to `_SCORER_CONFIG_ALLOWED`.
 
+### Adding a new multi-target estimator family
+
+`MixedTypeMultiTargetScorer` is polymorphic over estimator families via the runtime-checkable `MultiTargetEstimator` Protocol. To add a fourth family (e.g. a tree-based joint model, an MoE encoder, etc.):
+
+1. Implement a class with the four attributes/methods on `skrec.estimator.classification._multi_target_protocol.MultiTargetEstimator`:
+   - `target_specs: dict[str, TargetType | TargetGroupSpec]` attribute
+   - `fit(X, y, X_valid=None, y_valid=None)`
+   - `predict_proba_dict(X) -> dict[str, np.ndarray]` (multilabel groups fanned out)
+   - `predict_targets_dict(X) -> dict[str, np.ndarray]` (multilabel groups fanned out)
+2. The scorer's `__init__` Protocol check accepts your class automatically — no changes to `MixedTypeMultiTargetScorer` are required.
+3. If the family fits the joint pattern (shared encoder + per-target heads), subclass `JointMultiTargetBaseEstimator` and supply an encoder via `_build_encoder(input_dim, label_input_dim)`. See `joint_multi_target_mlp.py` for the minimal template.
+4. To expose via the factory, add a mode to `MULTI_TARGET_MODEL_TYPES` and a branch in `_create_multi_target_estimator()` in `factory.py`.
+5. For `mode="independent"` extensions (adding a new sub-estimator type), extend `_INDEPENDENT_TARGET_COMPAT` and `_create_independent_sub_estimator()`.
+
+Gate 1 (`tests/test_mixed_type_multi_target_gates.py`) asserts every family satisfies the Protocol; add your class to that test when contributing.
+
 ### Adding a new recommender
 
 1. Subclass `BaseRecommender` (`skrec/recommender/base_recommender.py`).

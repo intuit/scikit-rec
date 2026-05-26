@@ -39,6 +39,7 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 | **IndependentScorer** | **Yes** (single or dict of estimators) | **No** (raises at init) | **No** |
 | **MulticlassScorer** | **Yes** | **No** (raises at init) | **No** |
 | **MultioutputScorer** | **Yes** — accepts both `BaseClassifier` (e.g. `MultiOutputClassifierEstimator`, binary-only — multi-class targets rejected at fit) and `BaseRegressor` (e.g. `MultiOutputRegressorEstimator`, continuous targets) | **No** (raises at init) | **No** |
+| **MixedTypeMultiTargetScorer** | **Yes** — accepts any `MultiTargetEstimator` (joint MLP, joint Transformer, or independent). Heterogeneous per-target types: binary + regression + multiclass + multilabel groups in one model. See [decision rule](decision-rule.md) for per-target metric dispatch. | **No** (raises at init via Protocol check) | **No** |
 | **SequentialScorer** | **No** | **No** | **Yes** |
 | **HierarchicalScorer** | **No** | **No** | **Yes** (HRNN estimators) |
 | **UpliftScorerAdapter** | **Yes** (internal tabular scorers) | **No** (not exposed for uplift) | **No** |
@@ -67,6 +68,7 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 | **IndependentScorer** | **Yes** | When estimator is tabular; `score_fast` validates exactly one row. |
 | **MulticlassScorer** | **Yes** | Same one-row contract. |
 | **MultioutputScorer** | **Partial** | Returns a **DataFrame** with one column per `ITEM_<name>` target — predicted **class labels** in classifier mode or predicted **continuous values** in regressor mode; **`top_k` is ignored** (documented on `BaseRecommender.recommend_online`). For ranking-style top-K-by-positive-probability output, use the batch `recommend()` path instead. |
+| **MixedTypeMultiTargetScorer** | **Partial** | Returns a **DataFrame** of per-target point estimates (one column per fanned-out target, dtype preserved per `TargetType`). `top_k` is ignored. **`OBSERVED_*` columns supported in v3** with a `ConditionalMultiTargetEstimator` — auto-preserved through `interactions_schema.apply()` via the `preserved_inference_columns()` hook (no client-schema changes required). Vanilla estimators still reject `OBSERVED_*`. |
 | **SequentialScorer** | **No** | `score_fast` raises. |
 | **UpliftScorerAdapter** | **No** | Use `recommend()`. |
 
@@ -103,6 +105,20 @@ All recommenders built on **`BaseRecommender`** share the evaluation session API
 |-------|------|
 | **ContextualBanditsRecommender** | Offline `evaluate()` uses scorer scores but **ranking / probabilities follow the bandit policy** when the strategy applies. For “raw model” metrics, use **`RankingRecommender`** (see docstring on `ContextualBanditsRecommender`). |
 | **STATIC_ACTION** | Probabilistic `recommend()` / temperature paths may **raise** (`NotImplementedError`); evaluation has a dedicated bundle path for static action. |
+| **MixedTypeMultiTargetScorer** | Restricted to `RecommenderEvaluatorType.SIMPLE`. Returns `Dict[str, float]` (always — heterogeneous types can't macro-average). Per-`TargetType` metric dispatch: BINARY/MULTILABEL → ROC_AUC/PR_AUC; REGRESSION → RMSE/MAE; MULTICLASS → MULTICLASS_ACCURACY. Ranking metrics rejected. Use `metric_type=Dict[str, RecommenderMetricType]` for per-target overrides. For metrics outside the named set, use `scorer.score_per_target(metric_callables=...)`. See [decision rule](decision-rule.md) for the dispatch table. |
+
+### `MULTICLASS_ACCURACY` × scorer compatibility
+
+`MULTICLASS_ACCURACY` (new v2 metric — top-1 multiclass accuracy) is the only multiclass-typed metric in v2/v3. Scorer compatibility:
+
+| Scorer | `MULTICLASS_ACCURACY` |
+|--------|------------------------|
+| `UniversalScorer` | **No** (binary / ranking shapes only) |
+| `IndependentScorer` | **No** (binary / ranking shapes only) |
+| `MulticlassScorer` | **No** — uses ranking metrics over the item-as-class catalogue; per-target multiclass-accuracy doesn't apply |
+| `MultioutputScorer` | **No** (binary-only or regression-only mode) |
+| **`MixedTypeMultiTargetScorer`** | **Yes** — for every declared `MULTICLASS` target. Ground-truth labels in `logged_rewards` are mapped to the training-time catalogue (`_multiclass_classes`) before the metric runs |
+| `SequentialScorer` / `HierarchicalScorer` | **No** |
 
 ---
 

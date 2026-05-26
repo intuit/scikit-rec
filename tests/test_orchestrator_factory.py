@@ -272,9 +272,11 @@ def test_create_recommender_pipeline_success(mock_create_recommender, mock_creat
     pipeline = create_recommender_pipeline(config)
 
     # Estimator receives estimator_config and scorer_type hint
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type=config["scorer_type"])
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type=config["scorer_type"], target_specs=None
+    )
     # Scorer and Recommender receive the full config
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
     mock_create_recommender.assert_called_once_with(mock_sco, config)
     assert pipeline == mock_rec
 
@@ -291,7 +293,9 @@ def test_create_recommender_pipeline_estimator_error(mock_create_estimator):
     }
     with pytest.raises(ValueError, match="Estimator config error"):
         create_recommender_pipeline(config)
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type=config["scorer_type"])
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type=config["scorer_type"], target_specs=None
+    )
 
 
 @patch("skrec.orchestrator.factory.create_estimator")
@@ -313,9 +317,11 @@ def test_create_recommender_pipeline_scorer_error(mock_create_scorer, mock_creat
     with pytest.raises(NotImplementedError, match="Scorer type error"):
         create_recommender_pipeline(config)
     # Estimator receives estimator_config and scorer_type hint
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type=config["scorer_type"])
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type=config["scorer_type"], target_specs=None
+    )
     # Scorer receives the full config
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
 
 
 # --- Tests for embedding estimators ---
@@ -950,8 +956,10 @@ def test_pipeline_sequential_config_flow(mock_create_recommender, mock_create_sc
     }
     pipeline = create_recommender_pipeline(config)
 
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type="sequential")
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type="sequential", target_specs=None
+    )
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
     mock_create_recommender.assert_called_once_with(mock_sco, config)
     assert pipeline == mock_rec
 
@@ -977,8 +985,10 @@ def test_pipeline_uplift_config_flow(mock_create_recommender, mock_create_scorer
     }
     pipeline = create_recommender_pipeline(config)
 
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type="independent")
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type="independent", target_specs=None
+    )
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
     mock_create_recommender.assert_called_once_with(mock_sco, config)
     assert pipeline == mock_rec
 
@@ -1009,8 +1019,10 @@ def test_pipeline_gcsl_config_flow(mock_create_recommender, mock_create_scorer, 
     }
     pipeline = create_recommender_pipeline(config)
 
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type="universal")
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type="universal", target_specs=None
+    )
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
     mock_create_recommender.assert_called_once_with(mock_sco, config)
     assert pipeline == mock_rec
 
@@ -1038,8 +1050,10 @@ def test_pipeline_embedding_ranking_config_flow(mock_create_recommender, mock_cr
     }
     pipeline = create_recommender_pipeline(config)
 
-    mock_create_estimator.assert_called_once_with(config["estimator_config"], scorer_type="universal")
-    mock_create_scorer.assert_called_once_with(mock_est, config)
+    mock_create_estimator.assert_called_once_with(
+        config["estimator_config"], scorer_type="universal", target_specs=None
+    )
+    mock_create_scorer.assert_called_once_with(mock_est, config, scorer_config={})
     mock_create_recommender.assert_called_once_with(mock_sco, config)
     assert pipeline == mock_rec
 
@@ -1281,15 +1295,21 @@ def test_capability_matrix_has_expected_keys():
         "tabular_model_types",
         "embedding_model_types",
         "sequential_model_types",
+        "multi_target_model_types",
         "inference_method_types",
         "retriever_types",
         "scorer_config_keys",
         "evaluator_types",
         "metric_types",
+        # Multi-target capabilities published in v2 (M5).
+        "target_types",
+        "target_type_metric_compat",
+        "independent_target_compat",
+        "scorer_supports_observed_conditioning",
     }
     # The flat enum tuples carry an immutable contract for callers; the
-    # nested scorer_config_keys mapping (scorer_type -> tuple of keys) is a
-    # dict whose values are tuples.
+    # nested mappings (scorer_config_keys, target_type_metric_compat,
+    # independent_target_compat) are dicts whose values are tuples.
     tuple_keys = {
         "recommender_types",
         "scorer_types",
@@ -1297,16 +1317,25 @@ def test_capability_matrix_has_expected_keys():
         "tabular_model_types",
         "embedding_model_types",
         "sequential_model_types",
+        "multi_target_model_types",
         "inference_method_types",
         "retriever_types",
         "evaluator_types",
         "metric_types",
+        "target_types",
+        "scorer_supports_observed_conditioning",
     }
     for key in tuple_keys:
         assert isinstance(cm[key], tuple), f"{key} should be a tuple"
-    assert isinstance(cm["scorer_config_keys"], dict)
-    for scorer_type, keys in cm["scorer_config_keys"].items():
-        assert isinstance(keys, tuple), f"scorer_config_keys[{scorer_type!r}] should be a tuple"
+    dict_keys = {
+        "scorer_config_keys",
+        "target_type_metric_compat",
+        "independent_target_compat",
+    }
+    for key in dict_keys:
+        assert isinstance(cm[key], dict), f"{key} should be a dict"
+        for k, v in cm[key].items():
+            assert isinstance(v, tuple), f"{key}[{k!r}] should be a tuple"
 
 
 def test_top_level_tuples_exposed():

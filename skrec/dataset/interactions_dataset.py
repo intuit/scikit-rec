@@ -75,3 +75,27 @@ class InteractionMultiClassDataset(InteractionsDataset):
         if self.client_schema:
             if "OUTCOME" in self.client_schema.columns:
                 raise ValueError("For MultiClass Dataset, field OUTCOME should not be included")
+
+
+class InteractionMixedTypeMultiTargetDataset(InteractionsDataset):
+    """Wide-format dataset for :class:`MixedTypeMultiTargetScorer`.
+
+    Required schema is intentionally minimal — only ``USER_ID`` is enforced
+    at the dataset level. Per-target column presence and value-domain
+    validation lives on the scorer, since it depends on ``target_specs``
+    which the dataset does not see.
+    """
+
+    dirname = os.path.dirname(__file__)
+    REQUIRED_SCHEMA_PATH_TRAINING = os.path.join(
+        dirname, "required_schemas/mixed_type_multi_target_schema_training.yaml"
+    )
+
+    def __init__(
+        self,
+        data_location: str,
+        client_schema_path: Optional[str] = None,
+        extra_required_schema_path: Optional[str] = None,
+        is_training: bool = True,
+    ):
+        super().__init__(data_location, client_schema_path, extra_required_schema_path, is_training)
