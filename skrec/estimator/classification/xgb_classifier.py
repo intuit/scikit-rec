@@ -9,6 +9,7 @@ from xgboost import XGBClassifier as _XGBClassifier
 
 from skrec.constants import ITEM_ID_NAME
 from skrec.dataset.batch_training_dataset import BatchTrainingDataset
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy, SklearnFitParamsMixin
 from skrec.estimator.classification.base_classifier import BaseClassifier
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.numpy_predictor import NumpyPredictorMixin
@@ -38,11 +39,17 @@ class XGBClassifier(_XGBClassifier):
         return params
 
 
-class XGBClassifierEstimator(NumpyPredictorMixin, BaseClassifier):
-    def __init__(self, params: Optional[dict] = None):
+class XGBClassifierEstimator(SklearnFitParamsMixin, NumpyPredictorMixin, BaseClassifier):
+    def __init__(
+        self,
+        params: Optional[dict] = None,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         params = params or {}
         self._model = XGBClassifier(**params)
         self._use_inplace_predict = True
+        self._init_fit_params(fit_params, sample_weight)
 
     def set_inplace_predict(self, value: bool):
         self._use_inplace_predict = value
@@ -54,10 +61,11 @@ class XGBClassifierEstimator(NumpyPredictorMixin, BaseClassifier):
         X_valid: Optional[DataFrame] = None,
         y_valid: Optional[Union[NDArray, Series]] = None,
     ):
+        fit_kw = self._resolve_fit_kwargs(X, y, X_valid, y_valid, supports_eval_weight=True)
         if X_valid is not None:
-            self._model.fit(X, y, eval_set=[(X_valid, y_valid)])
+            self._model.fit(X, y, eval_set=[(X_valid, y_valid)], **fit_kw)
         else:
-            self._model.fit(X, y)
+            self._model.fit(X, y, **fit_kw)
 
     def _predict_proba_model(
         self,
@@ -134,8 +142,22 @@ class BatchXGBClassifierEstimator(BaseClassifier):
 
 
 class TunedXGBClassifierEstimator(TunedEstimator, XGBClassifierEstimator):
-    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
-        super().__init__(XGBClassifier, hpo_method, param_space, optimizer_params)
+    def __init__(
+        self,
+        hpo_method: HPOType,
+        param_space: dict,
+        optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
+        super().__init__(
+            XGBClassifier,
+            hpo_method,
+            param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )
         self._use_inplace_predict = True
 
 
@@ -145,16 +167,18 @@ class WeightedXGBClassifierEstimator(XGBClassifierEstimator):
         params: Optional[dict] = None,
         action_weight: float = 1,
         item_sample_weights: Optional[Dict[str, float]] = None,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
     ):
         params = params or {}
 
         if action_weight != 1 and ("colsample_bynode" not in params or params["colsample_bynode"] == 1):
             raise ValueError("Action weighting requires colsample_bynode < 1")
 
-        if action_weight == 1 and not item_sample_weights:
+        if action_weight == 1 and not item_sample_weights and sample_weight is None:
             logger.warning("No custom weights are being used, so this will act like a normal XGBClassifierEstimator")
 
-        super().__init__(params)
+        super().__init__(params, fit_params=fit_params, sample_weight=sample_weight)
         self.action_weight = action_weight
         self.item_sample_weights = item_sample_weights
         self._use_inplace_predict = True
@@ -187,9 +211,28 @@ class WeightedXGBClassifierEstimator(XGBClassifierEstimator):
                 sample_idx = (X.values[:, col_idx] == 1).flatten()
                 sample_weights[sample_idx] = weight
 
+        # Compose item/action weighting with any generic sample_weight strategy
+        # (e.g. 'balanced'): the two multiply, so 'balanced' rebalances classes
+        # on top of the per-item boosts. Pop the generic sample_weight out of the
+        # resolved kwargs so it doesn't collide with the combined array below;
+        # everything else in fit_params (feature_weights overrides, callbacks,
+        # sample_weight_eval_set, ...) still flows through.
+        #
+        # Known asymmetry: the *train* sample_weight here is item-weights ×
+        # generic-weights, but any derived sample_weight_eval_set (only present
+        # for a 'balanced'/callable strategy) carries the generic weights ONLY —
+        # the item/action weighting is not replayed on the eval set. So with
+        # item weighting + a strategy + early stopping, the train and eval
+        # objectives are weighted slightly differently. Low impact (item
+        # weighting is a coarse recsys boost, not a calibration target); documented
+        # rather than reconciled.
+        fit_kw = self._resolve_fit_kwargs(X, y, X_valid, y_valid, supports_eval_weight=True)
+        generic_w = fit_kw.pop("sample_weight", None)
+        combined = sample_weights if generic_w is None else sample_weights * np.asarray(generic_w)
+
         if X_valid is not None:
             self._model.fit(
-                X, y, feature_weights=feature_weights, sample_weight=sample_weights, eval_set=[(X_valid, y_valid)]
+                X, y, feature_weights=feature_weights, sample_weight=combined, eval_set=[(X_valid, y_valid)], **fit_kw
             )
         else:
-            self._model.fit(X, y, feature_weights=feature_weights, sample_weight=sample_weights)
+            self._model.fit(X, y, feature_weights=feature_weights, sample_weight=combined, **fit_kw)

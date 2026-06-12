@@ -5,6 +5,7 @@ from pandas import DataFrame
 from sklearn.base import RegressorMixin
 from sklearn.multioutput import MultiOutputRegressor
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.regression.sklearn_universal_regressor import (
     SklearnUniversalRegressorEstimator,
@@ -27,11 +28,19 @@ class MultiOutputRegressorEstimator(SklearnUniversalRegressorEstimator):
     handles NaN, RandomForestRegressor doesn't — caller's responsibility).
     """
 
-    def __init__(self, base_estimator: Type[RegressorMixin], params: Mapping):
+    def __init__(
+        self,
+        base_estimator: Type[RegressorMixin],
+        params: Mapping,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         model = base_estimator(**params)
         multioutput_params = {"estimator": model}
 
-        super().__init__(MultiOutputRegressor, multioutput_params)
+        # sklearn's MultiOutputRegressor.fit forwards sample_weight to every
+        # per-target sub-estimator, so the generic passthrough works here too.
+        super().__init__(MultiOutputRegressor, multioutput_params, fit_params=fit_params, sample_weight=sample_weight)
 
     @staticmethod
     def _validate_continuous_targets(y: object) -> None:

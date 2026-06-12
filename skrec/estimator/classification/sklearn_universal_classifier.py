@@ -4,14 +4,22 @@ from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from sklearn.base import ClassifierMixin
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy, SklearnFitParamsMixin
 from skrec.estimator.classification.base_classifier import BaseClassifier
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.tuned_estimator import TunedEstimator
 
 
-class SklearnUniversalClassifierEstimator(BaseClassifier):
-    def __init__(self, model: ClassifierMixin, params: Optional[dict] = None):
+class SklearnUniversalClassifierEstimator(SklearnFitParamsMixin, BaseClassifier):
+    def __init__(
+        self,
+        model: ClassifierMixin,
+        params: Optional[dict] = None,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         self._model = model(**params)
+        self._init_fit_params(fit_params, sample_weight)
 
     def _fit_model(
         self,
@@ -29,7 +37,8 @@ class SklearnUniversalClassifierEstimator(BaseClassifier):
                 stacklevel=2,
             )
 
-        self._model.fit(X, y)
+        # No eval-set for generic sklearn estimators → train-set weighting only.
+        self._model.fit(X, y, **self._resolve_fit_kwargs(X, y))
 
     def _predict_proba_model(self, X: Union[DataFrame, NDArray]) -> NDArray:
         # Dataframe is very slow. Convert to numpy array for sklearn predict_proba if needed
@@ -45,5 +54,14 @@ class TunedSklearnUniversalClassifierEstimator(TunedEstimator, SklearnUniversalC
         hpo_method: HPOType,
         param_space: dict,
         optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
     ):
-        super().__init__(model, hpo_method, param_space, optimizer_params)
+        super().__init__(
+            model,
+            hpo_method,
+            param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )

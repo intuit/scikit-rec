@@ -67,3 +67,21 @@ Side-by-side comparison of all three `ContextMode` variants on a synthetic datas
 - `SCORING_LAYER` — most expressive; context, user, and item representations combined in a final linear layer
 
 See the [Contextualized Two-Tower Guide](../user-guide/two-tower.md) for architecture details and ANN serving patterns.
+
+---
+
+## Multi-label — Per-label vs Joint XGBoost under `MultioutputScorer`
+
+`nb_examples/multioutput_per_label_vs_joint_xgb.ipynb`
+
+Three model structures behind the **same** `MultioutputScorer` API, on one wide
+binary-multilabel frame with correlated labels.
+
+**What it covers:**
+
+- **Per-label** (`MultiOutputClassifierEstimator`) — N independent boosters
+- **Joint `one_output_per_tree`** (`JointXGBMultiOutputClassifierEstimator`, default) — one booster, GPU-capable, **no** cross-label learning (metrics match per-label)
+- **Joint `multi_output_tree`** — one booster, shared vector-leaf splits = **genuine cross-label learning** (CPU-only); shows the small AUC lift on the correlated label
+- The general `sample_weight='balanced'` class-weighting passthrough
+
+See [per-label vs joint estimators](../user-guide/scorers.md#per-label-vs-joint-estimators) for the contract.

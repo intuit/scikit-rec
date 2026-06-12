@@ -17,6 +17,9 @@ from skrec.estimator.classification.joint_multi_target_mlp import (
 from skrec.estimator.classification.joint_multi_target_transformer import (
     JointMultiTargetTransformerEstimator,
 )
+from skrec.estimator.classification.joint_xgb_multioutput import (
+    JointXGBMultiOutputClassifierEstimator,
+)
 
 __all__ = [
     "ConditionalJointMultiTargetMLPEstimator",
@@ -25,5 +28,6 @@ __all__ = [
     "IndependentMultiTargetEstimator",
     "JointMultiTargetMLPEstimator",
     "JointMultiTargetTransformerEstimator",
+    "JointXGBMultiOutputClassifierEstimator",
     "MultiTargetEstimator",
 ]

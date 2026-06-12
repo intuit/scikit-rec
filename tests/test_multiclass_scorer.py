@@ -107,3 +107,42 @@ def test_score_items_with_item_subset(setup_fixture):
     result = scorer.score_items(interactions)
     expected = np.array([[2.1], [5.2]])
     assert_array_equal(result, expected)
+
+
+def _imbalanced_multiclass_interactions(n=900, seed=0):
+    """Wide multiclass interactions: USER_ID + ITEM_ID (3 imbalanced classes) + features.
+
+    Reproduces the firmographics-industry shape: a single multiclass target with a
+    dominant majority class and rare minority classes that class-balancing targets.
+    """
+    import skrec.constants as C
+
+    rng = np.random.RandomState(seed)
+    feats = rng.rand(n, 4)
+    classes = rng.choice(["A", "B", "C"], size=n, p=[0.7, 0.2, 0.1])  # ~[0.7, 0.2, 0.1]
+    feats[:, 0] += np.select([classes == "A", classes == "B", classes == "C"], [0.0, 0.6, 1.2]) + rng.rand(n) * 0.5
+    df = pd.DataFrame(feats, columns=[f"f{i}" for i in range(4)])
+    df[C.USER_ID_NAME] = np.arange(n).astype(str)
+    df[C.ITEM_ID_NAME] = classes
+    return df
+
+
+def test_multiclass_balanced_weights_shift_minority_scores():
+    """firmographics-industry recipe: multi:softprob + sample_weight='balanced'
+    trains end-to-end through MulticlassScorer and raises the score mass on the
+    rare minority class relative to unweighted training."""
+    from skrec.estimator.classification.xgb_classifier import XGBClassifierEstimator
+
+    df = _imbalanced_multiclass_interactions()
+
+    def _mean_minority_score(sample_weight):
+        scorer = MulticlassScorer(estimator=XGBClassifierEstimator({"n_estimators": 40}, sample_weight=sample_weight))
+        X, y = scorer.process_datasets(users_df=None, items_df=None, interactions_df=df)
+        scorer.train_model(X, y)
+        scores = scorer.score_items(interactions=df)  # (n, n_classes)
+        c_idx = list(scorer.item_names).index("C")  # rare class column, via scorer encoding
+        return np.asarray(scores)[:, c_idx].mean()
+
+    unweighted = _mean_minority_score(None)
+    balanced = _mean_minority_score("balanced")
+    assert balanced > unweighted  # balancing up-weights the rare class

@@ -143,6 +143,86 @@ estimator = MultiOutputRegressorEstimator(
 scorer = MultioutputScorer(estimator)
 ```
 
+### Per-label vs joint estimators
+
+`MultioutputScorer` is agnostic to *how* the N targets are modeled — only to the
+output shape. Two model structures are supported:
+
+- **Per-label (N independent models).** `MultiOutputClassifierEstimator` /
+  `MultiOutputRegressorEstimator` wrap `sklearn.MultiOutputClassifier` /
+  `MultiOutputRegressor`, which fit **one separate booster per target**. Simple
+  and robust; no signal is shared across targets.
+- **Joint (one model over all targets).** `JointXGBMultiOutputClassifierEstimator`
+  (classifier mode) and `JointXGBMultiOutputRegressorEstimator` (regressor mode)
+  train a **single XGBoost booster** on the 2-D target matrix. This matches a
+  production `num_target=N` recipe and trains/serves one artifact.
+
+  ```python
+  from skrec.estimator.classification.joint_xgb_multioutput import (
+      JointXGBMultiOutputClassifierEstimator,
+  )
+  # one joint booster over all binary labels
+  scorer = MultioutputScorer(JointXGBMultiOutputClassifierEstimator({"n_estimators": 300}))
+  ```
+
+  > **"Joint" ≠ cross-label learning by default.** XGBoost's `multi_strategy`
+  > decides whether targets share tree structure:
+  > - `'one_output_per_tree'` (**default**): separate trees per target inside one
+  >   jointly-boosted model. **GPU-capable. No cross-label learning** — modeling-wise
+  >   close to per-label.
+  > - `'multi_output_tree'` (vector leaf): splits chosen on the summed gradient
+  >   across all targets, so targets share structure. **Genuine cross-label
+  >   learning, but CPU-only.** Pass `params={'multi_strategy': 'multi_output_tree'}`
+  >   to opt in; the estimator logs that it's active + CPU-only and warns if a GPU
+  >   `device`/`tree_method` was also set.
+
+- **sklearn tree ensembles are joint for free.** `RandomForestClassifier` /
+  `ExtraTreesClassifier` (and their regressors) natively accept a 2-D target
+  matrix and grow **multi-output trees that share structure across all targets by
+  default** (splits chosen on the averaged criterion across targets — genuine
+  shared-representation learning). Their multilabel `predict_proba` already returns
+  the list-of-blocks layout the scorer expects, so they work through the plain
+  `SklearnUniversalClassifierEstimator` / `SklearnUniversalRegressorEstimator` with
+  **no dedicated estimator**:
+
+  ```python
+  from sklearn.ensemble import RandomForestClassifier
+  from skrec.estimator.classification.sklearn_universal_classifier import (
+      SklearnUniversalClassifierEstimator,
+  )
+  scorer = MultioutputScorer(
+      SklearnUniversalClassifierEstimator(RandomForestClassifier, {"n_estimators": 200})
+  )
+  ```
+
+  (Note: shared *structure* across targets is not the same as label *conditioning*
+  — none of these read one target's value to predict another. For real-time-label
+  conditioning use the `MixedTypeMultiTargetScorer` conditional estimators.)
+
+### Class weighting and fit-time parameters
+
+All sklearn-API estimators (XGBoost / LightGBM / sklearn wrappers, single- and
+multi-target) accept a generic fit-time passthrough — no estimator-specific
+plumbing:
+
+- `sample_weight`: a row-weight strategy — `'balanced'`
+  (`compute_sample_weight('balanced', y)` computed at fit time, the production
+  firmographics recipe), a callable `fn(y) -> weights`, or an explicit array.
+  Defaults to uniform.
+- `fit_params`: a dict of static kwargs forwarded verbatim to the underlying
+  `fit` (`feature_weights`, `base_margin`, a custom objective, `callbacks`, …).
+
+```python
+JointXGBMultiOutputClassifierEstimator({"n_estimators": 300}, sample_weight="balanced")
+```
+
+### Tree-count pinning vs early stopping
+
+To pin the number of trees (e.g. reproduce a production `best_iteration`), set
+`n_estimators` in `params` and **omit** `early_stopping_rounds`. An XGBoost
+`eval_set` is used only when validation data (`X_valid`) is passed to `fit`; with
+no validation set, training runs the full pinned `n_estimators`.
+
 **Dataset Requirements**:
 - ⚠️ **Interactions**: **One row per user only**
 - ❌ **Users**: Not allowed (pass user features as plain columns inside interactions)
@@ -222,11 +302,11 @@ Under `CONSTANT`, `recommender.scorer.degenerate_targets` exposes the manifest o
 
 ### Migration paths for multi-class targets
 
-Targets with 3+ classes are rejected at fit time. Choose one:
+`MultioutputScorer` rejects multi-class targets (3+ classes per `ITEM_<name>`) at fit time. Pick the path that fits your shape:
 
-1. **Single multi-class target** → use [`MulticlassScorer`](#3-multiclassscorer) in long format.
-2. **Multiple multi-class targets** → one-hot encode each into binary columns (e.g. `ITEM_X` with classes `{A, B, C}` becomes `ITEM_X_A`, `ITEM_X_B`, `ITEM_X_C`, each binary).
-3. **Heterogeneous target types (mix of binary, regression, multi-class)** → use [`MixedTypeMultiTargetScorer`](#5-mixedtypemultitargetscorer) below.
+1. **Wide format, any mix of multi-class + binary + regression + multilabel** → use [`MixedTypeMultiTargetScorer`](#5-mixedtypemultitargetscorer) below. Multi-class targets are first-class via `TargetType.MULTICLASS`; class labels are preserved end-to-end (no manual one-hot encoding, no label-encoder round-trips). This is the recommended path for new wide-format multi-target work.
+2. **Single multi-class target in long format** → use [`MulticlassScorer`](#3-multiclassscorer). Best when you have `(USER_ID, ITEM_ID)` rows and `ITEM_ID` itself is the class label.
+3. **Legacy compatibility (stay on `MultioutputScorer`)** → one-hot encode each multi-class column into binary columns (e.g. `ITEM_X` with classes `{A, B, C}` becomes `ITEM_X_A`, `ITEM_X_B`, `ITEM_X_C`, each binary). Only choose this if you have an existing `MultioutputScorer` pipeline you don't want to rewrite — option #1 handles the same data without the encoding step.
 
 **Pros**:
 - Multi-label binary classification with cross-target ranking semantics

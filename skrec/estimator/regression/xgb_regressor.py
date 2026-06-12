@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from xgboost import XGBRegressor as _XGBRegressor
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy, SklearnFitParamsMixin
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.regression.base_regressor import BaseRegressor
 from skrec.estimator.tuned_estimator import TunedEstimator
@@ -26,10 +27,16 @@ class XGBRegressor(_XGBRegressor):
         return params
 
 
-class XGBRegressorEstimator(BaseRegressor):
-    def __init__(self, params: Optional[dict] = None):
+class XGBRegressorEstimator(SklearnFitParamsMixin, BaseRegressor):
+    def __init__(
+        self,
+        params: Optional[dict] = None,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         params = params or {}
         self._model = XGBRegressor(**params)
+        self._init_fit_params(fit_params, sample_weight)
 
     def _fit_model(
         self,
@@ -38,10 +45,11 @@ class XGBRegressorEstimator(BaseRegressor):
         X_valid: Optional[DataFrame] = None,
         y_valid: Optional[Union[NDArray, Series]] = None,
     ):
+        fit_kw = self._resolve_fit_kwargs(X, y, X_valid, y_valid, supports_eval_weight=True)
         if X_valid is not None:
-            self._model.fit(X, y, eval_set=[(X_valid, y_valid)])
+            self._model.fit(X, y, eval_set=[(X_valid, y_valid)], **fit_kw)
         else:
-            self._model.fit(X, y)
+            self._model.fit(X, y, **fit_kw)
 
     def _predict_model(self, X: DataFrame) -> NDArray:
         # Dataframe is very slow. Convert to numpy array
@@ -51,5 +59,19 @@ class XGBRegressorEstimator(BaseRegressor):
 
 
 class TunedXGBRegressorEstimator(TunedEstimator, XGBRegressorEstimator):
-    def __init__(self, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
-        super().__init__(XGBRegressor, hpo_method, param_space, optimizer_params)
+    def __init__(
+        self,
+        hpo_method: HPOType,
+        param_space: dict,
+        optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
+        super().__init__(
+            XGBRegressor,
+            hpo_method,
+            param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )

@@ -4,14 +4,22 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from sklearn.base import RegressorMixin
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy, SklearnFitParamsMixin
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.regression.base_regressor import BaseRegressor
 from skrec.estimator.tuned_estimator import TunedEstimator
 
 
-class SklearnUniversalRegressorEstimator(BaseRegressor):
-    def __init__(self, model: RegressorMixin, params: Optional[dict] = None):
+class SklearnUniversalRegressorEstimator(SklearnFitParamsMixin, BaseRegressor):
+    def __init__(
+        self,
+        model: RegressorMixin,
+        params: Optional[dict] = None,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         self._model = model(**params)
+        self._init_fit_params(fit_params, sample_weight)
 
     def _fit_model(
         self, X: DataFrame, y: DataFrame, X_valid: Optional[DataFrame] = None, y_valid: Optional[DataFrame] = None
@@ -24,7 +32,8 @@ class SklearnUniversalRegressorEstimator(BaseRegressor):
                 "Validation data (X_valid, y_valid) will be ignored.",
                 stacklevel=2,
             )
-        self._model.fit(X, y)
+        # No eval-set for generic sklearn estimators → train-set weighting only.
+        self._model.fit(X, y, **self._resolve_fit_kwargs(X, y))
 
     def _predict_model(self, X: DataFrame) -> NDArray:
         # Dataframe is very slow. Convert to numpy array
@@ -40,5 +49,14 @@ class TunedSklearnUniversalRegressorEstimator(TunedEstimator, SklearnUniversalRe
         hpo_method: HPOType,
         param_space: dict,
         optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
     ):
-        super().__init__(model, hpo_method, param_space, optimizer_params)
+        super().__init__(
+            model,
+            hpo_method,
+            param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )

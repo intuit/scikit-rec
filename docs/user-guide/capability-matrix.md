@@ -38,7 +38,7 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 | **UniversalScorer** | **Yes** (factory yields `TabularUniversalScorer`) | **Yes** (`EmbeddingUniversalScorer`) | **No** (use `SequentialScorer`) |
 | **IndependentScorer** | **Yes** (single or dict of estimators) | **No** (raises at init) | **No** |
 | **MulticlassScorer** | **Yes** | **No** (raises at init) | **No** |
-| **MultioutputScorer** | **Yes** — accepts both `BaseClassifier` (e.g. `MultiOutputClassifierEstimator`, binary-only — multi-class targets rejected at fit) and `BaseRegressor` (e.g. `MultiOutputRegressorEstimator`, continuous targets) | **No** (raises at init) | **No** |
+| **MultioutputScorer** | **Yes** — `BaseClassifier` (binary-only; multi-class rejected at fit) or `BaseRegressor`. Per-label: `MultiOutputClassifierEstimator` / `MultiOutputRegressorEstimator` (N independent boosters). Joint single-booster: `JointXGBMultiOutputClassifierEstimator` / `JointXGBMultiOutputRegressorEstimator`. sklearn tree ensembles (RandomForest/ExtraTrees) are joint multi-output via the `SklearnUniversal*` wrappers. See [per-label vs joint](scorers.md#per-label-vs-joint-estimators). | **No** (raises at init) | **No** |
 | **MixedTypeMultiTargetScorer** | **Yes** — accepts any `MultiTargetEstimator` (joint MLP, joint Transformer, or independent). Heterogeneous per-target types: binary + regression + multiclass + multilabel groups in one model. See [decision rule](decision-rule.md) for per-target metric dispatch. | **No** (raises at init via Protocol check) | **No** |
 | **SequentialScorer** | **No** | **No** | **Yes** |
 | **HierarchicalScorer** | **No** | **No** | **Yes** (HRNN estimators) |

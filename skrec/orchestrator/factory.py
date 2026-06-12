@@ -195,6 +195,13 @@ class HPOConfig(TypedDict, total=False):
 class WeightsConfig(TypedDict, total=False):
     action_weight: float
     item_sample_weights: Optional[Dict[Any, float]]
+    # Generic fit-time passthrough (sklearn-API estimators only). `sample_weight`
+    # is a row-weight strategy: 'balanced', a callable fn(y)->weights, or an
+    # explicit array (None = uniform). `fit_params` is a dict of static kwargs
+    # forwarded verbatim to the wrapped model's fit (feature_weights, callbacks,
+    # base_margin, custom objective, ...). See skrec.estimator._fit_params_mixin.
+    sample_weight: Any
+    fit_params: Dict[str, Any]
 
 
 class EmbeddingConfig(TypedDict, total=False):
@@ -945,6 +952,11 @@ def create_estimator(
                     optimizer_params=optimizer_params,
                 )
     else:
+        # Generic fit-time passthrough (sklearn-API estimators). Resolved per-row
+        # at fit time inside the estimator; see skrec.estimator._fit_params_mixin.
+        sample_weight = weights_config.get("sample_weight")
+        fit_params = weights_config.get("fit_params")
+
         if ml_task == "classification":
             action_weight = weights_config.get("action_weight", 1)
             item_sample_weights = weights_config.get("item_sample_weights")
@@ -952,31 +964,39 @@ def create_estimator(
             if scorer_type == "multioutput":
                 base_cls = LGBMClassifier if use_lightgbm else XGBClassifier
                 logger.info(f"Creating MultiOutputClassifierEstimator with {base_cls.__name__}")
-                estimator = MultiOutputClassifierEstimator(base_cls, model_params)
+                estimator = MultiOutputClassifierEstimator(
+                    base_cls, model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif use_lightgbm:
                 logger.info("Creating LightGBMClassifierEstimator")
-                estimator = LightGBMClassifierEstimator(model_params)
+                estimator = LightGBMClassifierEstimator(
+                    model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif action_weight != 1 or item_sample_weights is not None:
                 logger.info("Creating WeightedXGBClassifierEstimator")
                 estimator = WeightedXGBClassifierEstimator(
                     params=xgb_config,
                     action_weight=action_weight,
                     item_sample_weights=item_sample_weights,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating XGBClassifierEstimator")
-                estimator = XGBClassifierEstimator(xgb_config)
+                estimator = XGBClassifierEstimator(xgb_config, fit_params=fit_params, sample_weight=sample_weight)
         else:  # regression
             if scorer_type == "multioutput":
                 base_cls = LGBMRegressor if use_lightgbm else XGBRegressor
                 logger.info(f"Creating MultiOutputRegressorEstimator with {base_cls.__name__}")
-                estimator = MultiOutputRegressorEstimator(base_cls, model_params)
+                estimator = MultiOutputRegressorEstimator(
+                    base_cls, model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif use_lightgbm:
                 logger.info("Creating LightGBMRegressorEstimator")
-                estimator = LightGBMRegressorEstimator(model_params)
+                estimator = LightGBMRegressorEstimator(model_params, fit_params=fit_params, sample_weight=sample_weight)
             else:
                 logger.info("Creating XGBRegressorEstimator")
-                estimator = XGBRegressorEstimator(xgb_config)
+                estimator = XGBRegressorEstimator(xgb_config, fit_params=fit_params, sample_weight=sample_weight)
 
     return estimator
 
