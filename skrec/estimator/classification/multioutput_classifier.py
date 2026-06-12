@@ -194,6 +194,8 @@ class TunedMultiOutputClassifierEstimator(TunedSklearnUniversalClassifierEstimat
         hpo_method: HPOType,
         param_space: dict,
         optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
     ):
         model = base_estimator()
         param_space["estimator"] = model
@@ -202,4 +204,11 @@ class TunedMultiOutputClassifierEstimator(TunedSklearnUniversalClassifierEstimat
         # https://stackoverflow.com/questions/69962287/how-to-use-multioutputclassifier-with-randomizedsearchcv-for-hyperparameter
         updated_param_space = {f"estimator__{k}" if k in model.get_params() else k: v for k, v in param_space.items()}
 
-        super().__init__(MultiOutputClassifier, hpo_method, updated_param_space, optimizer_params)
+        super().__init__(
+            MultiOutputClassifier,
+            hpo_method,
+            updated_param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )

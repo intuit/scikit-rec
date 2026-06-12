@@ -1591,3 +1591,18 @@ def test_capability_matrix_publishes_weights_and_multioutput_keys():
         "fit_params",
     }
     assert cm["multioutput_strategy_types"] == ("per_label", "joint")
+
+
+@pytest.mark.parametrize(
+    "scorer_type, ml_task",
+    [(None, "classification"), ("multioutput", "classification"), (None, "regression"), ("multioutput", "regression")],
+)
+def test_tuned_mode_forwards_sample_weight(scorer_type, ml_task):
+    """Regression: weights.sample_weight must reach Tuned* estimators (HPO mode),
+    not just the non-tuned path. Previously the tuned factory branch ignored it."""
+    hpo = {"hpo_method": "grid_search_cv", "param_space": {"max_depth": [2, 3]}, "optimizer_params": {"cv": 3}}
+    est = create_estimator(
+        {"ml_task": ml_task, "xgboost": {"n_estimators": 5}, "hpo": hpo, "weights": {"sample_weight": "balanced"}},
+        scorer_type=scorer_type,
+    )
+    assert est._sample_weight == "balanced"

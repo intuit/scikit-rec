@@ -864,6 +864,12 @@ def create_estimator(
     deepfm_config = estimator_config.get("deepfm")
     hpo_config = estimator_config.get("hpo", {})
     weights_config = estimator_config.get("weights", {})
+    # Generic fit-time passthrough (sklearn-API estimators), resolved per-row at
+    # fit time inside the estimator. Read once so BOTH the tuned and non-tuned
+    # paths forward it — under HPO, GridSearchCV/RandomizedSearchCV route
+    # sample_weight to the inner estimator's fit (and subset it per CV fold).
+    sample_weight = weights_config.get("sample_weight")
+    fit_params = weights_config.get("fit_params")
 
     tabular_model_keys = [k for k in ("xgboost", "lightgbm", "deepfm") if estimator_config.get(k) is not None]
     if len(tabular_model_keys) > 1:
@@ -932,6 +938,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             elif use_lightgbm:
                 logger.info("Creating TunedLightGBMClassifierEstimator")
@@ -939,6 +947,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating TunedXGBClassifierEstimator")
@@ -946,6 +956,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
         else:  # regression
             if scorer_type == "multioutput":
@@ -956,6 +968,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             elif use_lightgbm:
                 logger.info("Creating TunedLightGBMRegressorEstimator")
@@ -963,6 +977,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating TunedXGBRegressorEstimator")
@@ -970,14 +986,13 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
     else:
-        # Generic fit-time passthrough (sklearn-API estimators). Resolved per-row
-        # at fit time inside the estimator; see skrec.estimator._fit_params_mixin.
-        sample_weight = weights_config.get("sample_weight")
-        fit_params = weights_config.get("fit_params")
         # Multioutput estimator structure: "per_label" (N independent boosters)
-        # or "joint" (one joint XGBoost booster). XGBoost-only.
+        # or "joint" (one joint XGBoost booster). XGBoost-only. (sample_weight /
+        # fit_params are read above so both tuned and non-tuned paths forward them.)
         multioutput_strategy = estimator_config.get("multioutput_strategy", "per_label")
 
         if ml_task == "classification":
