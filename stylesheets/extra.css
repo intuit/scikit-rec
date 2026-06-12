@@ -1,0 +1,26 @@
+/* Custom styles for recommender documentation */
+
+.md-typeset .admonition,
+.md-typeset details {
+    font-size: 0.9rem;
+}
+
+.md-typeset code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.1em 0.3em;
+}
+
+/* Grid layout for cards */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.grid.cards > * {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.2rem;
+    padding: 1rem;
+}
+

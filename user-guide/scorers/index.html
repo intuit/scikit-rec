@@ -1,0 +1,3206 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://intuit.github.io/scikit-rec/user-guide/scorers/">
+      
+      
+        <link rel="prev" href="../capability-matrix/">
+      
+      
+        <link rel="next" href="../decision-rule/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Scorers - scikit-rec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#scorer-selection-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="scikit-rec" class="md-header__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            scikit-rec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Scorers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="scikit-rec" class="md-nav__button md-logo" aria-label="scikit-rec" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    scikit-rec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/intuit/scikit-rec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    intuit/scikit-rec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../capability-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-universalscorer-most-common" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. UniversalScorer (Most Common)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-independentscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. IndependentScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-multiclassscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. MulticlassScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-multioutputscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. MultioutputScorer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. MultioutputScorer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-label-vs-joint-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-label vs joint estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-weighting-and-fit-time-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class weighting and fit-time parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-count-pinning-vs-early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree-count pinning vs early stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#public-introspection-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public introspection surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#degenerate-target-handling-on_degenerate_target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Degenerate-target handling (on_degenerate_target)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-paths-for-multi-class-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration paths for multi-class targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-mixedtypemultitargetscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. MixedTypeMultiTargetScorer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. MixedTypeMultiTargetScorer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-time-label-conditioning-v3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-time-label conditioning (v3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-sequentialscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. SequentialScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-hierarchicalscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. HierarchicalScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimator-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimator Compatibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Estimator Compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#binary-classification-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary Classification Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiclass-classification-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiclass Classification Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-estimators-mf-ncf-twotower-dcn-neuralfactorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Estimators (MF, NCF, TwoTower, DCN, NeuralFactorization)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sequential-estimators-sasrec-hrnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Estimators (SASRec, HRNN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-universal-scorer-e-commerce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1: Universal Scorer (E-commerce)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-independent-scorer-content-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2: Independent Scorer (Content Recommendation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-multiclass-scorer-simple-ranking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3: Multiclass Scorer (Simple Ranking)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4a-multioutput-scorer-multi-label-binary-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4a: Multioutput Scorer (Multi-label binary classification)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4b-multioutput-scorer-multi-target-regression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4b: Multioutput Scorer (Multi-target regression)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-start-with-universalscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Start with UniversalScorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-feature-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Feature Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-data-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Data Volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-performance-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Performance Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-items-dataset-required-for-universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Items dataset required for Universal scorer"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-expected-one-row-per-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Expected one row per user"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-independent-scorer-is-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Independent scorer is slow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decision-rule/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Rule
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../estimators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collaborative-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ncf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-tower/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-Tower
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sasrec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SASRec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hrnn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HRNN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recommender Types
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recommender Types
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/ranking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/bandits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bandits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/uplift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uplift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/sequential/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequential
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/hierarchical/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hierarchical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommender-types/gcsl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hpo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hybrid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-universalscorer-most-common" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. UniversalScorer (Most Common)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-independentscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. IndependentScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-multiclassscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. MulticlassScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-multioutputscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. MultioutputScorer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. MultioutputScorer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-label-vs-joint-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-label vs joint estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-weighting-and-fit-time-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class weighting and fit-time parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tree-count-pinning-vs-early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree-count pinning vs early stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#public-introspection-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public introspection surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#degenerate-target-handling-on_degenerate_target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Degenerate-target handling (on_degenerate_target)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-paths-for-multi-class-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration paths for multi-class targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-mixedtypemultitargetscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. MixedTypeMultiTargetScorer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. MixedTypeMultiTargetScorer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-time-label-conditioning-v3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-time-label conditioning (v3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-sequentialscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. SequentialScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-hierarchicalscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. HierarchicalScorer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimator-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimator Compatibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Estimator Compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#binary-classification-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary Classification Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regression-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiclass-classification-estimators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiclass Classification Estimators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-estimators-mf-ncf-twotower-dcn-neuralfactorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Estimators (MF, NCF, TwoTower, DCN, NeuralFactorization)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sequential-estimators-sasrec-hrnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Estimators (SASRec, HRNN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-universal-scorer-e-commerce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1: Universal Scorer (E-commerce)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-independent-scorer-content-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2: Independent Scorer (Content Recommendation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-multiclass-scorer-simple-ranking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3: Multiclass Scorer (Simple Ranking)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4a-multioutput-scorer-multi-label-binary-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4a: Multioutput Scorer (Multi-label binary classification)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4b-multioutput-scorer-multi-target-regression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4b: Multioutput Scorer (Multi-target regression)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-start-with-universalscorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Start with UniversalScorer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-feature-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Feature Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-data-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Data Volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-performance-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Performance Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-items-dataset-required-for-universal-scorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Items dataset required for Universal scorer"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-expected-one-row-per-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Expected one row per user"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-independent-scorer-is-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Independent scorer is slow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="scorer-selection-guide">Scorer Selection Guide<a class="headerlink" href="#scorer-selection-guide" title="Permanent link">&para;</a></h1>
+<p>Scorers determine <strong>how items are scored</strong> given user context. Choosing the right scorer depends on your data structure and modeling needs.</p>
+<p><img alt="Choosing the Scorer" src="../../images/scorer.png" /></p>
+<h2 id="quick-comparison">Quick Comparison<a class="headerlink" href="#quick-comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Scorer</th>
+<th>Models</th>
+<th>Item Features</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Universal</strong></td>
+<td>1 global model</td>
+<td>✅ Required</td>
+<td>Best performance, needs item features. Also supports embedding estimators.</td>
+</tr>
+<tr>
+<td><strong>Independent</strong></td>
+<td>1 model per item</td>
+<td>❌ Not used</td>
+<td>Simple, no item features needed</td>
+</tr>
+<tr>
+<td><strong>Multiclass</strong></td>
+<td>1 model</td>
+<td>❌ Not allowed</td>
+<td>One positive item per user</td>
+</tr>
+<tr>
+<td><strong>Multioutput</strong></td>
+<td>1 model</td>
+<td>❌ Not allowed</td>
+<td>Multiple outcomes per user</td>
+</tr>
+<tr>
+<td><strong>Sequential</strong></td>
+<td>1 sequential model</td>
+<td>❌ N/A</td>
+<td>SASRec — scores from interaction sequences</td>
+</tr>
+<tr>
+<td><strong>Hierarchical</strong></td>
+<td>1 sequential model</td>
+<td>❌ N/A</td>
+<td>HRNN — scores from session-structured sequences</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-universalscorer-most-common">1. UniversalScorer (Most Common)<a class="headerlink" href="#1-universalscorer-most-common" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Builds a single global model that learns patterns across all items using item features.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.universal</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniversalScorer</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">UniversalScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Dataset Requirements</strong>:
+- ✅ <strong>Interactions</strong>: Multiple rows per user allowed
+- ✅ <strong>Users</strong>: Required
+- ✅ <strong>Items</strong>: <strong>Required</strong> (item features are used)
+- 📊 <strong>Outcome</strong>: Binary (classification) or continuous (regression)</p>
+<p><strong>Pros</strong>:
+- Best performance (learns item similarities)
+- Handles new items if they have features
+- Efficient inference</p>
+<p><strong>Cons</strong>:
+- Requires item features
+- More complex setup</p>
+<p><strong>When to use</strong>: This is the <strong>default choice</strong> for most scenarios. Use when you have item metadata.</p>
+<hr />
+<h2 id="2-independentscorer">2. IndependentScorer<a class="headerlink" href="#2-independentscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Builds separate models for each item. No sharing across items.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.independent</span><span class="w"> </span><span class="kn">import</span> <span class="n">IndependentScorer</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">IndependentScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Dataset Requirements</strong>:
+- ✅ <strong>Interactions</strong>: Multiple rows per user allowed
+- ⚠️ <strong>Users</strong>: Optional
+- ❌ <strong>Items</strong>: Not used (no item features needed)
+- 📊 <strong>Outcome</strong>: Binary or continuous</p>
+<p><strong>Pros</strong>:
+- Simple (no item features needed)
+- Supports parallel inference: <code>scorer.set_parallel_inference(parallel_inference_status=True, num_cores=4)</code>
+- Each item can have very different patterns</p>
+<p><strong>Cons</strong>:
+- No knowledge sharing across items
+- Cannot handle new items
+- Requires sufficient data per item</p>
+<p><strong>When to use</strong>: When you don't have item features, or each item needs a specialized model.</p>
+<hr />
+<h2 id="3-multiclassscorer">3. MulticlassScorer<a class="headerlink" href="#3-multiclassscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Treats items as competing classes in a multiclass classification problem.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multiclass</span><span class="w"> </span><span class="kn">import</span> <span class="n">MulticlassScorer</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MulticlassScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Dataset Requirements</strong>:
+- ⚠️ <strong>Interactions</strong>: <strong>One row per user only</strong> (one positive item per user)
+- ❌ <strong>Users</strong>: Not allowed
+- ❌ <strong>Items</strong>: Not allowed
+- 📊 <strong>Outcome</strong>: Not allowed (uses <code>ITEM_ID</code> as target)</p>
+<p><strong>Pros</strong>:
+- Simple data structure
+- Fast training and inference
+- Works well when users have clear single preferences</p>
+<p><strong>Cons</strong>:
+- Restrictive data format (one row per user)
+- No user or item features
+- Limited flexibility</p>
+<p><strong>When to use</strong>: Simple scenarios with one positive item per user and no additional features.</p>
+<hr />
+<h2 id="4-multioutputscorer">4. MultioutputScorer<a class="headerlink" href="#4-multioutputscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Wide-format multi-target scorer — one <code>ITEM_&lt;name&gt;</code> column per target, all trained jointly. Operates in one of two modes depending on the estimator type:</p>
+<ul>
+<li><strong>Classifier mode</strong> (with a <code>BaseClassifier</code>, e.g. <code>MultiOutputClassifierEstimator</code>): every target must be <strong>binary numeric</strong> — values strictly in <code>{0, 1}</code> (or <code>{0.0, 1.0}</code>). Pre-encode non-numeric binary labels at the caller (e.g. <code>df[col] = (df[col] == "yes").astype(float)</code>). Returns per-class probabilities (uniform column names <code>ITEM_&lt;name&gt;_0</code> / <code>ITEM_&lt;name&gt;_1</code>), supports cross-target ranking metrics, per-label classification metrics, and <code>recommend(top_k)</code> returning the top-K most-likely-positive labels per user.</li>
+<li><strong>Regressor mode</strong> (with a <code>BaseRegressor</code>, e.g. <code>MultiOutputRegressorEstimator</code>): every target is continuous. Returns predicted values per target, supports per-target regression metrics (RMSE, MAE).</li>
+</ul>
+<p><strong>Multi-class targets (3+ classes per <code>ITEM_&lt;name&gt;</code>) are rejected at fit time.</strong> See <a href="#migration-paths-for-multi-class-targets">Migration paths for multi-class targets</a> below.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Classifier mode — multi-label binary classification</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifier</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultioutputScorer</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.multioutput_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">MultiOutputClassifierEstimator</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">MultiOutputClassifierEstimator</span><span class="p">(</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">base_estimator</span><span class="o">=</span><span class="n">XGBClassifier</span><span class="p">,</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;max_depth&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;objective&quot;</span><span class="p">:</span> <span class="s2">&quot;binary:logistic&quot;</span><span class="p">},</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Regressor mode — multi-target regression</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBRegressor</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultioutputScorer</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.regression.multioutput_regressor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">MultiOutputRegressorEstimator</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">MultiOutputRegressorEstimator</span><span class="p">(</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">base_estimator</span><span class="o">=</span><span class="n">XGBRegressor</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;max_depth&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;objective&quot;</span><span class="p">:</span> <span class="s2">&quot;reg:squarederror&quot;</span><span class="p">},</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">)</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="per-label-vs-joint-estimators">Per-label vs joint estimators<a class="headerlink" href="#per-label-vs-joint-estimators" title="Permanent link">&para;</a></h3>
+<p><code>MultioutputScorer</code> is agnostic to <em>how</em> the N targets are modeled — only to the
+output shape. Two model structures are supported:</p>
+<ul>
+<li><strong>Per-label (N independent models).</strong> <code>MultiOutputClassifierEstimator</code> /
+  <code>MultiOutputRegressorEstimator</code> wrap <code>sklearn.MultiOutputClassifier</code> /
+  <code>MultiOutputRegressor</code>, which fit <strong>one separate booster per target</strong>. Simple
+  and robust; no signal is shared across targets.</li>
+<li><strong>Joint (one model over all targets).</strong> <code>JointXGBMultiOutputClassifierEstimator</code>
+  (classifier mode) and <code>JointXGBMultiOutputRegressorEstimator</code> (regressor mode)
+  train a <strong>single XGBoost booster</strong> on the 2-D target matrix. This matches a
+  production <code>num_target=N</code> recipe and trains/serves one artifact.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.joint_xgb_multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">JointXGBMultiOutputClassifierEstimator</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># one joint booster over all binary labels</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">JointXGBMultiOutputClassifierEstimator</span><span class="p">({</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">}))</span>
+</code></pre></div>
+<blockquote>
+<p><strong>"Joint" ≠ cross-label learning by default.</strong> XGBoost's <code>multi_strategy</code>
+decides whether targets share tree structure:
+- <code>'one_output_per_tree'</code> (<strong>default</strong>): separate trees per target inside one
+  jointly-boosted model. <strong>GPU-capable. No cross-label learning</strong> — modeling-wise
+  close to per-label.
+- <code>'multi_output_tree'</code> (vector leaf): splits chosen on the summed gradient
+  across all targets, so targets share structure. <strong>Genuine cross-label
+  learning, but CPU-only.</strong> Pass <code>params={'multi_strategy': 'multi_output_tree'}</code>
+  to opt in; the estimator logs that it's active + CPU-only and warns if a GPU
+  <code>device</code>/<code>tree_method</code> was also set.</p>
+</blockquote>
+<ul>
+<li><strong>sklearn tree ensembles are joint for free.</strong> <code>RandomForestClassifier</code> /
+  <code>ExtraTreesClassifier</code> (and their regressors) natively accept a 2-D target
+  matrix and grow <strong>multi-output trees that share structure across all targets by
+  default</strong> (splits chosen on the averaged criterion across targets — genuine
+  shared-representation learning). Their multilabel <code>predict_proba</code> already returns
+  the list-of-blocks layout the scorer expects, so they work through the plain
+  <code>SklearnUniversalClassifierEstimator</code> / <code>SklearnUniversalRegressorEstimator</code> with
+  <strong>no dedicated estimator</strong>:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.sklearn_universal_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">SklearnUniversalClassifierEstimator</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">SklearnUniversalClassifierEstimator</span><span class="p">(</span><span class="n">RandomForestClassifier</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">})</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+</code></pre></div>
+<p>(Note: shared <em>structure</em> across targets is not the same as label <em>conditioning</em>
+  — none of these read one target's value to predict another. For real-time-label
+  conditioning use the <code>MixedTypeMultiTargetScorer</code> conditional estimators.)</p>
+<h3 id="class-weighting-and-fit-time-parameters">Class weighting and fit-time parameters<a class="headerlink" href="#class-weighting-and-fit-time-parameters" title="Permanent link">&para;</a></h3>
+<p>All sklearn-API estimators (XGBoost / LightGBM / sklearn wrappers, single- and
+multi-target) accept a generic fit-time passthrough — no estimator-specific
+plumbing:</p>
+<ul>
+<li><code>sample_weight</code>: a row-weight strategy — <code>'balanced'</code>
+  (<code>compute_sample_weight('balanced', y)</code> computed at fit time, the production
+  firmographics recipe), a callable <code>fn(y) -&gt; weights</code>, or an explicit array.
+  Defaults to uniform.</li>
+<li><code>fit_params</code>: a dict of static kwargs forwarded verbatim to the underlying
+  <code>fit</code> (<code>feature_weights</code>, <code>base_margin</code>, a custom objective, <code>callbacks</code>, …).</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">JointXGBMultiOutputClassifierEstimator</span><span class="p">({</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span> <span class="n">sample_weight</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="tree-count-pinning-vs-early-stopping">Tree-count pinning vs early stopping<a class="headerlink" href="#tree-count-pinning-vs-early-stopping" title="Permanent link">&para;</a></h3>
+<p>To pin the number of trees (e.g. reproduce a production <code>best_iteration</code>), set
+<code>n_estimators</code> in <code>params</code> and <strong>omit</strong> <code>early_stopping_rounds</code>. An XGBoost
+<code>eval_set</code> is used only when validation data (<code>X_valid</code>) is passed to <code>fit</code>; with
+no validation set, training runs the full pinned <code>n_estimators</code>.</p>
+<p><strong>Dataset Requirements</strong>:
+- ⚠️ <strong>Interactions</strong>: <strong>One row per user only</strong>
+- ❌ <strong>Users</strong>: Not allowed (pass user features as plain columns inside interactions)
+- ❌ <strong>Items</strong>: Not allowed
+- 📊 <strong>Targets</strong>: Multiple <code>ITEM_&lt;name&gt;</code> columns; binary in classifier mode, continuous in regressor mode</p>
+<p><strong>Example Data (classifier mode)</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">41</span><span class="p">],</span>                      <span class="c1"># User feature, in-frame</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="s2">&quot;ITEM_label_workflow_automation&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="s2">&quot;ITEM_label_dashboard&quot;</span><span class="p">:</span>            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="s2">&quot;ITEM_label_custom_roles&quot;</span><span class="p">:</span>         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">})</span>
+</code></pre></div></p>
+<p><strong>Example Data (regressor mode)</strong>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">interactions_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">41</span><span class="p">],</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="s2">&quot;ITEM_revenue&quot;</span><span class="p">:</span>         <span class="p">[</span><span class="mf">125.50</span><span class="p">,</span> <span class="mf">89.20</span><span class="p">],</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="s2">&quot;ITEM_minutes_engaged&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">42.0</span><span class="p">,</span>    <span class="mf">18.5</span><span class="p">],</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="s2">&quot;ITEM_clicks&quot;</span><span class="p">:</span>          <span class="p">[</span><span class="mi">12</span><span class="p">,</span>      <span class="mi">5</span><span class="p">],</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">})</span>
+</code></pre></div></p>
+<h3 id="public-introspection-surface">Public introspection surface<a class="headerlink" href="#public-introspection-surface" title="Permanent link">&para;</a></h3>
+<p>Programmatic callers can inspect the scorer's mode and per-target metadata:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute / method</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scorer.is_classifier</code></td>
+<td><code>bool</code></td>
+<td><code>True</code> for binary classifier mode (estimator is a <code>BaseClassifier</code>); <code>False</code> for regressor mode (<code>BaseRegressor</code>). Set at construction; immutable afterwards.</td>
+</tr>
+<tr>
+<td><code>scorer.item_names</code></td>
+<td><code>list[str]</code> / <code>np.ndarray[str]</code></td>
+<td>Every <code>ITEM_&lt;name&gt;</code> target seen at fit, in input order. Used to align <code>logged_rewards</code> columns with the trained catalogue.</td>
+</tr>
+<tr>
+<td><code>scorer.degenerate_targets</code></td>
+<td><code>Dict[str, float]</code></td>
+<td>Manifest of targets that fell back to a constant predictor under <code>DegenerateTargetPolicy.CONSTANT</code> — empty when <code>RAISE</code> is in effect (training would have aborted) or when no targets were degenerate. Maps target name → the only observed value (always <code>0.0</code> or <code>1.0</code> since the binary-only contract pins targets to <code>{0, 1}</code>).</td>
+</tr>
+<tr>
+<td><code>scorer.score_items_per_target(interactions=df)</code></td>
+<td><code>pd.DataFrame</code> of shape <code>(n_users, n_targets)</code></td>
+<td>Per-target relevance scores: positive-class probability per target in classifier mode, predicted value per target in regressor mode. Used internally by <code>recommend()</code> and <code>evaluate()</code> for ranking metrics; available as a public method for callers that want the per-target view directly.</td>
+</tr>
+<tr>
+<td><code>scorer.positive_proba_column_name(label)</code></td>
+<td><code>str</code></td>
+<td>The column name in <code>score_items</code> output carrying <code>P(label = 1)</code>. Always returns <code>f"{label}_1"</code> since the binary-only contract pins the positive class to <code>1</code>. Classifier mode only.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="degenerate-target-handling-on_degenerate_target">Degenerate-target handling (<code>on_degenerate_target</code>)<a class="headerlink" href="#degenerate-target-handling-on_degenerate_target" title="Permanent link">&para;</a></h3>
+<p>A "degenerate" target is one whose training slice has only one unique value (no learning signal). The scorer's behaviour is configurable via the <code>DegenerateTargetPolicy</code> enum:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultioutputScorer</span><span class="p">,</span> <span class="n">DegenerateTargetPolicy</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Default: fail loudly at train() with the offending column names.</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>  <span class="c1"># on_degenerate_target=DegenerateTargetPolicy.RAISE</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Opt-in: fit a constant predictor for degenerate columns; train the rest normally.</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">estimator</span><span class="p">,</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="n">on_degenerate_target</span><span class="o">=</span><span class="n">DegenerateTargetPolicy</span><span class="o">.</span><span class="n">CONSTANT</span><span class="p">,</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">)</span>
+</code></pre></div>
+<p><strong>Through the factory.</strong> Most callers reach <code>MultioutputScorer</code> via <code>create_recommender_pipeline</code> rather than direct construction. The same policy is reachable as a <code>scorer_config</code> block on the top-level config:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.orchestrator.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_recommender_pipeline</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="s2">&quot;recommender_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ranking&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="s2">&quot;scorer_type&quot;</span><span class="p">:</span> <span class="s2">&quot;multioutput&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="s2">&quot;estimator_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ml_task&quot;</span><span class="p">:</span> <span class="s2">&quot;classification&quot;</span><span class="p">},</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="s2">&quot;scorer_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;on_degenerate_target&quot;</span><span class="p">:</span> <span class="s2">&quot;constant&quot;</span><span class="p">},</span>  <span class="c1"># or DegenerateTargetPolicy.CONSTANT</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="p">}</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">create_recommender_pipeline</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</code></pre></div>
+<p><code>scorer_config</code> accepts either the enum member or its string value. Passing keys a scorer doesn't accept raises <code>ValueError</code> upfront — the accepted keys per scorer are listed in <code>capability_matrix()["scorer_config_keys"]</code>.</p>
+<p>Under <code>CONSTANT</code>, <code>recommender.scorer.degenerate_targets</code> exposes the manifest of columns that fell back to constant prediction. Per-label classification metrics on degenerate targets emit <code>nan</code> (excluded from macro-mean), and ranking metrics drop them entirely (constant predictions would tie at the top of every per-user ranking and bias the metric).</p>
+<p><strong><code>recommend(top_k)</code> also drops degenerate targets</strong> before ranking. A <code>WARNING</code> is logged once per recommender instance listing the excluded targets. If <code>top_k</code> exceeds the count of non-degenerate targets, the request is silently capped at the available count with a warning — callers that pre-allocate by <code>top_k</code> should account for this. If every target is degenerate (only reachable when an <code>item_subset</code> selects only degenerate columns), <code>recommend()</code> raises with a pointer at <code>scorer.predict_classes()</code> for the constant per-target labels.</p>
+<h3 id="migration-paths-for-multi-class-targets">Migration paths for multi-class targets<a class="headerlink" href="#migration-paths-for-multi-class-targets" title="Permanent link">&para;</a></h3>
+<p><code>MultioutputScorer</code> rejects multi-class targets (3+ classes per <code>ITEM_&lt;name&gt;</code>) at fit time. Pick the path that fits your shape:</p>
+<ol>
+<li><strong>Wide format, any mix of multi-class + binary + regression + multilabel</strong> → use <a href="#5-mixedtypemultitargetscorer"><code>MixedTypeMultiTargetScorer</code></a> below. Multi-class targets are first-class via <code>TargetType.MULTICLASS</code>; class labels are preserved end-to-end (no manual one-hot encoding, no label-encoder round-trips). This is the recommended path for new wide-format multi-target work.</li>
+<li><strong>Single multi-class target in long format</strong> → use <a href="#3-multiclassscorer"><code>MulticlassScorer</code></a>. Best when you have <code>(USER_ID, ITEM_ID)</code> rows and <code>ITEM_ID</code> itself is the class label.</li>
+<li><strong>Legacy compatibility (stay on <code>MultioutputScorer</code>)</strong> → one-hot encode each multi-class column into binary columns (e.g. <code>ITEM_X</code> with classes <code>{A, B, C}</code> becomes <code>ITEM_X_A</code>, <code>ITEM_X_B</code>, <code>ITEM_X_C</code>, each binary). Only choose this if you have an existing <code>MultioutputScorer</code> pipeline you don't want to rewrite — option #1 handles the same data without the encoding step.</li>
+</ol>
+<p><strong>Pros</strong>:
+- Multi-label binary classification with cross-target ranking semantics
+- Multi-target regression with per-target diagnostics
+- One model for all targets (joint training, shared user features in-frame)</p>
+<p><strong>Cons</strong>:
+- Restrictive data format (one row per user; no separate users/items DataFrame)
+- Binary-only enforcement in classifier mode (multi-class targets must be reshaped)
+- All targets must be known at training time</p>
+<p><strong>When to use</strong>: A fixed set of binary outcomes per user (feature adoption, action labels) where you want both per-target diagnostics AND cross-target ranking ("top features this user is most likely to adopt"). For continuous outcomes, the regressor mode covers per-target prediction.</p>
+<hr />
+<h2 id="5-mixedtypemultitargetscorer">5. MixedTypeMultiTargetScorer<a class="headerlink" href="#5-mixedtypemultitargetscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Wide-format scorer for <strong>heterogeneous per-target types</strong> in one model. Unlike <code>MultioutputScorer</code> (binary-only OR continuous-only — every target must share a mode), this scorer declares each target's type explicitly via <code>target_specs</code> and supports BINARY + REGRESSION + MULTICLASS + MULTILABEL groups in the same training frame.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.mixed_type_multi_target</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">MixedTypeMultiTargetScorer</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TargetGroupSpec</span><span class="p">,</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">)</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">JointMultiTargetMLPEstimator</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="n">target_specs</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="s2">&quot;ITEM_clicked&quot;</span><span class="p">:</span>  <span class="n">TargetType</span><span class="o">.</span><span class="n">BINARY</span><span class="p">,</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="s2">&quot;ITEM_revenue&quot;</span><span class="p">:</span>  <span class="n">TargetType</span><span class="o">.</span><span class="n">REGRESSION</span><span class="p">,</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="s2">&quot;ITEM_action&quot;</span><span class="p">:</span>   <span class="n">TargetType</span><span class="o">.</span><span class="n">MULTICLASS</span><span class="p">,</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="s2">&quot;engagement&quot;</span><span class="p">:</span>    <span class="n">TargetGroupSpec</span><span class="p">(</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="nb">type</span><span class="o">=</span><span class="n">TargetType</span><span class="o">.</span><span class="n">MULTILABEL</span><span class="p">,</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ITEM_email_open&quot;</span><span class="p">,</span> <span class="s2">&quot;ITEM_app_open&quot;</span><span class="p">],</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="p">),</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="p">}</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">JointMultiTargetMLPEstimator</span><span class="p">(</span><span class="n">target_specs</span><span class="o">=</span><span class="n">target_specs</span><span class="p">)</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MixedTypeMultiTargetScorer</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">target_specs</span><span class="o">=</span><span class="n">target_specs</span><span class="p">)</span>
+</code></pre></div>
+<p><strong><code>target_specs</code> syntax:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Target type</th>
+<th>Spec value</th>
+<th>Column name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY</td>
+<td><code>TargetType.BINARY</code></td>
+<td>Key IS the column name (must be <code>ITEM_</code>-prefixed); values in <code>{0, 1}</code></td>
+</tr>
+<tr>
+<td>REGRESSION</td>
+<td><code>TargetType.REGRESSION</code></td>
+<td>Key IS the column name; numeric values</td>
+</tr>
+<tr>
+<td>MULTICLASS</td>
+<td><code>TargetType.MULTICLASS</code></td>
+<td>Key IS the column name; any hashable labels (≥2 unique)</td>
+</tr>
+<tr>
+<td>MULTILABEL group</td>
+<td><code>TargetGroupSpec(type=..., columns=[...])</code></td>
+<td>Key is a non-<code>ITEM_</code> group identifier; each member column is <code>ITEM_</code>-prefixed and binary</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Three estimator families, one scorer:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Class</th>
+<th>When to pick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Joint MLP</strong></td>
+<td><code>JointMultiTargetMLPEstimator</code></td>
+<td>Shared feature encoder + per-target heads. Default; good baseline when targets are correlated.</td>
+</tr>
+<tr>
+<td><strong>Joint Transformer</strong></td>
+<td><code>JointMultiTargetTransformerEstimator</code></td>
+<td>FT-Transformer-style feature tokenization + CLS pooling. Better when pairwise feature interactions matter.</td>
+</tr>
+<tr>
+<td><strong>Independent</strong></td>
+<td><code>IndependentMultiTargetEstimator</code></td>
+<td>One scikit-rec sub-estimator per target (XGB, LightGBM, LogReg, sklearn). Use when targets are independent OR you want per-target estimator-type flexibility. <strong>Loses</strong> the multilabel-group inductive bias.</td>
+</tr>
+</tbody>
+</table>
+<p>All three implement the <code>MultiTargetEstimator</code> Protocol; the scorer accepts any.</p>
+<p><strong>Output column conventions:</strong></p>
+<p><code>score_items</code> (wide DataFrame, one row per user, no <code>USER_ID</code> column):</p>
+<table>
+<thead>
+<tr>
+<th>Target type</th>
+<th>Output columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY</td>
+<td><code>ITEM_&lt;col&gt;_0</code>, <code>ITEM_&lt;col&gt;_1</code></td>
+</tr>
+<tr>
+<td>REGRESSION</td>
+<td><code>ITEM_&lt;col&gt;</code> (de-normalized)</td>
+</tr>
+<tr>
+<td>MULTICLASS</td>
+<td><code>ITEM_&lt;col&gt;_&lt;class_label&gt;</code> per class</td>
+</tr>
+<tr>
+<td>MULTILABEL</td>
+<td><code>ITEM_&lt;member&gt;_0</code>, <code>ITEM_&lt;member&gt;_1</code> per member</td>
+</tr>
+</tbody>
+</table>
+<p><code>predict_targets</code> (one column per fanned-out target):</p>
+<table>
+<thead>
+<tr>
+<th>Target type</th>
+<th>Output column</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY</td>
+<td><code>ITEM_&lt;col&gt;</code> (predicted label 0/1)</td>
+</tr>
+<tr>
+<td>REGRESSION</td>
+<td><code>ITEM_&lt;col&gt;</code> (predicted value)</td>
+</tr>
+<tr>
+<td>MULTICLASS</td>
+<td><code>ITEM_&lt;col&gt;</code> (predicted class label; original dtype preserved)</td>
+</tr>
+<tr>
+<td>MULTILABEL</td>
+<td><code>ITEM_&lt;member&gt;</code> (predicted label 0/1) per member</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evaluation (always returns <code>Dict[str, float]</code>):</strong></p>
+<p>Heterogeneous target types have no honest macro aggregation. Per-<code>TargetType</code> metric dispatch:</p>
+<table>
+<thead>
+<tr>
+<th>Target type</th>
+<th>Compatible metrics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY / MULTILABEL member</td>
+<td><code>ROC_AUC</code>, <code>PR_AUC</code></td>
+</tr>
+<tr>
+<td>REGRESSION</td>
+<td><code>RMSE</code>, <code>MAE</code></td>
+</tr>
+<tr>
+<td>MULTICLASS</td>
+<td><code>MULTICLASS_ACCURACY</code> (new v2 metric)</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">recommender</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">eval_type</span><span class="o">=</span><span class="n">RecommenderEvaluatorType</span><span class="o">.</span><span class="n">SIMPLE</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">metric_type</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>        <span class="s2">&quot;ITEM_clicked&quot;</span><span class="p">:</span>     <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span><span class="p">,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>        <span class="s2">&quot;ITEM_revenue&quot;</span><span class="p">:</span>     <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">RMSE</span><span class="p">,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>        <span class="s2">&quot;ITEM_action&quot;</span><span class="p">:</span>      <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">MULTICLASS_ACCURACY</span><span class="p">,</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>        <span class="s2">&quot;ITEM_email_open&quot;</span><span class="p">:</span>  <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span><span class="p">,</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>        <span class="s2">&quot;ITEM_app_open&quot;</span><span class="p">:</span>    <span class="n">RecommenderMetricType</span><span class="o">.</span><span class="n">ROC_AUC</span><span class="p">,</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>    <span class="p">},</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>    <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>    <span class="n">score_items_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;interactions&quot;</span><span class="p">:</span> <span class="n">valid_df</span><span class="p">},</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>    <span class="n">eval_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;logged_rewards&quot;</span><span class="p">:</span> <span class="n">valid_targets_wide</span><span class="p">},</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="p">)</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="c1"># → {&quot;ITEM_clicked&quot;: 0.83, &quot;ITEM_revenue&quot;: 12.7, &quot;ITEM_action&quot;: 0.71, ...}</span>
+</code></pre></div>
+<p>For metrics outside the named set (log-loss, macro-F1, business metrics), use the <strong><code>score_per_target</code> escape hatch</strong> with sklearn callables:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_loss</span><span class="p">,</span> <span class="n">f1_score</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">metrics</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">score_per_target</span><span class="p">(</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">interactions</span><span class="o">=</span><span class="n">valid_df</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">y_true</span><span class="o">=</span><span class="n">valid_targets_wide</span><span class="p">,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">metric_callables</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>        <span class="n">TargetType</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>     <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">log_loss</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>        <span class="n">TargetType</span><span class="o">.</span><span class="n">MULTICLASS</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">f1_score</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">average</span><span class="o">=</span><span class="s2">&quot;macro&quot;</span><span class="p">),</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>        <span class="s2">&quot;ITEM_revenue&quot;</span><span class="p">:</span>        <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">p</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)),</span>  <span class="c1"># name override</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    <span class="p">},</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="p">)</span>
+</code></pre></div>
+<p>Restricted to <code>RecommenderEvaluatorType.SIMPLE</code> (counterfactual evaluators assume a long-format ranking shape that doesn't apply). Ranking metrics are rejected with a pointer to <code>score_per_target</code> and <code>predict_targets</code>.</p>
+<p><strong>Factory config:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="s2">&quot;recommender_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ranking&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="s2">&quot;scorer_type&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed_type_multi_target&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="s2">&quot;scorer_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;target_specs&quot;</span><span class="p">:</span> <span class="n">target_specs</span><span class="p">},</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="s2">&quot;estimator_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>        <span class="s2">&quot;ml_task&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>        <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;joint_mlp&quot;</span><span class="p">,</span>  <span class="c1"># or joint_transformer, independent</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hidden_dim&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;num_layers&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>        <span class="p">},</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>    <span class="p">},</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="p">}</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="n">recommender</span> <span class="o">=</span> <span class="n">create_recommender_pipeline</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</code></pre></div>
+<p>For <code>mode="independent"</code>, supply per-type defaults and optional per-target overrides:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="s2">&quot;multi_target&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;independent&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="s2">&quot;independent&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>        <span class="s2">&quot;defaults&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>            <span class="s2">&quot;binary&quot;</span><span class="p">:</span>     <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;xgboost&quot;</span><span class="p">,</span>  <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}},</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>            <span class="s2">&quot;regression&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;lightgbm&quot;</span><span class="p">,</span> <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}},</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>            <span class="s2">&quot;multiclass&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;lightgbm&quot;</span><span class="p">,</span> <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>            <span class="s2">&quot;multilabel&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;xgboost&quot;</span><span class="p">,</span>  <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{}},</span>  <span class="c1"># per-member</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>        <span class="p">},</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>        <span class="s2">&quot;per_target&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>            <span class="s2">&quot;ITEM_revenue&quot;</span><span class="p">:</span>    <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;lightgbm&quot;</span><span class="p">,</span> <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">}},</span>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>            <span class="s2">&quot;ITEM_email_open&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;estimator_type&quot;</span><span class="p">:</span> <span class="s2">&quot;logreg&quot;</span><span class="p">,</span>   <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}},</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>        <span class="p">},</span>
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>    <span class="p">},</span>
+<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="p">},</span>
+</code></pre></div>
+<p>Compatible sub-estimator types per declared target type (also published in <code>capability_matrix()["independent_target_compat"]</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Target type</th>
+<th>Sub-estimator types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY</td>
+<td><code>xgboost</code>, <code>lightgbm</code>, <code>logreg</code>, <code>sklearn</code></td>
+</tr>
+<tr>
+<td>REGRESSION</td>
+<td><code>xgboost</code>, <code>lightgbm</code>, <code>sklearn</code></td>
+</tr>
+<tr>
+<td>MULTICLASS</td>
+<td><code>lightgbm</code>, <code>logreg</code> (xgboost excluded — <code>inplace_predict</code> has a multiclass shape bug)</td>
+</tr>
+<tr>
+<td>MULTILABEL (per member)</td>
+<td><code>xgboost</code>, <code>lightgbm</code>, <code>logreg</code>, <code>sklearn</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dataset Requirements:</strong>
+- ⚠️ <strong>Interactions</strong>: One row per user; declared target columns + feature columns
+- ❌ <strong>Users</strong>: Not allowed
+- ❌ <strong>Items</strong>: Not allowed</p>
+<h3 id="real-time-label-conditioning-v3">Real-time-label conditioning (v3)<a class="headerlink" href="#real-time-label-conditioning-v3" title="Permanent link">&para;</a></h3>
+<p>For scenarios where the caller has observed the ground truth for <strong>some</strong> targets at inference time (e.g. a real-time event arrived) and wants those values to condition predictions for the <strong>remaining</strong> targets, use a conditional estimator paired with <code>OBSERVED_&lt;suffix&gt;</code> columns:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">ConditionalJointMultiTargetMLPEstimator</span><span class="p">,</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="p">)</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">ConditionalJointMultiTargetMLPEstimator</span><span class="p">(</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="n">target_specs</span><span class="o">=</span><span class="n">target_specs</span><span class="p">,</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;mask_prob&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;label_embedding_dim&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="p">)</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MixedTypeMultiTargetScorer</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">target_specs</span><span class="o">=</span><span class="n">target_specs</span><span class="p">)</span>
+</code></pre></div>
+<p>At inference, add <code>OBSERVED_&lt;suffix&gt;</code> columns matching declared <code>ITEM_&lt;suffix&gt;</code> targets:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">inference_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="s2">&quot;USER_ID&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;u1&quot;</span><span class="p">],</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="s2">&quot;feat_0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">],</span> <span class="s2">&quot;feat_1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.3</span><span class="p">],</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    <span class="s2">&quot;OBSERVED_clicked&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>         <span class="c1"># observed for this row</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>    <span class="s2">&quot;OBSERVED_revenue&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">],</span>      <span class="c1"># not observed; predict from features</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>    <span class="s2">&quot;OBSERVED_action&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">],</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="s2">&quot;OBSERVED_email_open&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">],</span>   <span class="c1"># multilabel group members must mask together</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>    <span class="s2">&quot;OBSERVED_app_open&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">],</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="p">})</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="n">predictions</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">predict_targets</span><span class="p">(</span><span class="n">interactions</span><span class="o">=</span><span class="n">inference_df</span><span class="p">)</span>
+</code></pre></div>
+<p><code>OBSERVED_*</code> semantics:</p>
+<ul>
+<li><strong>Vanilla estimators</strong> (<code>JointMultiTargetMLPEstimator</code>, <code>JointMultiTargetTransformerEstimator</code>, <code>IndependentMultiTargetEstimator</code>) reject any <code>OBSERVED_*</code> column with a clean error pointing at the conditional families.</li>
+<li><strong>Conditional estimators</strong> permit them. NaN per cell means "not observed for this row, predict from features." Multilabel group members <strong>must mask together per row</strong> (all observed or all NaN); partial-group observation raises an explicit error.</li>
+<li><code>OBSERVED_*</code> columns are auto-preserved through <code>interactions_schema.apply()</code> even when the client schema doesn't declare them, via the <code>BaseScorer.preserved_inference_columns()</code> hook — so <code>recommend_online</code> works without per-deployment schema changes.</li>
+</ul>
+<p>Available in v3. Independent + conditional is NOT supported (cross-target observed-as-features is structurally different; revisited in v4+ if ever).</p>
+<p><strong>Compared to <code>MultioutputScorer</code>:</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>MultioutputScorer</code></th>
+<th><code>MixedTypeMultiTargetScorer</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target type</td>
+<td>All binary OR all continuous</td>
+<td>Heterogeneous per target</td>
+</tr>
+<tr>
+<td>Output of <code>evaluate()</code></td>
+<td><code>float</code> (macro) or <code>Dict[str, float]</code> via <code>per_label=True</code></td>
+<td><code>Dict[str, float]</code> only</td>
+</tr>
+<tr>
+<td>Multiclass support</td>
+<td>❌ (3+ class targets rejected)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Multilabel groups (joint loss)</td>
+<td>❌</td>
+<td>✅ via <code>TargetGroupSpec</code></td>
+</tr>
+<tr>
+<td>Estimator pluralism</td>
+<td>Single <code>MultiOutputClassifier</code>/<code>MultiOutputRegressor</code></td>
+<td>Joint MLP / joint Transformer / independent (any combination)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When to use</strong>: heterogeneous target types in one model (e.g., predict clicks AND revenue AND user-tier-class in one frame); deep tabular models on multi-target data; per-target estimator type flexibility (independent mode).</p>
+<p>See also: <a href="../decision-rule/">Decision rule</a> for the full joint-vs-independent / mixed-type-vs-multioutput tree.</p>
+<hr />
+<h2 id="6-sequentialscorer">6. SequentialScorer<a class="headerlink" href="#6-sequentialscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Wraps a <code>SequentialEstimator</code> (SASRec) that scores all items from a user's interaction sequence in a single forward pass.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.sequential</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequentialScorer</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">SequentialScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>  <span class="c1"># estimator must be a SequentialEstimator</span>
+</code></pre></div>
+<p><strong>Dataset Requirements</strong>:
+- ✅ <strong>Interactions</strong>: Multiple rows per user with <code>TIMESTAMP</code> column
+- ❌ <strong>Users</strong>: Not used (sequences encode user preferences)
+- ✅ <strong>Items</strong>: Used for item vocabulary
+- 📊 <strong>Outcome</strong>: Binary</p>
+<p><strong>When to use</strong>: When interaction order matters and you want to model sequential patterns (e.g., "users who watched A then B tend to watch C next"). Requires <code>SequentialRecommender</code> and a SASRec estimator. See <a href="../sasrec/">SASRec guide</a>.</p>
+<hr />
+<h2 id="7-hierarchicalscorer">7. HierarchicalScorer<a class="headerlink" href="#7-hierarchicalscorer" title="Permanent link">&para;</a></h2>
+<p><strong>How it works</strong>: Wraps a <code>SequentialEstimator</code> (HRNN) that models session-structured interaction histories with a two-level GRU hierarchy.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.hierarchical</span><span class="w"> </span><span class="kn">import</span> <span class="n">HierarchicalScorer</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">HierarchicalScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>  <span class="c1"># estimator must be a SequentialEstimator</span>
+</code></pre></div>
+<p><strong>Dataset Requirements</strong>:
+- ✅ <strong>Interactions</strong>: Multiple rows per user with <code>TIMESTAMP</code> (and optionally <code>SESSION_ID</code>)
+- ❌ <strong>Users</strong>: Not used
+- ✅ <strong>Items</strong>: Used for item vocabulary
+- 📊 <strong>Outcome</strong>: Binary</p>
+<p><strong>When to use</strong>: When users have distinct browsing sessions and cross-session context matters. Requires <code>HierarchicalSequentialRecommender</code> and an HRNN estimator. See <a href="../hrnn/">HRNN guide</a>.</p>
+<hr />
+<h2 id="decision-guide">Decision Guide<a class="headerlink" href="#decision-guide" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>graph TD
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    A[Start] --&gt; Z{Sequential/&lt;br/&gt;session data?}
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    Z --&gt;|Yes, flat sequences| SEQ[SequentialScorer&lt;br/&gt;+ SASRec]
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    Z --&gt;|Yes, sessions| HIER[HierarchicalScorer&lt;br/&gt;+ HRNN]
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>    Z --&gt;|No| B{Have item&lt;br/&gt;features?}
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>    B --&gt;|Yes| C[UniversalScorer]
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>    B --&gt;|No| D{One positive&lt;br/&gt;item per user?}
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>    D --&gt;|Yes| E{Need features?}
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>    E --&gt;|No| F[MulticlassScorer]
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>    E --&gt;|Yes| G[Can&#39;t use features&lt;br/&gt;with Multiclass.&lt;br/&gt;Use Universal]
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>    D --&gt;|No| H{Multiple binary&lt;br/&gt;outcomes per user?}
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>    H --&gt;|Yes, all binary| I[MultioutputScorer&lt;br/&gt;classifier or regressor mode&lt;br/&gt;binary targets only]
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>    H --&gt;|No| J[IndependentScorer]
+</code></pre></div>
+<h2 id="estimator-compatibility">Estimator Compatibility<a class="headerlink" href="#estimator-compatibility" title="Permanent link">&para;</a></h2>
+<h3 id="binary-classification-estimators">Binary Classification Estimators<a class="headerlink" href="#binary-classification-estimators" title="Permanent link">&para;</a></h3>
+<p>Compatible with scorers when outcomes are binary (0/1):
+- UniversalScorer ✅
+- IndependentScorer ✅
+- MulticlassScorer ✅
+- MultioutputScorer ✅</p>
+<h3 id="regression-estimators">Regression Estimators<a class="headerlink" href="#regression-estimators" title="Permanent link">&para;</a></h3>
+<p>Compatible with scorers when outcomes are continuous:
+- UniversalScorer ✅
+- IndependentScorer ✅
+- MulticlassScorer ❌
+- MultioutputScorer ✅ (regressor mode — pair with <code>MultiOutputRegressorEstimator</code> for multi-target regression)</p>
+<h3 id="multiclass-classification-estimators">Multiclass Classification Estimators<a class="headerlink" href="#multiclass-classification-estimators" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MulticlassScorer ✅</li>
+<li>Others ❌</li>
+</ul>
+<h3 id="embedding-estimators-mf-ncf-twotower-dcn-neuralfactorization">Embedding Estimators (MF, NCF, TwoTower, DCN, NeuralFactorization)<a class="headerlink" href="#embedding-estimators-mf-ncf-twotower-dcn-neuralfactorization" title="Permanent link">&para;</a></h3>
+<ul>
+<li>UniversalScorer ✅ (auto-dispatches to embedding pipeline)</li>
+<li>IndependentScorer ❌</li>
+<li>MulticlassScorer ❌</li>
+<li>MultioutputScorer ❌</li>
+</ul>
+<h3 id="sequential-estimators-sasrec-hrnn">Sequential Estimators (SASRec, HRNN)<a class="headerlink" href="#sequential-estimators-sasrec-hrnn" title="Permanent link">&para;</a></h3>
+<ul>
+<li>SequentialScorer ✅ (for SASRec)</li>
+<li>HierarchicalScorer ✅ (for HRNN)</li>
+<li>All other scorers ❌</li>
+</ul>
+<h2 id="complete-examples">Complete Examples<a class="headerlink" href="#complete-examples" title="Permanent link">&para;</a></h2>
+<h3 id="example-1-universal-scorer-e-commerce">Example 1: Universal Scorer (E-commerce)<a class="headerlink" href="#example-1-universal-scorer-e-commerce" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.universal</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniversalScorer</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.xgb_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifierEstimator</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Have item features (price, category, brand)</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">XGBClassifierEstimator</span><span class="p">({</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">UniversalScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-2-independent-scorer-content-recommendation">Example 2: Independent Scorer (Content Recommendation)<a class="headerlink" href="#example-2-independent-scorer-content-recommendation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.independent</span><span class="w"> </span><span class="kn">import</span> <span class="n">IndependentScorer</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.lightgbm_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightGBMClassifierEstimator</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># No item features, each content piece is unique</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">LightGBMClassifierEstimator</span><span class="p">({</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">})</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">IndependentScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="c1"># Enable parallel inference for speed</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="n">scorer</span><span class="o">.</span><span class="n">set_parallel_inference</span><span class="p">(</span><span class="n">parallel_inference_status</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-3-multiclass-scorer-simple-ranking">Example 3: Multiclass Scorer (Simple Ranking)<a class="headerlink" href="#example-3-multiclass-scorer-simple-ranking" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multiclass</span><span class="w"> </span><span class="kn">import</span> <span class="n">MulticlassScorer</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.xgb_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifierEstimator</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Simple setup: one item per user, no features</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">XGBClassifierEstimator</span><span class="p">({</span><span class="s2">&quot;objective&quot;</span><span class="p">:</span> <span class="s2">&quot;multi:softmax&quot;</span><span class="p">})</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MulticlassScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-4a-multioutput-scorer-multi-label-binary-classification">Example 4a: Multioutput Scorer (Multi-label binary classification)<a class="headerlink" href="#example-4a-multioutput-scorer-multi-label-binary-classification" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifier</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultioutputScorer</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.classification.multioutput_classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiOutputClassifierEstimator</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="c1"># Multi-label classification: predict adoption probability for each binary target</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">MultiOutputClassifierEstimator</span><span class="p">(</span><span class="n">XGBClassifier</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{})</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-4b-multioutput-scorer-multi-target-regression">Example 4b: Multioutput Scorer (Multi-target regression)<a class="headerlink" href="#example-4b-multioutput-scorer-multi-target-regression" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBRegressor</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.scorer.multioutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultioutputScorer</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">skrec.estimator.regression.multioutput_regressor</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiOutputRegressorEstimator</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="c1"># Multi-target regression: predict continuous values per target (e.g. revenue, clicks, minutes)</span>
+<a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">MultiOutputRegressorEstimator</span><span class="p">(</span><span class="n">XGBRegressor</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{})</span>
+<a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">MultioutputScorer</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="1-start-with-universalscorer">1. Start with UniversalScorer<a class="headerlink" href="#1-start-with-universalscorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Best performance in most scenarios</li>
+<li>Leverages item features for better predictions</li>
+<li>Only switch if you have constraints</li>
+</ul>
+<h3 id="2-feature-engineering">2. Feature Engineering<a class="headerlink" href="#2-feature-engineering" title="Permanent link">&para;</a></h3>
+<ul>
+<li>UniversalScorer benefits greatly from good item features</li>
+<li>IndependentScorer relies entirely on user-context features</li>
+</ul>
+<h3 id="3-data-volume">3. Data Volume<a class="headerlink" href="#3-data-volume" title="Permanent link">&para;</a></h3>
+<ul>
+<li>UniversalScorer: Needs sufficient data across items</li>
+<li>IndependentScorer: Needs sufficient data <strong>per item</strong></li>
+<li>MulticlassScorer: Needs balanced classes</li>
+<li>MultioutputScorer: Needs data for all <code>ITEM_&lt;name&gt;</code> columns; binary-only in classifier mode (multi-class targets rejected at fit time — see <a href="#migration-paths-for-multi-class-targets">Migration paths for multi-class targets</a>). Single-class-in-train degenerate targets handled per the <code>on_degenerate_target</code> policy (<code>RAISE</code> default; <code>CONSTANT</code> to fall back to a constant predictor)</li>
+</ul>
+<h3 id="4-performance-optimization">4. Performance Optimization<a class="headerlink" href="#4-performance-optimization" title="Permanent link">&para;</a></h3>
+<ul>
+<li>UniversalScorer: Fast inference (one model call); supports <code>score_fast()</code> for single-user real-time serving</li>
+<li>IndependentScorer: Use <code>set_parallel_inference()</code> for speed; supports <code>score_fast()</code></li>
+<li>MulticlassScorer: Fastest (single prediction); supports <code>score_fast()</code></li>
+<li>MultioutputScorer: Moderate (one prediction, multiple outputs); supports <code>score_fast()</code></li>
+</ul>
+<p>All non-embedding scorers support <code>scorer.score_fast(features_df)</code> for low-latency
+single-user inference. For end-to-end real-time serving (schema validation + ranking),
+use <code>recommender.recommend_online()</code> instead.</p>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-items-dataset-required-for-universal-scorer">Issue: "Items dataset required for Universal scorer"<a class="headerlink" href="#issue-items-dataset-required-for-universal-scorer" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Universal scorer needs item features. Provide <code>items_ds</code> or switch to Independent scorer.</p>
+<h3 id="issue-expected-one-row-per-user">Issue: "Expected one row per user"<a class="headerlink" href="#issue-expected-one-row-per-user" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Multiclass and Multioutput scorers require one row per user. Aggregate your data or use Universal/Independent scorer.</p>
+<h3 id="issue-independent-scorer-is-slow">Issue: Independent scorer is slow<a class="headerlink" href="#issue-independent-scorer-is-slow" title="Permanent link">&para;</a></h3>
+<p><strong>Solution</strong>: Enable parallel inference:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">scorer</span><span class="o">.</span><span class="n">set_parallel_inference</span><span class="p">(</span><span class="n">parallel_inference_status</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</code></pre></div></p>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../estimators/">Estimator Guide</a></strong> - Choose the right estimator for your scorer</li>
+<li><strong><a href="../architecture/">Architecture Overview</a></strong> - Understand how scorers fit in the system</li>
+<li><strong><a href="../training/">Training Guide</a></strong> - Train your scorer</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
