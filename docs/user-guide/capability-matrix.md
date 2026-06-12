@@ -46,6 +46,19 @@ Models fall into three **training / scoring planes**. Each plane uses different 
 
 ---
 
+## Estimator config knobs (tabular)
+
+These `estimator_config` keys apply to the sklearn-API tabular estimators (XGBoost / LightGBM / sklearn wrappers, single- and multi-target). All are introspectable via `capability_matrix()` so external callers (e.g. the agent) stay in lockstep.
+
+| Config path | Values | Applies to | `capability_matrix()` key |
+|---|---|---|---|
+| `weights.sample_weight` | `'balanced'` (class-balanced at fit), a callable `fn(y)->weights`, or an explicit array (default: uniform) | All sklearn-API estimators, all scorers (XGB/LightGBM/sklearn; single- & multi-target). For early stopping, `'balanced'`/callable also weight the eval set; explicit arrays are train-only. | `weights_config_keys` |
+| `weights.fit_params` | dict of static kwargs forwarded to the wrapped `fit` (`feature_weights`, `base_margin`, custom objective, `callbacks`, …) | All sklearn-API estimators | `weights_config_keys` |
+| `weights.action_weight`, `weights.item_sample_weights` | recsys item/action weighting (composes multiplicatively with `sample_weight`) | `WeightedXGBClassifierEstimator` path | `weights_config_keys` |
+| `multioutput_strategy` | `'per_label'` (default; N independent boosters) or `'joint'` (one joint XGBoost booster) | `scorer_type="multioutput"` only. `'joint'` is **XGBoost-only** and **non-tuned-only** (no HPO wrapper); pair with `xgboost.multi_strategy='multi_output_tree'` for cross-label learning (CPU-only) or `'one_output_per_tree'` (GPU; per-label-equivalent). | `multioutput_strategy_types` |
+
+---
+
 ## `recommend()` vs `recommend_online()`
 
 | Recommender | `recommend()` | `recommend_online()` | Notes |

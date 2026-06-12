@@ -1306,6 +1306,9 @@ def test_capability_matrix_has_expected_keys():
         "target_type_metric_compat",
         "independent_target_compat",
         "scorer_supports_observed_conditioning",
+        # Fit-time passthrough + joint multi-output (feat/joint-xgb branch).
+        "weights_config_keys",
+        "multioutput_strategy_types",
     }
     # The flat enum tuples carry an immutable contract for callers; the
     # nested mappings (scorer_config_keys, target_type_metric_compat,
@@ -1324,6 +1327,8 @@ def test_capability_matrix_has_expected_keys():
         "metric_types",
         "target_types",
         "scorer_supports_observed_conditioning",
+        "weights_config_keys",
+        "multioutput_strategy_types",
     }
     for key in tuple_keys:
         assert isinstance(cm[key], tuple), f"{key} should be a tuple"
@@ -1510,3 +1515,79 @@ def test_create_estimator_rejects_multiple_tabular_keys(estimator_config):
     """Specifying more than one tabular model key raises ValueError."""
     with pytest.raises(ValueError, match="Specify only one tabular model key"):
         create_estimator(estimator_config)
+
+
+# --- P1/P2: joint multi-output routing + capability keys ---
+
+from skrec.estimator.classification.joint_xgb_multioutput import (  # noqa: E402
+    JointXGBMultiOutputClassifierEstimator,
+)
+from skrec.estimator.regression.joint_xgb_multioutput import (  # noqa: E402
+    JointXGBMultiOutputRegressorEstimator,
+)
+from skrec.orchestrator.factory import capability_matrix  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "ml_task, strategy, expected_type",
+    [
+        ("classification", "per_label", MultiOutputClassifierEstimator),
+        ("classification", "joint", JointXGBMultiOutputClassifierEstimator),
+        ("classification", None, MultiOutputClassifierEstimator),  # default = per_label
+        ("regression", "per_label", MultiOutputRegressorEstimator),
+        ("regression", "joint", JointXGBMultiOutputRegressorEstimator),
+        ("regression", None, MultiOutputRegressorEstimator),
+    ],
+)
+def test_multioutput_strategy_routing(ml_task, strategy, expected_type):
+    config = {"ml_task": ml_task, "xgboost": {"n_estimators": 5}}
+    if strategy is not None:
+        config["multioutput_strategy"] = strategy
+    est = create_estimator(config, scorer_type="multioutput")
+    assert isinstance(est, expected_type)
+
+
+def test_joint_strategy_threads_weights_and_multi_strategy():
+    est = create_estimator(
+        {
+            "ml_task": "classification",
+            "xgboost": {"n_estimators": 5, "multi_strategy": "multi_output_tree"},
+            "multioutput_strategy": "joint",
+            "weights": {"sample_weight": "balanced"},
+        },
+        scorer_type="multioutput",
+    )
+    assert isinstance(est, JointXGBMultiOutputClassifierEstimator)
+    assert est._sample_weight == "balanced"
+
+
+def test_joint_strategy_rejects_lightgbm():
+    with pytest.raises(ValueError, match="XGBoost-only"):
+        create_estimator(
+            {"ml_task": "classification", "lightgbm": {"n_estimators": 5}, "multioutput_strategy": "joint"},
+            scorer_type="multioutput",
+        )
+
+
+def test_joint_strategy_rejects_tuned_mode():
+    with pytest.raises(ValueError, match="not supported in tuned"):
+        create_estimator(
+            {
+                "ml_task": "classification",
+                "xgboost": {},
+                "multioutput_strategy": "joint",
+                "hpo": {"hpo_method": "grid_search_cv", "param_space": {}, "optimizer_params": {}},
+            },
+            scorer_type="multioutput",
+        )
+
+
+def test_capability_matrix_publishes_weights_and_multioutput_keys():
+    cm = capability_matrix()
+    assert set(cm["weights_config_keys"]) == {
+        "action_weight",
+        "item_sample_weights",
+        "sample_weight",
+        "fit_params",
+    }
+    assert cm["multioutput_strategy_types"] == ("per_label", "joint")
