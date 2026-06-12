@@ -5,11 +5,12 @@ from pandas import DataFrame, Series
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy, SklearnFitParamsMixin
 from skrec.estimator.base_estimator import BaseEstimator
 from skrec.estimator.datatypes import HPOType
 
 
-class TunedEstimator(BaseEstimator):
+class TunedEstimator(SklearnFitParamsMixin, BaseEstimator):
     """Wraps a sklearn ``GridSearchCV`` or ``RandomizedSearchCV`` as a ``BaseEstimator``.
 
     Intended to be used as a mixin alongside a concrete estimator subclass::
@@ -24,7 +25,16 @@ class TunedEstimator(BaseEstimator):
     is sufficient for inference (no estimator-specific predict optimisations).
     """
 
-    def __init__(self, estimator_class, hpo_method: HPOType, param_space: dict, optimizer_params: dict):
+    def __init__(
+        self,
+        estimator_class,
+        hpo_method: HPOType,
+        param_space: dict,
+        optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
+        self._init_fit_params(fit_params, sample_weight)
         # Both sklearn MultiOutputClassifier and MultiOutputRegressor require
         # the base ``estimator=`` kwarg at construction; their tuned-mode
         # ``param_space`` carries the base estimator under that key, which
@@ -55,8 +65,14 @@ class TunedEstimator(BaseEstimator):
         y_valid: Optional[Union[NDArray, Series]] = None,
     ) -> None:
         """Fit the wrapped CV object. Validation data is not forwarded because
-        ``GridSearchCV`` / ``RandomizedSearchCV`` perform their own cross-validation."""
-        self._model.fit(X, y)
+        ``GridSearchCV`` / ``RandomizedSearchCV`` perform their own cross-validation.
+
+        Any configured ``fit_params`` / ``sample_weight`` are resolved against the
+        full ``y`` and passed to ``GridSearchCV.fit``; sklearn subsets per-row
+        params (e.g. ``sample_weight``) per CV fold automatically. (Confirmed on
+        sklearn 1.8 with metadata routing off — default forwarding to the inner
+        estimator's ``fit``.) No eval-set: CV owns the splits."""
+        self._model.fit(X, y, **self._resolve_fit_kwargs(X, y))
 
     def predict_proba(self, X: DataFrame) -> NDArray:
         """Return class probabilities from the best estimator found by CV.

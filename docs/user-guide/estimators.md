@@ -24,8 +24,29 @@ For continuous outcomes (revenue, time-spent, rating):
 
 ### Multi-output Estimators
 
-- **`MultiOutputClassifierEstimator`** - Wrapper for multi-output classification (multiple **binary numeric** targets per user — values strictly in `{0, 1}`). Pairs with `MultioutputScorer` in classifier mode. The scorer-level `MultioutputScorer._validate_targets` (early, before the wrapper sees the data) enforces the strict `{0, 1}` value contract — strings and signed-integer encodings like `{-1, 1}` are rejected there. Bool columns ARE accepted (Python `True == 1` / `False == 0` in set membership, so `{True, False}` collapses to `{0, 1}`). The wrapper's own `_validate_binary_targets` (defense-in-depth pre-flight scan, so the wrapper is safe to use standalone) enforces the per-target cardinality contract — exactly two unique values per column, neither single-class nor 3+-class. See [scorer migration paths](scorers.md#migration-paths-for-multi-class-targets).
-- **`MultiOutputRegressorEstimator`** - Wrapper for multi-output regression (multiple continuous targets per user). Pairs with `MultioutputScorer` in regressor mode for predictions like per-user revenue, engagement minutes, click counts, etc.
+- **`MultiOutputClassifierEstimator`** - Wrapper for multi-output classification (multiple **binary numeric** targets per user — values strictly in `{0, 1}`). Pairs with `MultioutputScorer` in classifier mode. Fits **one separate booster per target** (`sklearn.MultiOutputClassifier`). The scorer-level `MultioutputScorer._validate_targets` (early, before the wrapper sees the data) enforces the strict `{0, 1}` value contract — strings and signed-integer encodings like `{-1, 1}` are rejected there. Bool columns ARE accepted (Python `True == 1` / `False == 0` in set membership, so `{True, False}` collapses to `{0, 1}`). The wrapper's own `_validate_binary_targets` (defense-in-depth pre-flight scan, so the wrapper is safe to use standalone) enforces the per-target cardinality contract — exactly two unique values per column, neither single-class nor 3+-class. See [scorer migration paths](scorers.md#migration-paths-for-multi-class-targets).
+- **`MultiOutputRegressorEstimator`** - Wrapper for multi-output regression (multiple continuous targets per user). Fits one separate booster per target. Pairs with `MultioutputScorer` in regressor mode for predictions like per-user revenue, engagement minutes, click counts, etc.
+- **`JointXGBMultiOutputClassifierEstimator`** - A **single joint XGBoost booster** over all N binary labels (vs N independent boosters above). Pairs with `MultioutputScorer` classifier mode; reshapes XGBoost's `(n, N)` `predict_proba` into the per-label list the scorer expects. `multi_strategy='one_output_per_tree'` (default, GPU-capable) does **not** share structure across labels; `multi_strategy='multi_output_tree'` (vector leaf, CPU-only) does — that's the only mode with genuine cross-label learning. See [Per-label vs joint estimators](scorers.md#per-label-vs-joint-estimators).
+- **`JointXGBMultiOutputRegressorEstimator`** - The regressor analogue: a single joint XGBoost booster over N continuous targets, for `MultioutputScorer` regressor mode (no reshape needed — `predict` is already `(n, N)`).
+- **Note on `multi_strategy`:** "joint" means one model artifact; it does **not** automatically mean cross-target learning. Only `multi_output_tree` (or sklearn tree ensembles below) shares tree structure across targets. None of these condition one target on another's *value* — for that, use the conditional estimators under `MixedTypeMultiTargetScorer`.
+- **sklearn tree ensembles (`RandomForestClassifier`, `ExtraTreesClassifier`, regressors)** are joint multi-output **for free**: they natively accept a 2-D target matrix, grow multi-output trees that share structure across all targets **by default**, and their multilabel `predict_proba` already returns the list-of-blocks layout `MultioutputScorer` expects. Use them through the plain `SklearnUniversalClassifierEstimator` / `SklearnUniversalRegressorEstimator` (2-D `y`) — no dedicated estimator needed.
+
+### Class weighting & fit-time parameters
+
+Every sklearn-API estimator (XGBoost / LightGBM / sklearn wrappers, single- and multi-target) takes two optional constructor args (and matching `set_sample_weight` / `set_fit_params` setters):
+
+- **`sample_weight`** — a row-weight strategy: `'balanced'` (computes `compute_sample_weight('balanced', y)` at fit time — the production class-balancing recipe), a callable `fn(y) -> weights`, or an explicit per-row array. Defaults to uniform.
+- **`fit_params`** — a dict of static kwargs forwarded verbatim to the wrapped model's `fit` (`feature_weights`, `base_margin`, a custom objective, `callbacks`, …).
+
+```python
+# class-balanced multiclass (firmographics-industry recipe)
+estimator = XGBClassifierEstimator(
+    {"n_estimators": 426, "objective": "multi:softprob"},
+    sample_weight="balanced",
+)
+```
+
+This is the general replacement for ad-hoc weighting; the row weights are resolved against `y` at fit time, so they stay aligned through the scorer pipeline. (`WeightedXGBClassifierEstimator`'s item/action weighting still exists and composes multiplicatively with a `'balanced'` strategy.)
 
 ### Embedding Estimators
 

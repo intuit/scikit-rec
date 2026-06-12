@@ -5,6 +5,9 @@ import pandas as pd
 from lightgbm import LGBMClassifier, LGBMRegressor
 
 from skrec.estimator.base_estimator import BaseEstimator
+from skrec.estimator.classification.joint_xgb_multioutput import (
+    JointXGBMultiOutputClassifierEstimator,
+)
 from skrec.estimator.classification.lightgbm_classifier import (
     LightGBMClassifierEstimator,
     TunedLightGBMClassifierEstimator,
@@ -21,6 +24,9 @@ from skrec.estimator.classification.xgb_classifier import (
 )
 from skrec.estimator.datatypes import HPOType
 from skrec.estimator.embedding.base_embedding_estimator import BaseEmbeddingEstimator
+from skrec.estimator.regression.joint_xgb_multioutput import (
+    JointXGBMultiOutputRegressorEstimator,
+)
 from skrec.estimator.regression.lightgbm_regressor import (
     LightGBMRegressorEstimator,
     TunedLightGBMRegressorEstimator,
@@ -195,6 +201,13 @@ class HPOConfig(TypedDict, total=False):
 class WeightsConfig(TypedDict, total=False):
     action_weight: float
     item_sample_weights: Optional[Dict[Any, float]]
+    # Generic fit-time passthrough (sklearn-API estimators only). `sample_weight`
+    # is a row-weight strategy: 'balanced', a callable fn(y)->weights, or an
+    # explicit array (None = uniform). `fit_params` is a dict of static kwargs
+    # forwarded verbatim to the wrapped model's fit (feature_weights, callbacks,
+    # base_margin, custom objective, ...). See skrec.estimator._fit_params_mixin.
+    sample_weight: Any
+    fit_params: Dict[str, Any]
 
 
 class EmbeddingConfig(TypedDict, total=False):
@@ -215,6 +228,13 @@ class EstimatorConfig(TypedDict, total=False):
     lightgbm: LGBMConfig
     hpo: HPOConfig
     weights: WeightsConfig
+    # --- multioutput estimator structure (scorer_type="multioutput" only) ---
+    # "per_label" (default): N independent boosters via MultiOutputClassifier/
+    # Regressor. "joint": a single joint XGBoost booster
+    # (JointXGBMultiOutput{Classifier,Regressor}Estimator). XGBoost-only; for the
+    # joint case set ``xgboost.multi_strategy`` to "one_output_per_tree"
+    # (GPU; per-label-equivalent) or "multi_output_tree" (cross-label; CPU-only).
+    multioutput_strategy: str
     # --- deep tabular (tabular input, PyTorch training; requires scikit-rec[torch]) ---
     deepfm: DeepFMConfig
     # --- embedding ---
@@ -844,6 +864,12 @@ def create_estimator(
     deepfm_config = estimator_config.get("deepfm")
     hpo_config = estimator_config.get("hpo", {})
     weights_config = estimator_config.get("weights", {})
+    # Generic fit-time passthrough (sklearn-API estimators), resolved per-row at
+    # fit time inside the estimator. Read once so BOTH the tuned and non-tuned
+    # paths forward it — under HPO, GridSearchCV/RandomizedSearchCV route
+    # sample_weight to the inner estimator's fit (and subset it per CV fold).
+    sample_weight = weights_config.get("sample_weight")
+    fit_params = weights_config.get("fit_params")
 
     tabular_model_keys = [k for k in ("xgboost", "lightgbm", "deepfm") if estimator_config.get(k) is not None]
     if len(tabular_model_keys) > 1:
@@ -896,6 +922,13 @@ def create_estimator(
         param_space = hpo_config["param_space"]
         optimizer_params = hpo_config["optimizer_params"]
 
+        if estimator_config.get("multioutput_strategy") == "joint":
+            raise ValueError(
+                "multioutput_strategy='joint' is not supported in tuned/HPO mode — the joint "
+                "XGBoost estimators have no GridSearchCV/RandomizedSearchCV wrapper. Use non-tuned "
+                "mode for a joint booster, or multioutput_strategy='per_label' (default) with HPO."
+            )
+
         if ml_task == "classification":
             if scorer_type == "multioutput":
                 base_cls = LGBMClassifier if use_lightgbm else XGBClassifier
@@ -905,6 +938,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             elif use_lightgbm:
                 logger.info("Creating TunedLightGBMClassifierEstimator")
@@ -912,6 +947,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating TunedXGBClassifierEstimator")
@@ -919,6 +956,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
         else:  # regression
             if scorer_type == "multioutput":
@@ -929,6 +968,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             elif use_lightgbm:
                 logger.info("Creating TunedLightGBMRegressorEstimator")
@@ -936,6 +977,8 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating TunedXGBRegressorEstimator")
@@ -943,40 +986,77 @@ def create_estimator(
                     hpo_method=hpo_method,
                     param_space=param_space,
                     optimizer_params=optimizer_params,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
     else:
+        # Multioutput estimator structure: "per_label" (N independent boosters)
+        # or "joint" (one joint XGBoost booster). XGBoost-only. (sample_weight /
+        # fit_params are read above so both tuned and non-tuned paths forward them.)
+        multioutput_strategy = estimator_config.get("multioutput_strategy", "per_label")
+
         if ml_task == "classification":
             action_weight = weights_config.get("action_weight", 1)
             item_sample_weights = weights_config.get("item_sample_weights")
 
-            if scorer_type == "multioutput":
+            if scorer_type == "multioutput" and multioutput_strategy == "joint":
+                if use_lightgbm:
+                    raise ValueError(
+                        "multioutput_strategy='joint' is XGBoost-only (a single joint booster); "
+                        "LightGBM has no native joint multi-output. Use multioutput_strategy='per_label', "
+                        "or drop the lightgbm config to use XGBoost."
+                    )
+                logger.info("Creating JointXGBMultiOutputClassifierEstimator (single joint booster)")
+                estimator = JointXGBMultiOutputClassifierEstimator(
+                    xgb_config, fit_params=fit_params, sample_weight=sample_weight
+                )
+            elif scorer_type == "multioutput":
                 base_cls = LGBMClassifier if use_lightgbm else XGBClassifier
                 logger.info(f"Creating MultiOutputClassifierEstimator with {base_cls.__name__}")
-                estimator = MultiOutputClassifierEstimator(base_cls, model_params)
+                estimator = MultiOutputClassifierEstimator(
+                    base_cls, model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif use_lightgbm:
                 logger.info("Creating LightGBMClassifierEstimator")
-                estimator = LightGBMClassifierEstimator(model_params)
+                estimator = LightGBMClassifierEstimator(
+                    model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif action_weight != 1 or item_sample_weights is not None:
                 logger.info("Creating WeightedXGBClassifierEstimator")
                 estimator = WeightedXGBClassifierEstimator(
                     params=xgb_config,
                     action_weight=action_weight,
                     item_sample_weights=item_sample_weights,
+                    fit_params=fit_params,
+                    sample_weight=sample_weight,
                 )
             else:
                 logger.info("Creating XGBClassifierEstimator")
-                estimator = XGBClassifierEstimator(xgb_config)
+                estimator = XGBClassifierEstimator(xgb_config, fit_params=fit_params, sample_weight=sample_weight)
         else:  # regression
-            if scorer_type == "multioutput":
+            if scorer_type == "multioutput" and multioutput_strategy == "joint":
+                if use_lightgbm:
+                    raise ValueError(
+                        "multioutput_strategy='joint' is XGBoost-only (a single joint booster); "
+                        "LightGBM has no native joint multi-output. Use multioutput_strategy='per_label', "
+                        "or drop the lightgbm config to use XGBoost."
+                    )
+                logger.info("Creating JointXGBMultiOutputRegressorEstimator (single joint booster)")
+                estimator = JointXGBMultiOutputRegressorEstimator(
+                    xgb_config, fit_params=fit_params, sample_weight=sample_weight
+                )
+            elif scorer_type == "multioutput":
                 base_cls = LGBMRegressor if use_lightgbm else XGBRegressor
                 logger.info(f"Creating MultiOutputRegressorEstimator with {base_cls.__name__}")
-                estimator = MultiOutputRegressorEstimator(base_cls, model_params)
+                estimator = MultiOutputRegressorEstimator(
+                    base_cls, model_params, fit_params=fit_params, sample_weight=sample_weight
+                )
             elif use_lightgbm:
                 logger.info("Creating LightGBMRegressorEstimator")
-                estimator = LightGBMRegressorEstimator(model_params)
+                estimator = LightGBMRegressorEstimator(model_params, fit_params=fit_params, sample_weight=sample_weight)
             else:
                 logger.info("Creating XGBRegressorEstimator")
-                estimator = XGBRegressorEstimator(xgb_config)
+                estimator = XGBRegressorEstimator(xgb_config, fit_params=fit_params, sample_weight=sample_weight)
 
     return estimator
 
@@ -1294,6 +1374,14 @@ def capability_matrix() -> Dict[str, Union[Tuple[str, ...], Dict[str, Tuple[str,
         "inference_method_types": tuple(_INFERENCE_METHOD_MAP.keys()),
         "retriever_types": tuple(_RETRIEVER_MAP.keys()),
         "scorer_config_keys": {k: tuple(sorted(v)) for k, v in _SCORER_CONFIG_ALLOWED.items()},
+        # Keys accepted under estimator_config["weights"] (sklearn-API estimators):
+        # item/action weighting plus the generic fit-time passthrough
+        # (sample_weight strategy + static fit_params). Sourced from WeightsConfig
+        # so it can't drift from the TypedDict.
+        "weights_config_keys": tuple(WeightsConfig.__annotations__.keys()),
+        # estimator_config["multioutput_strategy"] values (scorer_type="multioutput"):
+        # "per_label" = N independent boosters; "joint" = one joint XGBoost booster.
+        "multioutput_strategy_types": ("per_label", "joint"),
         "evaluator_types": tuple(e.value for e in RecommenderEvaluatorType),
         "metric_types": tuple(m.value for m in RecommenderMetricType),
         # Multi-target capabilities — read by scikit-rec-agent for pre-flight

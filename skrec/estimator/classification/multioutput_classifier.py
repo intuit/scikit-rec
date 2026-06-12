@@ -6,6 +6,7 @@ from pandas import DataFrame
 from sklearn.base import ClassifierMixin
 from sklearn.multioutput import MultiOutputClassifier
 
+from skrec.estimator._fit_params_mixin import SampleWeightStrategy
 from skrec.estimator.classification.sklearn_universal_classifier import (
     SklearnUniversalClassifierEstimator,
     TunedSklearnUniversalClassifierEstimator,
@@ -33,11 +34,19 @@ class MultiOutputClassifierEstimator(SklearnUniversalClassifierEstimator):
     on data the eval pipeline can't make sense of.
     """
 
-    def __init__(self, base_estimator: Type[ClassifierMixin], params: Mapping):
+    def __init__(
+        self,
+        base_estimator: Type[ClassifierMixin],
+        params: Mapping,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
+    ):
         model = base_estimator(**params)
         multioutput_params = {"estimator": model}
 
-        super().__init__(MultiOutputClassifier, multioutput_params)
+        # sklearn's MultiOutputClassifier.fit forwards sample_weight to every
+        # per-label sub-estimator, so the generic passthrough works here too.
+        super().__init__(MultiOutputClassifier, multioutput_params, fit_params=fit_params, sample_weight=sample_weight)
 
     @staticmethod
     def _validate_binary_targets(y: object) -> None:
@@ -185,6 +194,8 @@ class TunedMultiOutputClassifierEstimator(TunedSklearnUniversalClassifierEstimat
         hpo_method: HPOType,
         param_space: dict,
         optimizer_params: dict,
+        fit_params: Optional[dict] = None,
+        sample_weight: SampleWeightStrategy = None,
     ):
         model = base_estimator()
         param_space["estimator"] = model
@@ -193,4 +204,11 @@ class TunedMultiOutputClassifierEstimator(TunedSklearnUniversalClassifierEstimat
         # https://stackoverflow.com/questions/69962287/how-to-use-multioutputclassifier-with-randomizedsearchcv-for-hyperparameter
         updated_param_space = {f"estimator__{k}" if k in model.get_params() else k: v for k, v in param_space.items()}
 
-        super().__init__(MultiOutputClassifier, hpo_method, updated_param_space, optimizer_params)
+        super().__init__(
+            MultiOutputClassifier,
+            hpo_method,
+            updated_param_space,
+            optimizer_params,
+            fit_params=fit_params,
+            sample_weight=sample_weight,
+        )
