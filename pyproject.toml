@@ -38,7 +38,7 @@ aws = [
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "ruff>=0.4",
+    "ruff==0.16.0",
     "mypy>=1.0",
     "moto[s3]>=4.0",
     "pre-commit>=3.0",
@@ -58,6 +58,7 @@ include = ["skrec*"]
 [tool.ruff]
 line-length = 120
 target-version = "py310"
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]  # pycodestyle errors, pyflakes, isort
