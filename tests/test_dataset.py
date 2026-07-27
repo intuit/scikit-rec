@@ -320,5 +320,159 @@ class TestDataset(unittest.TestCase):
             assert data_df["ITEM_ID"].tolist() == ["10", "20", "30"]
             assert data_df["OUTCOME"].dtype == np.float32
 
+    def _wide_schema(self, tempdir):
+        """A narrow client schema (a, b) over a wide frame (a, b, extra_0..extra_99)."""
+        schema = {
+            "columns": [
+                {"name": "a", "type": "int"},
+                {"name": "b", "type": "float"},
+            ]
+        }
+        schema_filename = os.path.join(tempdir, "narrow_schema.yaml")
+        yaml.dump(schema, open(schema_filename, "w"))
+        return DatasetSchema.create(schema_filename)
+
+    def _wide_frame(self):
+        cols = {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0]}
+        for i in range(100):
+            cols[f"extra_{i}"] = [i, i + 1, i + 2]
+        return pd.DataFrame(cols)
+
+    def test_projection_matches_unprojected_apply_local_parquet(self):
+        """Projected fetch_data() == old full-read + client_schema.apply() (parquet)."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "wide.parquet")
+            wide = self._wide_frame()
+            wide.to_parquet(filename)
+            schema = self._wide_schema(tempdir)
+
+            dataset = Dataset(schema, schema, data_location=filename)
+            projected = dataset.fetch_data()
+
+            # Reference: the pre-optimization behavior — read every column, then apply().
+            expected = schema.apply(pd.read_parquet(filename))
+            pd.testing.assert_frame_equal(projected, expected)
+
+    def test_projection_matches_unprojected_apply_local_csv(self):
+        """Projected fetch_data() == old full-read + client_schema.apply() (csv)."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "wide.csv")
+            wide = self._wide_frame()
+            wide.to_csv(filename, index=False)
+            schema = self._wide_schema(tempdir)
+
+            dataset = Dataset(schema, schema, data_location=filename)
+            projected = dataset.fetch_data()
+
+            expected = schema.apply(pd.read_csv(filename))
+            pd.testing.assert_frame_equal(projected, expected)
+
+    def test_projection_only_reads_declared_columns_local_parquet(self):
+        """The undeclared columns are never materialized off disk."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "wide.parquet")
+            self._wide_frame().to_parquet(filename)
+            schema = self._wide_schema(tempdir)
+
+            reader = LocalDataReader(file_extension=".parquet", data_location=filename)
+            projection = [c for c in schema.source_columns() if c in reader.available_columns()]
+            self.assertEqual(projection, ["a", "b"])
+
+            read_df = reader.read(columns=projection)
+            self.assertEqual(list(read_df.columns), ["a", "b"])
+
+    def test_missing_declared_column_raises_runtime_error(self):
+        """A declared-but-absent column still raises the same RuntimeError as before.
+
+        The projection is intersected against available columns, so the missing
+        column simply isn't read — apply() then rejects it with its usual message,
+        NOT a reader-level pyarrow ValueError.
+        """
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "test.parquet")
+            pd.DataFrame({"a": [1, 2, 3]}).to_parquet(filename)
+            schema = {
+                "columns": [
+                    {"name": "a", "type": "int"},
+                    {"name": "missing", "type": "int"},
+                ]
+            }
+            schema_filename = os.path.join(tempdir, "schema.yaml")
+            yaml.dump(schema, open(schema_filename, "w"))
+            dataset_schema = DatasetSchema.create(schema_filename)
+
+            dataset = Dataset(dataset_schema, dataset_schema, data_location=filename)
+            with self.assertRaises(RuntimeError) as context:
+                dataset.fetch_data()
+            self.assertIn("missing", str(context.exception))
+
+    def test_source_columns_uses_raw_names_not_expanded(self):
+        """source_columns() returns raw declared names, not vocab/hash-expanded ones."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            schema = {
+                "columns": [
+                    {"name": "USER_ID", "type": "str"},
+                    {"name": "cat", "type": "str", "vocab": ["x", "y"]},
+                    {"name": "h", "type": "str", "hash_buckets": 4},
+                ]
+            }
+            schema_filename = os.path.join(tempdir, "schema.yaml")
+            yaml.dump(schema, open(schema_filename, "w"))
+            dataset_schema = DatasetSchema.create(schema_filename)
+
+            self.assertEqual(dataset_schema.source_columns(), ["USER_ID", "cat", "h"])
+            # self.columns is post-expansion and must NOT be used for projection
+            self.assertIn("cat_unknown", dataset_schema.columns)
+
+    def test_available_columns_local_parquet_and_csv(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            pq_file = os.path.join(tempdir, "t.parquet")
+            csv_file = os.path.join(tempdir, "t.csv")
+            frame = pd.DataFrame({"a": [1], "b": [2], "c": [3]})
+            frame.to_parquet(pq_file)
+            frame.to_csv(csv_file, index=False)
+
+            pq_reader = LocalDataReader(file_extension=".parquet", data_location=pq_file)
+            self.assertEqual(sorted(pq_reader.available_columns()), ["a", "b", "c"])
+
+            csv_reader = LocalDataReader(file_extension=".csv", data_location=csv_file)
+            self.assertEqual(sorted(csv_reader.available_columns()), ["a", "b", "c"])
+
+    def test_available_columns_local_partitioned_dir(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            frame = pd.DataFrame({"a": [1], "b": [2], "c": [3]})
+            frame.iloc[:1].to_parquet(os.path.join(tempdir, "1.parquet"), index=False)
+            frame.iloc[:1].to_parquet(os.path.join(tempdir, "2.parquet"), index=False)
+            reader = LocalDataReader(file_extension="", data_location=tempdir)
+            self.assertEqual(sorted(reader.available_columns()), ["a", "b", "c"])
+
+    def test_projection_s3_parquet(self):
+        """S3 parquet fetch_data projects to declared columns and matches apply()."""
+        wide = self._wide_frame()
+        s3 = boto3.resource("s3", region_name="us-west-2")
+        buf = BytesIO()
+        wide.to_parquet(buf, index=False)
+        buf.seek(0)
+        s3.Object("testbucket", "wide/wide.parquet").put(Body=buf.getvalue())
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            schema = self._wide_schema(tempdir)
+            dataset = Dataset(schema, schema, data_location="s3://testbucket/wide/wide.parquet")
+            projected = dataset.fetch_data()
+            expected = schema.apply(wide.copy())
+            pd.testing.assert_frame_equal(projected, expected)
+
+    def test_available_columns_s3_parquet(self):
+        wide = self._wide_frame()
+        s3 = boto3.resource("s3", region_name="us-west-2")
+        buf = BytesIO()
+        wide.to_parquet(buf, index=False)
+        buf.seek(0)
+        s3.Object("testbucket", "wide2/wide.parquet").put(Body=buf.getvalue())
+
+        reader = S3DataReader(file_extension=".parquet", data_location="s3://testbucket/wide2/wide.parquet")
+        self.assertEqual(reader.available_columns()[:2], ["a", "b"])
+        self.assertIn("extra_99", reader.available_columns())
+
     def tearDown(self):
         shutil.rmtree(self.temp_folder)

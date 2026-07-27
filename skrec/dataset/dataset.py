@@ -79,7 +79,21 @@ class Dataset:
             Validated and type-coerced pandas DataFrame.
         """
         reader = self._get_reader(data_partition)
-        data = reader.read()
+
+        # Push a column projection down into the read when a client schema is
+        # present: only the schema's declared source columns are materialized,
+        # instead of reading every column and dropping the undeclared ones in
+        # client_schema.apply(). This is a pure I/O/memory optimization — the
+        # output DataFrame is identical, since apply() narrows to schema columns
+        # anyway. The projection is intersected against the columns that actually
+        # exist so a genuinely-absent declared column is left for apply() to
+        # reject with its usual RuntimeError (rather than a reader-level error).
+        projection: Optional[List[str]] = None
+        if self.client_schema is not None:
+            available = set(reader.available_columns())
+            projection = [c for c in self.client_schema.source_columns() if c in available]
+
+        data = reader.read(columns=projection)
 
         if self.client_schema is None:
             # converts the data types to standard data types.

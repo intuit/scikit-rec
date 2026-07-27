@@ -70,6 +70,17 @@ class DatasetSchema:
             if dtype not in ColumnDataType.dtype_map:
                 raise RuntimeError(f"Invalid type: {dtype} for column: {name}")
 
+    def source_columns(self) -> List[str]:
+        """Return the raw (source) column names declared in the schema.
+
+        These are the names as they appear in the underlying data file, before
+        any vocab/hash-bucket expansion. ``self.columns`` holds the post-encoding
+        names (e.g. ``<name>_<i>``), which do not exist in the source parquet/CSV
+        and therefore cannot be used to project the read. Use this instead when
+        pushing a ``columns=`` projection down into the reader.
+        """
+        return [col_info["name"] for col_info in self.raw_schema.get("columns", [])]
+
     def remove_column(self, column_name: str) -> None:
         """Remove a column declaration from the schema in place.
 
