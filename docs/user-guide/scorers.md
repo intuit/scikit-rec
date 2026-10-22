@@ -72,6 +72,19 @@ scorer = IndependentScorer(estimator)
 
 **When to use**: When you don't have item features, or each item needs a specialized model.
 
+**Batch training** (data larger than memory): pass a batch-capable estimator such as `BatchXGBClassifierEstimator`, either one estimator (copied per item) or a dict with one per item. Don't mix batch and in-memory estimators in one dict. `items_ds` is required, to supply the item list. Each item trains from only its own rows:
+
+- If the interactions are partitioned into `ITEM_ID=<value>/` directories (e.g. Spark `partitionBy("ITEM_ID")`), each item reads its own files directly, with no copy.
+- Otherwise one pass over the partitions writes each item's rows to temporary parquet files, a local-disk copy of the interactions. Choose where with `IndependentScorer(estimator, batch_chunk_dir="/big/volume")` or `scorer_config: {batch_chunk_dir: ...}`.
+
+```python
+from skrec.estimator.classification.xgb_classifier import BatchXGBClassifierEstimator
+
+scorer = IndependentScorer(BatchXGBClassifierEstimator({"objective": "binary:logistic"}))
+```
+
+See [Batch (partitioned) training](capability-matrix.md#batch-partitioned-training) for details.
+
 ---
 
 ## 3. MulticlassScorer

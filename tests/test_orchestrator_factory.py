@@ -152,6 +152,8 @@ def mock_estimator():
     mock = MagicMock(spec=BaseClassifier)
     # Make the mock appear as an instance of BaseClassifier
     mock.__class__ = BaseClassifier
+    # In-memory estimator, like a real BaseClassifier (a bare MagicMock return is truthy)
+    mock.support_batch_training.return_value = False
     return mock
 
 

@@ -236,6 +236,10 @@ estimator = XGBClassifierEstimator({"random_state": 42, ...})
 - Use fewer estimator iterations
 - Enable GPU training if available
 
+### Issue: Data does not fit in memory
+
+**Solution**: Use batch training with a partitioned dataset and a batch-capable estimator such as `BatchXGBClassifierEstimator`, with `UniversalScorer` or `IndependentScorer`. See [Batch (partitioned) training](capability-matrix.md#batch-partitioned-training) and [Partitioned Datasets](../getting-started/datasets.md#partitioned-datasets).
+
 ### Issue: Poor validation performance
 
 **Solution**:

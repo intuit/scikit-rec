@@ -7,6 +7,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 from skrec.dataset.datatypes import DataFileFormat
+from skrec.dataset.partitioning import is_hidden_path
 
 # Design decision: We do not want to add capability to write dataset to local location
 
@@ -67,12 +68,14 @@ class LocalDataReader:
         """
         List all dataset files.
             - If the dataset is a single file, return a list with a single element
-            - If the dataset is a directory, return a list of all data files in the directory
+            - If the dataset is a directory, return a list of all data files in the directory,
+              including subdirectories (e.g. Hive-style ``ITEM_ID=<value>/``), skipping
+              ``_``/``.`` directories as pyarrow does when reading the directory
         """
         if self.file_extension:
             # this is a CSV or Parquet file, not a directory
             return set([self.local_path])
         else:
-            parquet_expression = os.path.join(self.local_path, "*.parquet")
+            parquet_expression = os.path.join(self.local_path, "**", "*.parquet")
             filenames = glob.glob(parquet_expression, recursive=True)
-            return set(filenames)
+            return set(f for f in filenames if not is_hidden_path(f, self.local_path))

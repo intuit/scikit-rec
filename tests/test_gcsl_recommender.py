@@ -299,3 +299,63 @@ def test_recommend_with_retriever(setup_fixture):
     ranked_items = recommender.recommend(interactions, users, top_k=2)
     # Retriever path returns one row per unique user (3), not per interaction row (4).
     assert ranked_items.shape == (3, 2)
+
+
+def test_gcsl_batch_training_keeps_outcome_features(setup_fixture):
+    # Batch training applies the recommender's outcome policy per partition: GCSL keeps
+    # OUTCOME_* as features, and fits its inference method on interactions loaded on demand.
+    from skrec.estimator.classification.xgb_classifier import BatchXGBClassifierEstimator
+
+    estimator = BatchXGBClassifierEstimator({"objective": "binary:logistic", "num_boost_round": 3})
+    recommender = GcslRecommender(UniversalScorer(estimator), MeanScalarization({"OUTCOME_1": 1.0, "OUTCOME_2": 1.0}))
+    recommender.train(
+        setup_fixture["users_dataset"],
+        setup_fixture["items_dataset"],
+        setup_fixture["multioutcome_interactions_dataset"],
+    )
+    assert recommender.outcome_cols == ["OUTCOME_1", "OUTCOME_2"]
+    assert {"OUTCOME_1", "OUTCOME_2"} <= set(estimator._dmatrix_col_names)
+
+    users = setup_fixture["users_dataset"].fetch_data()
+    interactions = setup_fixture["multioutcome_interactions_dataset"].fetch_data().drop(["ITEM_ID", "OUTCOME"], axis=1)
+    assert recommender.recommend(interactions, users, top_k=2).shape == (len(interactions), 2)
+
+
+def test_gcsl_batch_set_inference_method_after_training(setup_fixture):
+    # Batch training doesn't keep the interactions; setting a method later must still fit it
+    from skrec.estimator.classification.xgb_classifier import BatchXGBClassifierEstimator
+
+    estimator = BatchXGBClassifierEstimator({"objective": "binary:logistic", "num_boost_round": 3})
+    recommender = GcslRecommender(UniversalScorer(estimator))
+    recommender.train(
+        setup_fixture["users_dataset"],
+        setup_fixture["items_dataset"],
+        setup_fixture["multioutcome_interactions_dataset"],
+    )
+    method = MeanScalarization({"OUTCOME_1": 1.0, "OUTCOME_2": 1.0})
+    recommender.set_inference_method(method)
+    assert method.outcome_cols_ == ["OUTCOME_1", "OUTCOME_2"]
+
+    users = setup_fixture["users_dataset"].fetch_data()
+    interactions = setup_fixture["multioutcome_interactions_dataset"].fetch_data().drop(["ITEM_ID", "OUTCOME"], axis=1)
+    assert recommender.recommend(interactions, users, top_k=2).shape == (len(interactions), 2)
+
+
+def test_gcsl_batch_model_keeps_training_interactions(setup_fixture):
+    # A batch-trained model must not need the original data location to fit an inference method later
+    import pickle
+
+    from skrec.estimator.classification.xgb_classifier import BatchXGBClassifierEstimator
+
+    estimator = BatchXGBClassifierEstimator({"objective": "binary:logistic", "num_boost_round": 3})
+    recommender = GcslRecommender(UniversalScorer(estimator))
+    recommender.train(
+        setup_fixture["users_dataset"],
+        setup_fixture["items_dataset"],
+        setup_fixture["multioutcome_interactions_dataset"],
+    )
+    recommender._train_interactions_ds = None  # as if the data location is unreachable after loading
+    loaded = pickle.loads(pickle.dumps(recommender))
+    method = MeanScalarization({"OUTCOME_1": 1.0, "OUTCOME_2": 1.0})
+    loaded.set_inference_method(method)
+    assert method.outcome_cols_ == ["OUTCOME_1", "OUTCOME_2"]

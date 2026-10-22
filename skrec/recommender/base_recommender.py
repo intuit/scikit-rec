@@ -91,15 +91,18 @@ class BaseRecommender(ABC):
                 split.  When provided, training will emit per-epoch validation
                 loss and (if configured) apply early stopping.
         """
+        # Batch training streams interactions partition by partition and fetches users itself, so don't load
+        # them here; retrievers and GCSL that need the interactions call _training_interactions_df().
+        batch_training = self.scorer.support_batch_training()
         if users_ds is not None:
-            users_df = users_ds.fetch_data()
+            users_df = None if batch_training else users_ds.fetch_data()
             self.users_schema = users_ds.client_schema
         else:
             users_df = None
             self.users_schema = None
 
         if interactions_ds is not None:
-            interactions_df = interactions_ds.fetch_data()
+            interactions_df = None if batch_training else interactions_ds.fetch_data()
             self.interactions_schema = interactions_ds.client_schema
         else:
             interactions_df = None
@@ -115,18 +118,25 @@ class BaseRecommender(ABC):
         # Store raw fetched DataFrames so subclasses can access them without
         # a second fetch_data() call (e.g. RankingRecommender.train building retrieval index).
         self._train_interactions_df = interactions_df
+        self._train_interactions_ds = interactions_ds
         self._train_items_df = items_df
 
-        valid_users_df = valid_users_ds.fetch_data() if valid_users_ds else None
-        valid_interactions_df = valid_interactions_ds.fetch_data() if valid_interactions_ds else None
+        valid_users_df = valid_users_ds.fetch_data() if valid_users_ds and not batch_training else None
+        valid_interactions_df = (
+            valid_interactions_ds.fetch_data() if valid_interactions_ds and not batch_training else None
+        )
 
         if valid_users_ds is not None and valid_interactions_ds is None:
             logger.warning(
                 "valid_users_ds was provided without valid_interactions_ds — validation data will be ignored."
             )
 
-        if interactions_df is not None:
-            self.outcome_cols = [col for col in interactions_df.columns if col.startswith(OUTCOME_PREFIX)]
+        if interactions_ds is not None:
+            if interactions_df is not None:
+                columns = interactions_df.columns.tolist()
+            else:
+                columns = interactions_ds.peek_columns()
+            self.outcome_cols = [col for col in columns if col.startswith(OUTCOME_PREFIX)]
         interactions_df = self._process_outcome_columns(interactions_df)
         valid_interactions_df = self._process_outcome_columns(valid_interactions_df)
 
@@ -147,9 +157,22 @@ class BaseRecommender(ABC):
     def _process_outcome_columns(self, interactions_df: Optional[DataFrame] = None) -> Optional[DataFrame]:
         if interactions_df is None:
             return None
-        if not self.outcome_cols:
+        # Inference inputs usually lack the training-time outcome columns, so drop only those present
+        present = [col for col in self.outcome_cols if col in interactions_df.columns]
+        if not present:
             return interactions_df
-        return interactions_df.drop(columns=self.outcome_cols)
+        return interactions_df.drop(columns=present)
+
+    def _training_interactions_df(self) -> Optional[DataFrame]:
+        """The raw training interactions, loading them on first use when batch training skipped that.
+
+        None before training, or when it ran without interactions.
+        """
+        train_df = getattr(self, "_train_interactions_df", None)
+        interactions_ds = getattr(self, "_train_interactions_ds", None)
+        if train_df is None and interactions_ds is not None:
+            train_df = self._train_interactions_df = interactions_ds.fetch_data()
+        return train_df
 
     def set_item_subset(self, item_subset: List[str]) -> None:
         """Restrict recommendations to a subset of the item catalogue.

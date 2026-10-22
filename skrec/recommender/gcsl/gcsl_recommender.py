@@ -68,8 +68,8 @@ class GcslRecommender(RankingRecommender):
         """
         old_method = self.inference_method
         self.inference_method = inference_method
-        train_df = getattr(self, "_train_interactions_df", None)
-        if train_df is not None and self.outcome_cols:
+        train_df = self._training_interactions_df() if self.outcome_cols else None
+        if train_df is not None:
             try:
                 inference_method.fit(train_df, self.outcome_cols)
             except Exception:
@@ -89,8 +89,11 @@ class GcslRecommender(RankingRecommender):
         if not self.outcome_cols:
             raise ValueError("Extra outcome columns are required for GCSL training")
 
+        # Kept with the model, as in-memory training does, so set_inference_method() can fit a method
+        # after the model is saved and loaded somewhere the training data is not reachable
+        train_df = self._training_interactions_df()
         if self.inference_method is not None:
-            self.inference_method.fit(self._train_interactions_df, self.outcome_cols)
+            self.inference_method.fit(train_df, self.outcome_cols)
         else:
             logger.info(
                 "Inference method not specified — skipping fit(). "

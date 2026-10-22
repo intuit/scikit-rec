@@ -299,12 +299,16 @@ class ScorerConfig(TypedDict, total=False):
     Current mapping:
 
     - ``multioutput``: ``on_degenerate_target``
-    - ``multiclass``, ``independent``, ``universal``, ``sequential``,
-      ``hierarchical``: (none yet — included in the whitelist as empty sets)
+    - ``independent``: ``batch_chunk_dir``
+    - ``mixed_type_multi_target``: ``target_specs``
+    - ``multiclass``, ``universal``, ``sequential``, ``hierarchical``:
+      (none yet — included in the whitelist as empty sets)
     """
 
     # --- multioutput ---
     on_degenerate_target: Union[DegenerateTargetPolicy, str]
+    # --- independent ---
+    batch_chunk_dir: str
     # --- mixed_type_multi_target ---
     target_specs: Dict[str, Any]  # dict[str, TargetType | TargetGroupSpec]
 
@@ -397,7 +401,7 @@ _EMBEDDING_INCOMPATIBLE_SCORERS = {
 _SCORER_CONFIG_ALLOWED: Dict[str, frozenset] = {
     "multioutput": frozenset({"on_degenerate_target"}),
     "multiclass": frozenset(),
-    "independent": frozenset(),
+    "independent": frozenset({"batch_chunk_dir"}),
     "universal": frozenset(),
     "mixed_type_multi_target": frozenset({"target_specs"}),
     "sequential": frozenset(),
