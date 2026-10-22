@@ -29,6 +29,17 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
+def _raise_on_null_ids(df: DataFrame, columns: Tuple[str, ...], name: str) -> None:
+    for col in columns:
+        null_rows = df.index[df[col].isnull()]
+        if len(null_rows) > 0:
+            raise ValueError(
+                f"'{col}' column in {name} contains {len(null_rows)} null value(s) "
+                f"(first rows: {null_rows[:5].tolist()}). Drop or fill them first; null IDs usually come "
+                "from an unmatched upstream join or a failed type cast."
+            )
+
+
 class BaseScorer(ABC):
     """Abstract base class for all scorers in the recommender pipeline.
 
@@ -267,12 +278,7 @@ class BaseScorer(ABC):
         if ITEM_ID_NAME not in interactions_df.columns:
             raise ValueError(f"'{ITEM_ID_NAME}' column must exist in interactions_df.")
 
-        for col in (USER_ID_NAME, ITEM_ID_NAME):
-            null_count = interactions_df[col].isnull().sum()
-            if null_count > 0:
-                raise ValueError(
-                    f"'{col}' column contains {null_count} null value(s). Remove rows with null IDs before training."
-                )
+        _raise_on_null_ids(interactions_df, (USER_ID_NAME, ITEM_ID_NAME), "interactions")
 
         if TIMESTAMP_COL not in interactions_df.columns:
             dup_count = interactions_df.duplicated(subset=[USER_ID_NAME, ITEM_ID_NAME]).sum()
@@ -301,6 +307,7 @@ class BaseScorer(ABC):
     def _validate_users(self, users_df: DataFrame) -> None:
         if USER_ID_NAME not in users_df.columns:
             raise ValueError(f"'{USER_ID_NAME}' column must exist in users_df.")
+        _raise_on_null_ids(users_df, (USER_ID_NAME,), "users")
         dup_count = users_df.duplicated(subset=[USER_ID_NAME]).sum()
         if dup_count > 0:
             logger.warning(
@@ -313,6 +320,7 @@ class BaseScorer(ABC):
     def _validate_items(self, items_df: DataFrame) -> None:
         if ITEM_ID_NAME not in items_df.columns:
             raise ValueError(f"'{ITEM_ID_NAME}' column must exist in items_df.")
+        _raise_on_null_ids(items_df, (ITEM_ID_NAME,), "items")
         dup_count = items_df.duplicated(subset=[ITEM_ID_NAME]).sum()
         if dup_count > 0:
             logger.warning(
@@ -502,10 +510,13 @@ class BaseScorer(ABC):
         if users is not None:
             if USER_ID_NAME not in users.columns:
                 raise ValueError(f"{USER_ID_NAME} must exist in Users DataFrame!")
+            # a null USER_ID would merge with every other null one
+            _raise_on_null_ids(users, (USER_ID_NAME,), "users")
 
         if interactions is not None:
             if USER_ID_NAME not in interactions.columns:
                 raise ValueError(f"{USER_ID_NAME} must exist in Interactions DataFrame!")
+            _raise_on_null_ids(interactions, (USER_ID_NAME,), "interactions")
 
         if users is None:
             users_dict = {USER_ID_NAME: list(set(interactions[USER_ID_NAME]))}  # type: ignore[index]
@@ -624,6 +635,9 @@ class BaseScorer(ABC):
             raise ValueError("Cannot process item_subset because item_names is None (training likely incomplete).")
 
         input_length_item_subset = len(item_subset)
+        # checked before sorting, which would otherwise fail with an opaque TypeError
+        if any(pd.isna(item) for item in item_subset):
+            raise ValueError("item_subset contains null item IDs")
         unique_item_subset = sorted(list(set(item_subset)))
 
         if input_length_item_subset == 0:
