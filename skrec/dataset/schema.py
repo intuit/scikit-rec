@@ -5,11 +5,22 @@ from typing import List, Optional
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_float_dtype, is_integer_dtype
 
+from skrec.constants import ITEM_ID_NAME, USER_ID_NAME
 from skrec.dataset.datatypes import ColumnDataType
 from skrec.util.config_loader import load_config
 from skrec.util.logger import get_logger
 
 logger = get_logger(__name__)
+
+# astype(str) turns None into "None" and NaN into "nan", hiding missing IDs from validation
+_ID_COLUMNS = (USER_ID_NAME, ITEM_ID_NAME)
+
+
+def _cast(series: pd.Series, dtype: str, name: str) -> pd.Series:
+    """Cast to ``dtype``; ID columns cast to str keep missing values missing so they can be rejected."""
+    if dtype == "str" and name in _ID_COLUMNS:
+        return series.astype(str).where(series.notna(), None)
+    return series.astype(dtype)
 
 
 class DatasetSchema:
@@ -174,7 +185,7 @@ class DatasetSchema:
                 df = pd.concat([df.drop(columns=[name]), encoded_df], axis=1)
             else:
                 dtype = ColumnDataType.dtype_map[schema_type]
-                df[name] = df[name].astype(dtype)
+                df[name] = _cast(df[name], dtype, name)
 
         # drop columns not in schema
         df = df[self.columns]
@@ -195,7 +206,7 @@ class DatasetSchema:
                     f"Required column '{name}' not found in dataset. Available columns: {list(df.columns)}"
                 )
             dtype = ColumnDataType.dtype_map[column_info["type"]]
-            df[name] = df[name].astype(dtype)
+            df[name] = _cast(df[name], dtype, name)
         return df
 
     @classmethod
@@ -215,5 +226,5 @@ class DatasetSchema:
             elif is_bool_dtype(feature):
                 df[column] = feature.astype("int64")
             else:
-                df[column] = feature.astype("str")
+                df[column] = _cast(feature, "str", column)
         return df
