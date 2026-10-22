@@ -66,8 +66,9 @@ Per-scorer constructor kwargs. Optional; defaults preserve historical scorer beh
 | Key | Used by | Type | Description |
 |-----|---------|------|-------------|
 | `on_degenerate_target` | `multioutput` | `DegenerateTargetPolicy` or `"raise"` / `"constant"` | Policy for single-class targets in the training slice. `"raise"` (default) aborts training with the offending column names; `"constant"` fits a constant predictor for degenerate columns and trains the rest. See [`MultioutputScorer` degenerate-target handling](../user-guide/scorers.md#degenerate-target-handling-on_degenerate_target). |
+| `batch_chunk_dir` | `independent` | `str` | Directory for the temporary per-item chunks written during batch training (default: the system temp directory). Unused when the interactions are already partitioned into `ITEM_ID=<value>/` directories. See [Batch (partitioned) training](../user-guide/capability-matrix.md#batch-partitioned-training). |
 
-Scorers without entries here (`multiclass`, `independent`, `universal`, `sequential`, `hierarchical`) accept no `scorer_config` keys today — passing any key raises.
+Scorers without entries here (`multiclass`, `universal`, `sequential`, `hierarchical`) accept no `scorer_config` keys today — passing any key raises.
 
 ### Embedding Config
 
@@ -182,6 +183,7 @@ capability_matrix()
 #     "scorer_config_keys": {
 #         "multioutput": ("on_degenerate_target",),
 #         "mixed_type_multi_target": ("target_specs",),
+#         "independent": ("batch_chunk_dir",),
 #         "multiclass": (),
 #         # ...
 #     },

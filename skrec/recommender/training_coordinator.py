@@ -32,7 +32,7 @@ def coordinate_training(
     """Run batch, tabular, or embedding training on ``recommender.scorer``."""
     scorer = recommender.scorer
 
-    if scorer.estimator.support_batch_training():
+    if scorer.support_batch_training():
         if interactions_ds is None:
             raise ValueError("interactions_ds is required for batch training.")
         is_partitioned = len(interactions_ds.data_filenames()) > 1
@@ -44,6 +44,7 @@ def coordinate_training(
             interactions_ds=interactions_ds,
             valid_interactions_ds=valid_interactions_ds,
             valid_users_ds=valid_users_ds,
+            process_interactions=recommender._process_outcome_columns,
         )
         return
 

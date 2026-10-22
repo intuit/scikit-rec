@@ -225,6 +225,19 @@ interactions_ds = InteractionsDataset(
 )
 ```
 
+### Partitioned Datasets
+
+Point `data_location` at a directory (local or S3) to read every `.parquet` file in it, including subdirectories. Directories starting with `_` or `.` (such as Spark's `_temporary`) are skipped.
+
+```python
+interactions_ds = InteractionsDataset(data_location='s3://my-bucket/data/interactions/')
+```
+
+Hive-style `key=value/` directories are supported, e.g. data written by Spark's `partitionBy`:
+
+- `ITEM_ID=<value>/` restores `ITEM_ID` as a column, since it is required. `IndependentScorer` batch training also uses this layout to train each item from its own files.
+- Other keys such as `month=` or `dt=` are ignored, so they never become features by accident. Declare them in the client schema to load them as columns.
+
 ### Using Example Datasets
 
 The library includes sample datasets for experimentation:
@@ -288,6 +301,7 @@ Different scorers have different dataset requirements:
 ### 2. Data Quality
 - Remove duplicate interactions
 - Handle missing values consistently
+- Remove rows with missing `USER_ID` or `ITEM_ID`: training and `recommend()` reject them
 - Ensure ID consistency across datasets
 
 ### 3. Train/Test Split
@@ -313,6 +327,10 @@ Different scorers have different dataset requirements:
 ### TypeError: Expected float, got str
 
 **Solution**: Check your schema matches your actual data types.
+
+### ValueError: 'USER_ID' column in interactions contains N null value(s)
+
+**Solution**: Drop or fill rows with missing IDs (the message lists the first rows). Null IDs usually come from an unmatched upstream join or a failed type cast. The same check applies to `ITEM_ID`, and to the users and items datasets.
 
 ### ValueError: Items dataset required for Universal scorer
 

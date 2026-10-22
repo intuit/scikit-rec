@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -76,6 +76,16 @@ class BaseScorer(ABC):
 
     def __init__(self, estimator: Union[BaseEstimator, SequentialEstimator]) -> None:
         self.estimator = estimator
+
+    def support_batch_training(self) -> bool:
+        """Return ``True`` if this scorer can run batch (partitioned) training.
+
+        Training dispatch asks the scorer rather than ``self.estimator`` so that
+        scorers whose estimator is not a single :class:`BaseEstimator` (e.g. the
+        per-item dict held by :class:`IndependentScorer`) can answer for
+        themselves. Default: delegate to the estimator.
+        """
+        return self.estimator.support_batch_training()
 
     def preserved_inference_columns(self) -> List[str]:
         """Columns that must survive ``interactions_schema.apply()`` at inference.
@@ -458,6 +468,7 @@ class BaseScorer(ABC):
         users_ds: Optional[UsersDataset] = None,
         valid_interactions_ds: Optional[InteractionsDataset] = None,
         valid_users_ds: Optional[UsersDataset] = None,
+        process_interactions: Optional[Callable[[DataFrame], DataFrame]] = None,
     ) -> None:
         """Train the scorer's estimator in batch (partitioned) mode.
 
@@ -472,6 +483,8 @@ class BaseScorer(ABC):
             users_ds: Optional user features dataset.
             valid_interactions_ds: Optional validation interactions dataset.
             valid_users_ds: Optional validation user features dataset.
+            process_interactions: Optional transform applied to each interactions
+                partition as it is read (the recommender's outcome-column handling).
 
         Raises:
             RuntimeError: If the estimator does not support batch training, or
@@ -483,8 +496,9 @@ class BaseScorer(ABC):
             interactions_dataset=interactions_ds,
             users_dataset=users_ds,
             items_dataset=items_ds,  # type: ignore[arg-type]
+            process_interactions=process_interactions,
         )
-        if not self.estimator.support_batch_training():
+        if not self.support_batch_training():
             raise RuntimeError("The estimator does not support batch training.")
 
         if valid_interactions_ds is not None:
@@ -495,6 +509,7 @@ class BaseScorer(ABC):
                 interactions_dataset=valid_interactions_ds,
                 users_dataset=valid_users_ds,
                 items_dataset=items_ds,  # type: ignore[arg-type]
+                process_interactions=process_interactions,
             )
         else:
             valid = None

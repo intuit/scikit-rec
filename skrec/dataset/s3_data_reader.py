@@ -8,6 +8,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 from skrec.dataset.datatypes import DataFileFormat
+from skrec.dataset.partitioning import hive_partition_values, is_hidden_path
 
 REGION = None
 
@@ -81,7 +82,17 @@ class S3DataReader:
             for file_path in sorted(self.get_data_filenames()):
                 parsed = urlparse(file_path)
                 file_obj = resource.Object(parsed.netloc, parsed.path.lstrip("/"))
-                dfs.append(pd.read_parquet(BytesIO(file_obj.get()["Body"].read()), columns=columns))
+                body = BytesIO(file_obj.get()["Body"].read())
+                # Hive partition columns usually live in the path, not the file; a column the file
+                # does have wins, as for per-file reads
+                partition_values = hive_partition_values(file_path, self.s3_path)
+                in_file = set(pq.ParquetFile(body).schema.names)
+                file_columns = [c for c in columns if c in in_file] if columns is not None else None
+                file_df = pd.read_parquet(body, columns=file_columns)
+                for column, value in partition_values.items():
+                    if column not in file_df.columns and (columns is None or column in columns):
+                        file_df[column] = value
+                dfs.append(file_df)
             df = pd.concat(dfs, ignore_index=True)
         else:
             raise ValueError("Unknown data file format")
@@ -139,7 +150,8 @@ class S3DataReader:
             file_name = item.key.replace(key, "").lstrip("/")
             full_file_name = os.path.join(self.s3_path, file_name)
 
-            if full_file_name.endswith(".parquet"):
+            # skip _/. directories (e.g. Spark's _temporary), as the local reader and pyarrow do
+            if full_file_name.endswith(".parquet") and not is_hidden_path(full_file_name, self.s3_path):
                 data_filenames.add(full_file_name)
 
         return data_filenames

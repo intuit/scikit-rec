@@ -209,10 +209,10 @@ class RankingRecommender(BaseRecommender):
             # retrievers that ignore the estimator argument (Popularity, ContentBased).
             estimator = getattr(self.scorer, "estimator", None)
 
-            # Reuse DataFrames already fetched by super().train() — no second fetch.
+            # Reuse DataFrames already fetched by super().train(); batch training loads interactions here.
             self.retriever.build_index(
                 estimator=estimator,
-                interactions=self._train_interactions_df,
+                interactions=self._training_interactions_df(),
                 items=self._train_items_df,
             )
 

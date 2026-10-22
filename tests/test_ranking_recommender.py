@@ -9,6 +9,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from xgboost import XGBClassifier
 
+from skrec.dataset.interactions_dataset import InteractionsDataset
 from skrec.dataset.users_dataset import UsersDataset
 from skrec.estimator.classification.multioutput_classifier import (
     MultiOutputClassifierEstimator,
@@ -270,6 +271,55 @@ def test_independent_models_recommender(setup_fixture):
     assert_array_equal(np.array(list(estimators.keys())), item_names)
     for estimator in list(estimators.values()):
         isinstance(estimator, XGBClassifierEstimator) is True
+
+
+def test_independent_models_recommender_dict_of_estimators(setup_fixture):
+    # Per-item estimators passed as a dict (each with its own params) must train
+    # end-to-end through recommender.train(), not just via the scorer directly.
+    estimators = {
+        "ITEM_1": XGBClassifierEstimator(setup_fixture["xgb_params"]),
+        "ITEM_2": XGBClassifierEstimator({**setup_fixture["xgb_params"], "max_depth": 2}),
+        "ITEM_3": XGBClassifierEstimator(setup_fixture["xgb_params"]),
+    }
+    scorer = IndependentScorer(estimators)
+    independent_models_recommender = RankingRecommender(scorer)
+    independent_models_recommender.train(
+        sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+    )
+
+    interactions = pd.DataFrame({"USER_ID": ["Emma", "Jasper"]})
+    users = pd.DataFrame({"USER_ID": ["Emma", "Jasper"], "feat1": [18, 65], "feat2": [0, 1]})
+    recommended_items = independent_models_recommender.recommend(interactions, users, 3)
+    assert recommended_items.shape == (2, 3)
+
+    trained = independent_models_recommender.scorer.estimator
+    assert_array_equal(np.array(list(trained.keys())), np.array(["ITEM_1", "ITEM_2", "ITEM_3"]))
+    for item, estimator in estimators.items():
+        assert trained[item] is estimator
+
+
+def test_independent_scorer_in_memory_estimators_do_not_batch_train(setup_fixture):
+    single = IndependentScorer(XGBClassifierEstimator(setup_fixture["xgb_params"]))
+    per_item = IndependentScorer({"ITEM_1": XGBClassifierEstimator(setup_fixture["xgb_params"])})
+    assert single.support_batch_training() is False
+    assert per_item.support_batch_training() is False
+
+
+def test_independent_scorer_rejects_mixed_batch_and_in_memory_estimators(setup_fixture):
+    estimator = {
+        "ITEM_1": XGBClassifierEstimator(setup_fixture["xgb_params"]),
+        "ITEM_2": BatchXGBClassifierEstimator({}),
+    }
+    with pytest.raises(TypeError, match="cannot mix batch-training estimators"):
+        IndependentScorer(estimator)
+
+
+def test_independent_models_recommender_empty_estimator_dict(setup_fixture):
+    independent_models_recommender = RankingRecommender(IndependentScorer({}))
+    with pytest.raises(ValueError, match="Estimator missing for the item"):
+        independent_models_recommender.train(
+            sample_binary_reward_users, sample_binary_reward_items, sample_binary_reward_interactions
+        )
 
 
 def test_independent_models_recommender_continuous_rewards(setup_fixture):
@@ -1215,3 +1265,26 @@ def test_ranking_recommender_with_embedding_estimator_realtime(setup_fixture):
         score_items_kwargs=score_items_kwargs_batch,
         eval_kwargs=eval_kwargs_simple_batch,
     )
+
+
+def test_recommend_after_training_with_auxiliary_outcome_columns(tmp_path):
+    # Inference inputs lack the training-time OUTCOME_* columns; recommend() must not try to drop them
+    users = pd.DataFrame({"USER_ID": ["U0", "U1", "U2", "U3"], "feat1": [1.0, 2.0, 3.0, 4.0]})
+    interactions = pd.DataFrame(
+        {
+            "USER_ID": ["U0", "U1", "U2", "U3"],
+            "ITEM_ID": ["A", "A", "B", "B"],
+            "OUTCOME": [0, 1, 0, 1],
+            "OUTCOME_click": [1, 1, 0, 1],
+        }
+    )
+    users.to_csv(tmp_path / "users.csv", index=False)
+    interactions.to_csv(tmp_path / "interactions.csv", index=False)
+
+    recommender = RankingRecommender(IndependentScorer(XGBClassifierEstimator({})))
+    recommender.train(
+        users_ds=UsersDataset(data_location=str(tmp_path / "users.csv")),
+        interactions_ds=InteractionsDataset(data_location=str(tmp_path / "interactions.csv")),
+    )
+    assert recommender.outcome_cols == ["OUTCOME_click"]
+    assert recommender.recommend(pd.DataFrame({"USER_ID": ["U0"]}), users.head(1), 2).shape == (1, 2)
